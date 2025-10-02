@@ -289,6 +289,7 @@ body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-4
   height: 100%;
   flex: 0 0 100%;   /* 1枚がちょうど1画面ぶん */
 }
+/* 念のためトラック自身も高さを持たせておく */
 .shorts-track{ height:100%; }
 .phone .shorts{
   position:relative;
@@ -398,21 +399,21 @@ body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-4
 }
 
 /* ===== Hero内SNSアイコン（Hero限定表示） ===== */
-.hero { position: relative; }
+.hero { position: relative; } /* 既にrelativeならこの行は無視OK */
 
 .hero-social{
   position: absolute;
-  right: 22px;
+  right: 22px;             /* 右端からの距離 */
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: 14px;
-  z-index: 6;
+  z-index: 6;              /* ヒーロー内で前面に */
 }
 
 .hero-social a{
-  width: 66px;
+  width: 66px;   /* ← サイズを1.5倍 */
   height: 66px;
   display:flex;
   align-items:center;
@@ -420,7 +421,7 @@ body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-4
   border-radius: 50%;
   background:#fff;
   color:#333;
-  font-size:33px;
+  font-size:33px;   /* ← アイコンサイズも拡大 */
   text-decoration:none;
   box-shadow:0 6px 14px rgba(0,0,0,.18);
   border:1px solid rgba(17,17,17,.08);
@@ -428,14 +429,17 @@ body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-4
 }
 
 .hero-social a:hover{
-  transform: translateY(-3px);
+  transform: translateY(-3px); /* ← 少しホバー浮きを強調してもOK */
   background: var(--accent);
   color:#fff;
 }
 
+/* スクロール表示など他UIと被る場合の微調整（任意） */
 @media (min-width: 1200px){
   .hero-social{ right: 26px; }
 }
+
+/* スマホでは邪魔になりやすいので非表示（必要なら調整） */
 @media (max-width: 979px){
   .hero-social{ display:none; }
 }
@@ -585,6 +589,7 @@ body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-4
   will-change: transform, opacity;
   transition: opacity .7s ease, transform .7s cubic-bezier(.22,.61,.36,1);
 }
+/* 交差したら .in を付ける（JSが付与） */
 .about-card.in{
   opacity: 1;
   transform: translateY(0);
@@ -606,6 +611,7 @@ body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-4
 .about-title{ font-size: clamp(40px, 6vw, 72px); }
 .about-copy-ja{ font-size: clamp(22px, 3.2vw, 28px); }
 
+/* 好みで右カラムの行間・注釈 */
 .about-right p{ margin:0 0 1rem; color:#3b4252; line-height:1.9; }
 .about-cta-note{
   margin-top:1.2rem; padding:12px 14px;
@@ -613,6 +619,7 @@ body.nav-open .nav-toggle span:nth-child(3){transform:translateY(-7px) rotate(-4
   background:rgba(250,250,255,.7);
 }
 
+/* OSの「動きを減らす」への配慮（任意） */
 @media (prefers-reduced-motion: reduce){
   .about-card{ transition:none }
 }
@@ -860,86 +867,3 @@ select{
 
 /* ===== Audition: CTA tune ===== */
 .aud-cta .cta-copy p{ color:#3b4252 }
-
-/* =========================================================
-   ▼▼ ここから “ファンタジー演出” 追加（既存機能は不変）▼▼
-   ========================================================= */
-
-/* 既存トークンへ別名（波SVG用） */
-:root{
-  --c-bg: var(--bg);
-  --c-sub: var(--surface);
-}
-
-/* グラデーション文字 */
-.gradient-text{
-  background: linear-gradient(90deg, var(--accent), #ff66b2);
-  -webkit-background-clip:text;
-  background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-
-/* フェードアップ汎用（JSで .in-view 付与） */
-.fade-in-up{ opacity:0; transform: translateY(16px); transition: opacity .7s ease, transform .7s ease; }
-.fade-in-up.in-view{ opacity:1; transform: translateY(0); }
-
-/* Heroの“ファンタジー層”（星/オーロラ/きらめき） */
-.fantasy-hero{ isolation:isolate; }
-.fantasy-hero .starfield{
-  position:absolute; inset:0; z-index:-2; display:block;
-}
-.fantasy-hero .aurora{
-  position:absolute; inset:-15% -10% -10% -10%; z-index:-1;
-  background:
-    radial-gradient(60% 40% at 30% 30%, rgba(138,122,255,.45), transparent 60%),
-    radial-gradient(50% 35% at 70% 35%, rgba(255,102,178,.45), transparent 60%),
-    radial-gradient(80% 60% at 50% 70%, rgba(255,255,255,.22), transparent 60%);
-  filter: blur(18px) saturate(120%);
-  animation: auroraMove 16s ease-in-out infinite alternate;
-}
-@keyframes auroraMove{
-  0%{ transform: translateY(-6%) rotate(-2deg); }
-  100%{ transform: translateY(6%) rotate(2deg); }
-}
-.fantasy-hero .sparkles{
-  position:absolute; inset:0; pointer-events:none;
-}
-.fantasy-hero .sparkles span{
-  position:absolute; width:8px; height:8px; border-radius:50%;
-  background: radial-gradient(circle, #fff, rgba(255,255,255,0) 70%);
-  filter: drop-shadow(0 0 8px #fff);
-  animation: sparkFloat 8s ease-in-out infinite;
-  opacity:.7;
-}
-.fantasy-hero .sparkles span:nth-child(1){ top:18%; left:14%; animation-duration:10s; }
-.fantasy-hero .sparkles span:nth-child(2){ top:36%; right:12%; animation-duration:9s; }
-.fantasy-hero .sparkles span:nth-child(3){ bottom:22%; left:28%; animation-duration:11s; }
-.fantasy-hero .sparkles span:nth-child(4){ bottom:30%; right:24%; animation-duration:12s; }
-.fantasy-hero .sparkles span:nth-child(5){ top:50%; left:50%; animation-duration:8s; }
-@keyframes sparkFloat{
-  0%{ transform: translate(-6px, 8px) scale(.9); }
-  50%{ transform: translate(6px, -8px) scale(1.1); }
-  100%{ transform: translate(-6px, 8px) scale(.9); }
-}
-
-/* “キラキラ”の統一スキン（News/Talents/CTAセクションに適用可） */
-.fantasy-section{ position:relative; overflow:hidden; }
-.fancy-card{
-  position:relative; background:#fff; border:1px solid rgba(17,17,17,.08);
-  border-radius:16px; box-shadow:0 8px 30px rgba(138,122,255,.14); overflow:hidden;
-  transition: transform .25s ease, box-shadow .25s ease;
-}
-.fancy-card::before{
-  content:""; position:absolute; inset:0; border-radius:16px; padding:1px;
-  background: linear-gradient(135deg, rgba(138,122,255,.55), rgba(255,102,178,.55));
-  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor; mask-composite: exclude;
-  pointer-events:none;
-}
-.fancy-card:hover{ transform: translateY(-6px); box-shadow:0 12px 36px rgba(255,102,178,.22); }
-
-/* 2〜3列の“きらカード”グリッドが欲しい時に使用（今回は未使用でも可） */
-.fancy-grid{ display:grid; gap:18px; grid-template-columns: repeat(12, 1fr); }
-.fancy-grid > .fancy-card{ grid-column: span 4; }
-@media (max-width:1024px){ .fancy-grid > .fancy-card{ grid-column: span 6; } }
-@media (max-width:640px){ .fancy-grid > .fancy-card{ grid-column: span 12; } }

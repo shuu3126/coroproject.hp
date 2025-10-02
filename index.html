@@ -1,3 +1,7 @@
+コード送るから全体コードで返してほしい
+既存の機能は絶対に崩さないで
+まず、Index.htmlだけ送るからそれだけ返してそのあとにCSSの全体コード送るからまた同じように全体コードをください
+
 <!doctype html>
 <html lang="ja">
 <head>
@@ -86,31 +90,21 @@
         </button>
 
         <nav class="nav" id="siteNav" aria-label="メインナビゲーション">
-          <a href="#news">News</a>
-          <a href="#talents">Talents</a>
+          <a href="html/news.html">News</a>
+          <a href="html/talents.html">Talents</a>
           <a href="html/audition.html">Audition</a>
           <!-- Contactは専用ページに移行（ヘッダーから外す or 下記で戻してもOK） -->
           <!-- <a href="./contact.html">Contact</a> -->
         </nav>
       </div>
     </header>
-
     <main>
-      <!-- ===== Hero（ファンタジー装飾を“追加”しつつ既存機能は維持） ===== -->
-      <section class="hero fantasy-hero">
-        <!-- ★ 追加：星空キャンバス / オーロラ / スパークル（装飾） -->
-        <canvas class="starfield" aria-hidden="true"></canvas>
-        <div class="aurora" aria-hidden="true"></div>
-        <div class="sparkles" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
-        </div>
-
-        <!-- 既存：背景プレースホルダ（そのまま維持） -->
+      <!-- ===== Hero ===== -->
+      <section class="hero">
         <div class="hero-bg" aria-hidden="true"></div>
-
         <div class="container hero-inner hero-split">
-          <!-- 左：スマホモック＋ショート動画（既存そのまま） -->
-          <div class="phone fade-in-up">
+        <!-- 左：スマホモック＋ショート動画 -->
+          <div class="phone">
             <div class="shorts">
               <div class="shorts-track" id="shortsTrack">
                 <!-- 1本目 -->
@@ -155,25 +149,22 @@
               </div>
             </div>
           </div>
-
-          <!-- 右：テキスト（既存の文言そのまま・装飾クラスだけ追加） -->
-          <div class="hero-copy fade-in-up">
-            <h1 class="hero-title gradient-text">ころぷろじぇくと！</h1>
+          <!-- 右：テキスト（いまの内容そのまま） -->
+          <div class="hero-copy">
+            <h1 class="hero-title">ころぷろじぇくと！</h1>
             <p class="hero-lead">"自分だけでは届かなかった場所へ"</p>
             <div class="hero-actions">
               <a class="btn btn-primary" href="html/audition.html">オーディション</a>
-              <a class="btn btn-ghost" href="#talents">タレントを見る</a>
+              <a class="btn btn-ghost" href="html/talents.html">タレントを見る</a>
             </div>
           </div>
         </div>
-
-        <!-- ▼ スクロール誘導（PCのみ表示：既存） -->
+        <!-- ▼ スクロール誘導（PCのみ表示） -->
         <div class="scroll-indicator" aria-hidden="true">
           <span class="scroll-text">SCROLL</span>
           <span class="scroll-arrow"></span>
         </div>
-
-        <!-- ▼ 既存デコに加え、キラ要素と調和するよう微増（既存クラスは維持） -->
+        <!-- ▼ デコレーション（控えめな星・幾何・流れ星） -->
         <div class="hero-decor" aria-hidden="true">
           <!-- 小さな星（点） -->
           <span class="dot dot--1"></span>
@@ -198,8 +189,7 @@
           <span class="meteor meteor--2"></span>
           <span class="meteor meteor--3"></span>
         </div>
-
-        <!-- Hero 内のSNSアイコン（既存） -->
+        <!-- Hero 内のSNSアイコン -->
         <div class="hero-social" aria-label="Official links">
           <a href="https://x.com/CoroProject0111" target="_blank" aria-label="X (Twitter)">
             <i class="fab fa-x-twitter" aria-hidden="true"></i>
@@ -207,21 +197,21 @@
           <a href="https://youtube.com/@YourChannel" target="_blank" aria-label="YouTube">
             <i class="fab fa-youtube" aria-hidden="true"></i>
           </a>
-          <a href="/html/contact.html" target="_blank" rel="noopener" aria-label="Mail">
+          <a href="/html/contact.html"target="_blank" rel="noopener" aria-label="Mail">
             <i class="fas fa-envelope" aria-hidden="true"></i>
           </a>        
         </div>
       </section>
       
       <!-- ===== About / Company Statement ===== -->
-      <section id="about" class="section about fantasy-section section-alt">
+      <section id="about" class="section about">
         <div class="container">
           <div class="about-card">
             <div class="about-grid">
               <!-- 左：大見出し＆コピー -->
-              <div class="about-left fade-in-up">
+              <div class="about-left">
                 <span class="about-eyebrow" aria-hidden="true"></span>
-                <h2 class="about-title gradient-text">Your Stream,<br>Your Story.</h2>
+                <h2 class="about-title">Your Stream,<br>Your Story.</h2>
                 <p class="about-copy-ja">
                   あなたにしかできない配信を、<br>
                   あなた自身の力で。
@@ -229,7 +219,7 @@
               </div>
 
               <!-- 右：企業説明テキスト -->
-              <div class="about-right fade-in-up">
+              <div class="about-right">
                 <p>
                   CORO PROJECTは、配信者一人ひとりの<strong>「らしさ」</strong>を尊重するVTuberプロダクションです。<br>
                   私たちは派手な演出や型にはまった活動だけを求めるのではなく、<br>
@@ -258,15 +248,15 @@
       </section>
 
       <!-- ===== News ===== -->
-      <section id="news" class="section fantasy-section">
+      <section id="news" class="section">
         <div class="container">
           <div class="section-head">
-            <h2 class="section-title gradient-text">News</h2>
+            <h2 class="section-title">News</h2>
             <a class="section-more" href="html/news.html">すべて見る →</a>
           </div>
 
           <div class="grid grid-3">
-            <article class="card fancy-card fade-in-up">
+            <article class="card">
               <a class="card-body" href="#">
                 <div class="card-thumb" aria-hidden="true"></div>
                 <div class="card-meta">
@@ -278,7 +268,7 @@
               </a>
             </article>
 
-            <article class="card fancy-card fade-in-up" style="--delay:.06s">
+            <article class="card">
               <a class="card-body" href="#">
                 <div class="card-thumb" aria-hidden="true"></div>
                 <div class="card-meta">
@@ -290,7 +280,7 @@
               </a>
             </article>
 
-            <article class="card fancy-card fade-in-up" style="--delay:.12s">
+            <article class="card">
               <a class="card-body" href="#">
                 <div class="card-thumb" aria-hidden="true"></div>
                 <div class="card-meta">
@@ -306,10 +296,10 @@
       </section>
 
       <!-- ===== Talents（2人の16:9自己紹介プレート・スライダー） ===== -->
-      <section id="talents" class="section section-alt fantasy-section">
+      <section id="talents" class="section section-alt">
         <div class="container">
           <div class="section-head">
-            <h2 class="section-title gradient-text">Talents</h2>
+            <h2 class="section-title">Talents</h2>
             <a class="section-more" href="html/talents.html">一覧を見る →</a>
           </div>
 
@@ -344,10 +334,10 @@
       </section>
 
       <!-- ===== Audition CTA ===== -->
-      <section id="audition" class="section cta fantasy-section">
+      <section id="audition" class="section cta">
         <div class="container cta-inner">
           <div class="cta-copy">
-            <h2 class="gradient-text">Audition</h2>
+            <h2>Audition</h2>
             <p>"自分だけでは届かなかった場所へ"</p>
           </div>
           <div class="cta-actions">
@@ -377,8 +367,8 @@
         <div class="footer-col">
           <h4>Links</h4>
           <ul class="footer-links">
-            <li><a href="#news">News</a></li>
-            <li><a href="#talents">Talents</a></li>
+            <li><a href="html/news.html">News</a></li>
+            <li><a href="html/talents.html">Talents</a></li>
             <li><a href="html/audition.html">Audition</a></li>
             <li><a href="html/privacy.html">Privacy Policy</a></li>
           </ul>
@@ -523,8 +513,6 @@
       // 初期スタート
       restart();
     })();
-
-    // スクロール位置の制御（既存）
     (function () {
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
@@ -541,8 +529,6 @@
         html.style.scrollBehavior = prev;   // 元の smooth 設定に戻す
       }, { once: true });
     })();
-
-    // Shorts（縦動画オート）— 既存
     (function(){
       const track = document.getElementById('shortsTrack');
       if(!track) return;
@@ -577,13 +563,12 @@
         if(document.hidden) stop(); else start();
       });
 
-      // クリックで一時停止/再開（仕様そのまま）
+      // クリックで一時停止/再開したい場合（お好みで）
       track.addEventListener('click', ()=>{
         if(timer){ stop(); } else { start(); }
       });
     })();
-
-    // Aboutカードのスクロール発火（既存）
+    // Aboutカードのスクロール発火
     (function(){
       const el = document.querySelector('.about-card');
       if (!el) return;
@@ -631,73 +616,6 @@
         window.addEventListener('load', revealOnce, { once:true });
         revealOnce(); // 初回判定
       }
-    })();
-
-    // ★ 追加：スクロール時のフェードアップ適用（汎用）
-    (function(){
-      if (!('IntersectionObserver' in window)) return;
-      const io = new IntersectionObserver((entries,obs)=>{
-        entries.forEach(e=>{
-          if(e.isIntersecting){ e.target.classList.add('in-view'); obs.unobserve(e.target); }
-        });
-      }, { rootMargin: '0px 0px -8% 0px', threshold: .12 });
-      document.querySelectorAll('.fade-in-up').forEach(el=> io.observe(el));
-    })();
-
-    // ★ 追加：星空のゆるアニメ（CSS不要のCanvas）
-    (function(){
-      const c = document.querySelector('.fantasy-hero .starfield');
-      if(!c) return;
-      const ctx = c.getContext('2d',{alpha:true});
-      let W, H, stars=[];
-
-      function resize(){
-        const dpr = Math.max(1, window.devicePixelRatio || 1);
-        c.width  = Math.floor(c.clientWidth  * dpr);
-        c.height = Math.floor(c.clientHeight * dpr);
-        ctx.setTransform(dpr,0,0,dpr,0,0);
-        W = c.clientWidth; H = c.clientHeight;
-        const count = Math.floor((W*H)/9000);
-        stars = Array.from({length: count}, ()=>({
-          x: Math.random()*W,
-          y: Math.random()*H,
-          r: Math.random()*1.6 + .2,
-          a: Math.random()*1,
-          s: Math.random()*0.6 + 0.2
-        }));
-      }
-      function draw(){
-        ctx.clearRect(0,0,W,H);
-        for(const st of stars){
-          st.a += (Math.random()-.5)*0.06;
-          st.a = Math.max(0.15, Math.min(1, st.a));
-          ctx.globalAlpha = st.a;
-          ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI*2); ctx.fill();
-          st.x += st.s*0.06; if(st.x > W+4) st.x = -4;
-        }
-        requestAnimationFrame(draw);
-      }
-      const ro = new ResizeObserver(resize); ro.observe(c);
-      resize(); draw();
-    })();
-
-    // ★ 追加：軽いパララックス（ポインタ移動時にオーロラをふわっと）
-    (function(){
-      const hero = document.querySelector('.fantasy-hero');
-      if(!hero) return;
-      const aurora = hero.querySelector('.aurora');
-      let raf = null;
-      hero.addEventListener('pointermove', (e)=>{
-        if(!aurora) return;
-        if(raf) cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(()=>{
-          const r = hero.getBoundingClientRect();
-          const rx = (e.clientX - r.left) / r.width - .5;
-          const ry = (e.clientY - r.top) / r.height - .5;
-          aurora.style.transform = `translate(${rx*8}px, ${ry*8}px)`;
-        });
-      });
     })();
   </script>
 </body>
