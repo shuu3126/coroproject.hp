@@ -883,39 +883,10 @@ select{
 .fade-in-up{ opacity:0; transform: translateY(16px); transition: opacity .7s ease, transform .7s ease; }
 .fade-in-up.in-view{ opacity:1; transform: translateY(0); }
 
-/* Heroの“ファンタジー層”（星/オーロラ/きらめき） */
-.fantasy-hero{ isolation:isolate; }
-.fantasy-hero .starfield{
-  position:absolute; inset:0; z-index:-2; display:block;
-}
-.fantasy-hero .aurora{
-  position:absolute; inset:-15% -10% -10% -10%; z-index:-1;
-  background:
-    radial-gradient(60% 40% at 30% 30%, rgba(138,122,255,.45), transparent 60%),
-    radial-gradient(50% 35% at 70% 35%, rgba(255,102,178,.45), transparent 60%),
-    radial-gradient(80% 60% at 50% 70%, rgba(255,255,255,.22), transparent 60%);
-  filter: blur(18px) saturate(120%);
-  animation: auroraMove 16s ease-in-out infinite alternate;
-}
 @keyframes auroraMove{
   0%{ transform: translateY(-6%) rotate(-2deg); }
   100%{ transform: translateY(6%) rotate(2deg); }
 }
-.fantasy-hero .sparkles{
-  position:absolute; inset:0; pointer-events:none;
-}
-.fantasy-hero .sparkles span{
-  position:absolute; width:8px; height:8px; border-radius:50%;
-  background: radial-gradient(circle, #fff, rgba(255,255,255,0) 70%);
-  filter: drop-shadow(0 0 8px #fff);
-  animation: sparkFloat 8s ease-in-out infinite;
-  opacity:.7;
-}
-.fantasy-hero .sparkles span:nth-child(1){ top:18%; left:14%; animation-duration:10s; }
-.fantasy-hero .sparkles span:nth-child(2){ top:36%; right:12%; animation-duration:9s; }
-.fantasy-hero .sparkles span:nth-child(3){ bottom:22%; left:28%; animation-duration:11s; }
-.fantasy-hero .sparkles span:nth-child(4){ bottom:30%; right:24%; animation-duration:12s; }
-.fantasy-hero .sparkles span:nth-child(5){ top:50%; left:50%; animation-duration:8s; }
 @keyframes sparkFloat{
   0%{ transform: translate(-6px, 8px) scale(.9); }
   50%{ transform: translate(6px, -8px) scale(1.1); }
