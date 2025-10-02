@@ -922,11 +922,6 @@ select{
   100%{ transform: translate(-6px, 8px) scale(.9); }
 }
 
-/* セクション区切りの波形 */
-.wave-divider{ position:absolute; left:0; right:0; bottom:-1px; line-height:0; }
-.wave-divider--top{ position:absolute; top:-1px; bottom:auto; transform: rotate(180deg); left:0; right:0; }
-.wave-divider svg{ display:block; width:100%; height:auto; }
-
 /* “キラキラ”の統一スキン（News/Talents/CTAセクションに適用可） */
 .fantasy-section{ position:relative; overflow:hidden; }
 .fancy-card{
