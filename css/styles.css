@@ -948,3 +948,47 @@ select{
 .fancy-grid > .fancy-card{ grid-column: span 4; }
 @media (max-width:1024px){ .fancy-grid > .fancy-card{ grid-column: span 6; } }
 @media (max-width:640px){ .fancy-grid > .fancy-card{ grid-column: span 12; } }
+
+/* ==== キラ文字見出し ==== */
+.section-title.fancy-title{
+  position:relative;
+  display:inline-block;
+  font-family:'Keifont', system-ui, sans-serif; /* お好みで変更OK */
+  font-weight:900;
+  font-size:clamp(36px, 7vw, 96px);
+  letter-spacing:.06em;
+  line-height:1;
+  /* グラデ塗り */
+  background:linear-gradient(180deg,#9fd3ff 0%, #9bb0ff 55%, #d49aff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  /* 外側の太縁（多重テキストシャドウで擬似アウトライン） */
+  text-shadow:
+    0 0 0 #4ca5ff,
+    2px 2px 0 #4ca5ff, -2px 2px 0 #4ca5ff, 2px -2px 0 #4ca5ff, -2px -2px 0 #4ca5ff,
+    3px 0 0 #4ca5ff, -3px 0 0 #4ca5ff, 0 3px 0 #4ca5ff, 0 -3px 0 #4ca5ff,
+    0 0 28px rgba(120,120,255,.35);
+  transform:translateZ(0); /* ちらつき防止 */
+}
+
+/* 立体影（少しズラした複製） */
+.section-title.fancy-title::after{
+  content:attr(data-title);
+  position:absolute; inset:0;
+  transform:translate(6px,10px);
+  z-index:-1;
+  color:#6ad0ff;
+  -webkit-text-stroke:0 transparent;
+  text-shadow:0 0 0 transparent;
+  opacity:.85;
+  filter:drop-shadow(0 6px 0 rgba(0,0,0,.0));
+  pointer-events:none;
+}
+
+/* セクションの見出しを中央寄せにしたい時（必要なら） */
+.fantasy-section .section-head{
+  justify-content:center;
+  text-align:center;
+}
+.fantasy-section .section-more{ margin-left:auto; }
