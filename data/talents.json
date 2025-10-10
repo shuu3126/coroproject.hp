@@ -1,8 +1,8 @@
 [
   {
     "id": "holo-01",
-    "name": "天音 ころも",
-    "kana": "あまね ころも",
+    "name": "青海 しび",
+    "kana": "あおみ しび",
     "group": "1st",
     "status": "active",
     "debut": "2025-07-15",
@@ -25,34 +25,28 @@
     "tags": ["歌", "雑談", "RPG"]
   },
   {
-    "id": "holo-02",
-    "name": "白兎 ましろ",
-    "kana": "しろと ましろ",
+    "id": "holo-01",
+    "name": "青海 しび",
+    "kana": "あおみ しび",
     "group": "1st",
-    "status": "hiatus",
-    "debut": "2025-06-01",
-    "lastActive": "2025-09-18",
-    "avatar": "../images/talents/mashiro.jpg",
-    "bio": "お絵描き配信とASMR。落ち着く声。",
-    "platforms": [
-      {"name":"YouTube","url":"https://youtube.com/@mashiro"},
-      {"name":"X","url":"https://x.com/mashiro"}
+    "status": "active",
+    "debut": "2025-07-15",
+    "lastActive": "2025-10-01",
+    "avatar": "../images/talents/koromo.jpg",
+    "bio": "雑談・歌・ゲーム配信が中心。朝活と深夜配信の二刀流。",
+    "longBio": [
+      "“朝の挨拶係”として、短めの歌枠とトークで視聴者の1日を元気にするのがモットー。",
+      "週末はロング配信でRPG進行や耐久歌枠を実施。"
     ],
-    "tags": ["イラスト", "ASMR", "作業用BGM"]
-  },
-  {
-    "id": "holo-03",
-    "name": "黒羽 いつき",
-    "kana": "くろは いつき",
-    "group": "2nd",
-    "status": "graduated",
-    "debut": "2024-12-24",
-    "lastActive": "2025-08-05",
-    "avatar": "../images/talents/itsuki.jpg",
-    "bio": "FPSと歌。現在は卒業アナウンス済み。",
     "platforms": [
-      {"name":"YouTube","url":"https://youtube.com/@itsuki"}
+      {"name":"YouTube","url":"https://youtube.com/@koromo"},
+      {"name":"X","url":"https://x.com/koromo"},
+      {"name":"Twitch","url":"https://twitch.tv/koromo"}
     ],
-    "tags": ["FPS", "歌", "コラボ"]
+    "links": [
+      {"label":"配信切り抜き","url":"https://youtube.com/playlist?list=xxxx"},
+      {"label":"ファンサイト","url":"https://example.com/fan"}
+    ],
+    "tags": ["歌", "雑談", "RPG"]
   }
 ]
