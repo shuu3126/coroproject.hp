@@ -156,8 +156,8 @@
     </section>
 
     <!-- ===== About ===== -->
-    <section id="about" class="section section-about">
-      <div class="container">
+    <section id="about" class="section section-about reveal">
+      <div class="container about-inner">
         <div class="section-head">
           <h2 class="section-title">About</h2>
           <p class="section-kicker">CORO PROJECTとは？</p>
@@ -165,125 +165,188 @@
 
         <div class="about-grid">
           <div class="about-main">
-            <h3>Creator First, Creative Next.</h3>
+            <h3 class="about-title">「好き」と「続けられる」を、ちゃんと両立させるプロダクション。</h3>
             <p>
-              CORO PROJECTは、配信者一人ひとりの「らしさ」を大切にするVTuberプロダクションです。<br>
-              活動のペースやスタイルを無理に合わせるのではなく、あなたが続けやすい形を一緒に考えます。
+              CORO PROJECTは、紫とピンクをテーマにした小さなVTuberプロダクションです。<br>
+              目指しているのは、大きな看板ではなく「ちゃんと隣で一緒に走ってくれる運営」。
             </p>
             <p>
-              配信の企画サポート、ビジュアルやロゴの制作、配信環境の整備、スケジュール管理など、<br>
-              クリエイターが「やりたいこと」に集中できるような伴走型のサポートを行っています。
+              配信スケジュール、企画、コラボ、数字の伸び方。<br>
+              ひとつひとつの悩みに寄り添いながら、タレントと一緒に
+              <span class="about-highlight">“その人らしい活動スタイル”</span>を組み立てていきます。
+            </p>
+            <p>
+              「もっと本気でやりたいけど、ひとりだと限界を感じている」「でも、ガチガチの箱に入りたいわけじゃない」。<br>
+              そんな人の “ちょうどいい居場所” になれたら、と考えています。
             </p>
           </div>
 
-          <ul class="about-points">
-            <li>
-              <strong>配信サポート</strong>
-              <span>企画相談 / 配信振り返り / サムネ・素材制作など</span>
-            </li>
-            <li>
-              <strong>クリエイティブ支援</strong>
-              <span>キャラクターデザイン・ロゴ・BGM などの制作パートナー紹介</span>
-            </li>
-            <li>
-              <strong>コミュニティ運営</strong>
-              <span>ファンイベント・グッズ企画などのサポート</span>
-            </li>
-          </ul>
+          <div class="about-side">
+            <div class="about-pill">Support &amp; Production</div>
+            <ul class="about-points">
+              <li>
+                <strong>配信まわりの伴走サポート</strong>
+                <span>企画相談 / 週次の振り返り / 方向性のすり合わせ など</span>
+              </li>
+              <li>
+                <strong>クリエイティブ制作の窓口</strong>
+                <span>キャラデザ・ロゴ・OPED・BGMなど、制作パートナーの紹介と進行サポート</span>
+              </li>
+              <li>
+                <strong>数字と生活のバランス設計</strong>
+                <span>無理のない活動ペースの設計 / 収益化までのロードマップ作成</span>
+              </li>
+              <li>
+                <strong>ファンと一緒に育てる企画</strong>
+                <span>周年企画 / グッズ / イベント運営 などの共同プランニング</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- ===== News ===== -->
-    <section id="news" class="section section-news">
+    <!-- ===== News（JSON から最新3件を表示） ===== -->
+    <section id="news" class="section section-news reveal">
       <div class="container">
         <div class="section-head">
           <h2 class="section-title">News</h2>
           <a class="section-link" href="html/news.html">すべて見る</a>
         </div>
 
-        <div class="news-grid">
-          <article class="news-card">
-            <a href="html/news.html">
-              <div class="news-label">お知らせ</div>
-              <time datetime="2025-10-04" class="news-date">2025.10.04</time>
-              <h3 class="news-title">新規タレント募集 第一期 開始</h3>
-              <p class="news-text">応募要項やスケジュールをご確認のうえ、専用フォームからエントリーをお願いします。</p>
-            </a>
-          </article>
-
-          <article class="news-card">
-            <a href="html/news.html">
-              <div class="news-label label-sub">リリース</div>
-              <time datetime="2025-10-04" class="news-date">2025.10.04</time>
-              <h3 class="news-title">公式サイト公開のお知らせ</h3>
-              <p class="news-text">CORO PROJECTの公式サイトを公開しました。今後はこちらで最新情報を発信していきます。</p>
-            </a>
-          </article>
-
-          <article class="news-card">
-            <a href="html/news.html">
-              <div class="news-label label-sub">リリース</div>
-              <time datetime="2025-10-04" class="news-date">2025.10.04</time>
-              <h3 class="news-title">公式Xアカウント開設</h3>
-              <p class="news-text">配信予定や企画の裏側など、リアルタイムな情報をXアカウントでお届けします。</p>
-            </a>
-          </article>
+        <div id="top-news-list" class="news-grid">
+          <!-- JS で JSON から最新3件を挿入 -->
         </div>
+
+        <noscript>
+          <p style="font-size:.85rem; color:#9ca3c3;">
+            JavaScriptが無効になっています。最新情報は<a href="html/news.html">Newsページ</a>からご確認ください。
+          </p>
+        </noscript>
       </div>
     </section>
 
-    <!-- ===== Talents ===== -->
-    <section id="talents" class="section section-talents">
+    <!-- ===== Talents（フルHDスライダー） ===== -->
+    <section id="talents" class="section section-talents reveal">
       <div class="container">
         <div class="section-head">
           <h2 class="section-title">Talents</h2>
           <a class="section-link" href="html/talents.html">一覧を見る</a>
         </div>
 
-        <div class="talent-grid">
-          <article class="talent-card">
-            <div class="talent-thumb">
-              <img src="images/1.png" alt="青海しびのイラスト">
-            </div>
-            <div class="talent-body">
-              <h3 class="talent-name">青海しび</h3>
-              <p class="talent-text">ゲーム配信とゆる雑談を中心に活動中。コアなファンに愛される、海のように優しいストリーマー。</p>
-              <div class="talent-tags">
-                <span>Twitch</span><span>YouTube</span><span>X</span>
-              </div>
-            </div>
-          </article>
+        <div class="talent-slider" id="talentSlider">
+          <button class="talent-nav talent-nav--prev" type="button" aria-label="前のタレント">
+            ‹
+          </button>
 
-          <article class="talent-card">
-            <div class="talent-thumb">
-              <img src="images/2.png" alt="來凛みゅぜのイラスト">
-            </div>
-            <div class="talent-body">
-              <h3 class="talent-name">來凛みゅぜ</h3>
-              <p class="talent-text">歌と企画配信が得意なマルチタレント。視聴者と一緒に「楽しい」を作ることがモットー。</p>
-              <div class="talent-tags">
-                <span>Twitch</span><span>YouTube</span><span>X</span>
+          <div class="talent-viewport">
+            <!-- slide 1: 青海しび -->
+            <article class="talent-slide is-active" data-index="0">
+              <div class="talent-media">
+                <div class="talent-media-inner">
+                  <img src="images/1.png" alt="青海しびのキービジュアル" loading="lazy">
+                </div>
               </div>
-            </div>
-          </article>
+              <div class="talent-info">
+                <p class="talent-label">Coro Project Talent</p>
+                <h3 class="talent-name-main">青海しび</h3>
+                <p class="talent-desc">
+                  ゲーム配信とゆる雑談を中心に活動中。<br>
+                  深夜帯の落ち着いたトーンと、たまに出るオタクな早口でコアなファンを惹きつけるストリーマー。
+                </p>
+                <ul class="talent-meta">
+                  <li><span>主な活動</span>ゲーム / 雑談 / コラボ企画</li>
+                  <li><span>配信プラットフォーム</span>Twitch / YouTube / X</li>
+                </ul>
+                <div class="talent-links">
+                  <a href="#" class="btn btn-outline btn-sm">プロフィールを見る</a>
+                  <a href="#" class="btn btn-primary btn-sm">X（Twitter）</a>
+                </div>
+              </div>
+            </article>
+
+            <!-- slide 2: 來凛みゅぜ -->
+            <article class="talent-slide" data-index="1">
+              <div class="talent-media">
+                <div class="talent-media-inner">
+                  <img src="images/2.png" alt="來凛みゅぜのキービジュアル" loading="lazy">
+                </div>
+              </div>
+              <div class="talent-info">
+                <p class="talent-label">Coro Project Talent</p>
+                <h3 class="talent-name-main">來凛みゅぜ</h3>
+                <p class="talent-desc">
+                  歌と企画配信を得意とするマルチタレント。<br>
+                  参加型イベントとリスナー巻き込み企画で「一緒に作る楽しさ」を届けている。
+                </p>
+                <ul class="talent-meta">
+                  <li><span>主な活動</span>歌 / 企画 / イベント配信</li>
+                  <li><span>配信プラットフォーム</span>YouTube / Twitch / X</li>
+                </ul>
+                <div class="talent-links">
+                  <a href="#" class="btn btn-outline btn-sm">プロフィールを見る</a>
+                  <a href="#" class="btn btn-primary btn-sm">X（Twitter）</a>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <button class="talent-nav talent-nav--next" type="button" aria-label="次のタレント">
+            ›
+          </button>
+        </div>
+
+        <div class="talent-dots" id="talentDots" aria-label="タレント切り替え">
+          <button type="button" class="is-active" data-index="0"></button>
+          <button type="button" data-index="1"></button>
         </div>
       </div>
     </section>
 
-    <!-- ===== Audition CTA ===== -->
-    <section class="section section-cta">
-      <div class="container cta-inner">
-        <div class="cta-copy">
-          <h2>一緒に、次の一歩を踏み出しませんか？</h2>
-          <p>
-            配信経験が少なくても大丈夫。CORO PROJECTが企画・配信・クリエイティブ面をサポートしながら、
-            あなたの「やってみたい」を形にしていきます。
+    <!-- ===== Audition CTA（しっかり作り込み） ===== -->
+    <section class="section section-cta section-cta--audition reveal">
+      <div class="container cta-audition">
+        <div class="cta-audition-copy">
+          <p class="cta-label">Audition</p>
+          <h2 class="cta-title">「一度ちゃんと、本気でやってみたい」人へ。</h2>
+          <p class="cta-lead">
+            CORO PROJECTのオーディションでは、登録者数や配信歴だけで判断しません。<br>
+            いまの数字よりも、これから一緒に作っていける「熱量」と「続ける意思」を大切にしています。
+          </p>
+          <ul class="cta-points">
+            <li><span>✔</span> 配信経験が少なくてもOK（未経験でも意欲があれば歓迎）</li>
+            <li><span>✔</span> 学業・仕事との両立を前提に、活動ペースを一緒に設計</li>
+            <li><span>✔</span> キャラクターや世界観づくりから相談可能</li>
+          </ul>
+          <div class="cta-actions">
+            <a class="btn btn-primary" href="html/audition.html">オーディションの詳細を見る</a>
+            <a class="btn btn-outline" href="html/contact.html">まずは相談してみる</a>
+          </div>
+          <p class="cta-note">
+            「自分に合っているのかわからない」「少しだけ話を聞きたい」などのご相談もお気軽にどうぞ。
           </p>
         </div>
-        <div class="cta-actions">
-          <a class="btn btn-primary" href="html/audition.html">オーディション詳細へ</a>
-          <a class="btn btn-outline" href="html/contact.html">まずは相談してみる</a>
+
+        <div class="cta-audition-side">
+          <div class="cta-card">
+            <h3>募集しているイメージ</h3>
+            <ul>
+              <li>長期的に活動を続けたい意志がある方</li>
+              <li>リスナーとコミュニケーションをとるのが好きな方</li>
+              <li>新しいことに挑戦してみたい方</li>
+            </ul>
+          </div>
+          <div class="cta-card cta-card--soft">
+            <h3>選考フロー（例）</h3>
+            <ol>
+              <li>Webフォームから応募</li>
+              <li>書類・配信アーカイブの確認</li>
+              <li>オンライン面談（1〜2回）</li>
+            </ol>
+            <p class="cta-small">
+              詳細は<a href="html/audition.html">オーディションページ</a>にてご確認ください。
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -428,5 +491,114 @@
       }, 10); // ローダーと干渉しないように軽く遅延
     });
   </script>
+  <script>
+  // News：JSONから最新3件を取得してトップに表示
+  (function(){
+    const listEl = document.getElementById('top-news-list');
+    if (!listEl) return;
+
+    fetch('news/data.json', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        // data が配列か、data.items 形式かに対応
+        const items = Array.isArray(data) ? data : (data.items || []);
+        if (!items.length) return;
+
+        // 日付で降順ソート（キー名は JSON に合わせて換えてOK）
+        items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+        const latest = items.slice(0, 3);
+        listEl.innerHTML = latest.map(item => {
+          const date = (item.date || '').replace(/-/g, '.');
+          const label = item.label || item.category || 'お知らせ';
+          const href  = item.link || item.url || 'html/news.html';
+          const text  = item.summary || item.text || '';
+
+          return `
+            <article class="news-card">
+              <a href="${href}">
+                <div class="news-label">${label}</div>
+                <time class="news-date">${date}</time>
+                <h3 class="news-title">${item.title || ''}</h3>
+                <p class="news-text">${text}</p>
+              </a>
+            </article>
+          `;
+        }).join('');
+      })
+      .catch(err => {
+        console.error('news load error', err);
+      });
+  })();
+</script>
+
+<script>
+  // Talents スライダー
+  (function(){
+    const slider = document.getElementById('talentSlider');
+    if (!slider) return;
+
+    const slides = Array.from(slider.querySelectorAll('.talent-slide'));
+    const prevBtn = slider.querySelector('.talent-nav--prev');
+    const nextBtn = slider.querySelector('.talent-nav--next');
+    const dotsWrap = document.getElementById('talentDots');
+    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('button')) : [];
+    let index = 0;
+
+    function show(i){
+      index = (i + slides.length) % slides.length;
+      slides.forEach((el, idx) => {
+        el.classList.toggle('is-active', idx === index);
+      });
+      dots.forEach((el, idx) => {
+        el.classList.toggle('is-active', idx === index);
+      });
+    }
+
+    prevBtn.addEventListener('click', () => show(index - 1));
+    nextBtn.addEventListener('click', () => show(index + 1));
+
+    dots.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = Number(btn.dataset.index || 0);
+        show(i);
+      });
+    });
+
+    // 自動でゆっくり切り替える場合（いらなければコメントアウト）
+    let timer = setInterval(() => show(index + 1), 10000);
+    slider.addEventListener('mouseenter', () => clearInterval(timer));
+    slider.addEventListener('mouseleave', () => {
+      timer = setInterval(() => show(index + 1), 10000);
+    });
+
+    show(0);
+  })();
+</script>
+
+<script>
+  // スクロール時のフェードイン（.reveal に is-visible 付与）
+  (function(){
+    const reveals = Array.from(document.querySelectorAll('.reveal'));
+    if (!('IntersectionObserver' in window) || !reveals.length) {
+      reveals.forEach(el => el.classList.add('is-visible'));
+      return;
+    }
+
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {
+      root:null,
+      threshold:0.15
+    });
+
+    reveals.forEach(el => io.observe(el));
+  })();
+</script>
 </body>
 </html>
