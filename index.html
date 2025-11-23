@@ -494,45 +494,39 @@
     });
   </script>
   <script>
-  // News：JSONから最新3件を取得してトップに表示
-  (function(){
-    const listEl = document.getElementById('top-news-list');
-    if (!listEl) return;
+    // Top News（最新3件を表示）
+    (async function(){
+      const wrap = document.getElementById('topNewsGrid'); // ★後述のHTMLとidを揃える
+      if (!wrap) return;
 
-    fetch('news/data.json', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => {
-        // data が配列か、data.items 形式かに対応
-        const items = Array.isArray(data) ? data : (data.items || []);
-        if (!items.length) return;
+      try{
+        const res = await fetch('./data/news.json', { cache: 'no-store' });
+        const all = await res.json();
 
-        // 日付で降順ソート（キー名は JSON に合わせて換えてOK）
-        items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        // 日付の新しい順に並べ替えて3件だけ
+        const latest = all
+          .slice()
+          .sort((a,b) => a.date < b.date ? 1 : -1)
+          .slice(0, 3);
 
-        const latest = items.slice(0, 3);
-        listEl.innerHTML = latest.map(item => {
-          const date = (item.date || '').replace(/-/g, '.');
-          const label = item.label || item.category || 'お知らせ';
-          const href  = item.link || item.url || 'html/news.html';
-          const text  = item.summary || item.text || '';
-
-          return `
-            <article class="news-card">
-              <a href="${href}">
-                <div class="news-label">${label}</div>
-                <time class="news-date">${date}</time>
-                <h3 class="news-title">${item.title || ''}</h3>
-                <p class="news-text">${text}</p>
-              </a>
-            </article>
-          `;
-        }).join('');
-      })
-      .catch(err => {
-        console.error('news load error', err);
-      });
-  })();
-</script>
+        wrap.innerHTML = latest.map(n => `
+          <article class="news-card">
+            <a href="${n.url || './html/news.html'}">
+              <div class="card-thumb"
+                  aria-hidden="true"
+                  style="${n.thumb ? `background-image:url('${n.thumb}')` : ''}"></div>
+              <span class="news-label">${n.tag || 'News'}</span>
+              <span class="news-date">${n.date}</span>
+              <h3 class="news-title">${n.title}</h3>
+              <p class="news-text">${n.excerpt || ''}</p>
+            </a>
+          </article>
+        `).join('');
+      }catch(err){
+        console.error('トップニュース読込エラー', err);
+      }
+    })();
+  </script>
 
 <script>
   // Talents スライダー
