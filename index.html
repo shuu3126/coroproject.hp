@@ -418,5 +418,15 @@
       }, 3200); // 3.2秒後にフェードアウト開始
     });
   </script>
+  <script>
+    // ページを開いたら常に最上部に戻す
+    window.history.scrollRestoration = "manual";
+    
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 10); // ローダーと干渉しないように軽く遅延
+    });
+  </script>
 </body>
 </html>
