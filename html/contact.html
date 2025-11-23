@@ -31,14 +31,18 @@
           <img src="../images/toukalogo.png" alt="CORO PROJECT ロゴ" class="brand-logo">
           <span class="brand-text">CORO PROJECT</span>
         </a>
+
+        <!-- モバイル用トグル -->
         <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="メニューを開く">
           <span></span><span></span><span></span>
         </button>
+
         <nav class="nav" id="siteNav" aria-label="メインナビゲーション">
+          <a href="../index.html#about">About</a>
           <a href="./news.html">News</a>
           <a href="./talents.html">Talents</a>
           <a href="./audition.html">Audition</a>
-          <a href="./contact.html" aria-current="page">Contact</a>
+          <a href="./contact.html">Contact</a>
         </nav>
       </div>
     </header>
@@ -68,27 +72,34 @@
           <div class="section-head">
             <h2 class="section-title">お問い合わせフォーム</h2>
           </div>
-
-          <form class="contact-form" action="./thanks.html" method="post">
+          <form
+            class="contact-form"
+            action="https://formspree.io/f/YOUR_FORM_ID"
+            method="post"
+          >
             <div class="form-grid">
               <label class="field">
                 <span>お名前</span>
                 <input type="text" name="name" placeholder="山田 太郎" required>
               </label>
+
               <label class="field">
                 <span>メールアドレス</span>
                 <input type="email" name="email" placeholder="you@example.com" required>
               </label>
+
               <label class="field">
                 <span>ご用件</span>
                 <select name="topic" required>
                   <option value="" hidden>選択してください</option>
+                  <option>オーディション応募</option>
                   <option>案件のご相談</option>
                   <option>取材・メディアのご連絡</option>
                   <option>コラボ・提携のご相談</option>
                   <option>その他のお問い合わせ</option>
                 </select>
               </label>
+
               <label class="field">
                 <span>関連URL（任意）</span>
                 <input type="url" name="url" placeholder="https://...">
@@ -97,21 +108,27 @@
 
             <label class="field">
               <span>内容</span>
-              <textarea name="message" placeholder="ご相談内容の概要、スケジュールやご予算の目安などをご記載ください。" required></textarea>
+              <textarea
+                name="message"
+                placeholder="ご相談内容の概要、スケジュールやご予算の目安などをご記載ください。"
+                required
+              ></textarea>
             </label>
 
             <label class="checkbox">
               <input type="checkbox" name="agree" required>
-              <span><a href="./privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>に同意する</span>
+              <span>
+                <a href="./privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>
+                に同意する
+              </span>
             </label>
 
-            <!-- reCAPTCHAを使う場合はここに設置 -->
-            <!-- <div class="g-recaptcha" data-sitekey="YOUR_KEY"></div> -->
+            <!-- Formspree 用: 送信後のリダイレクト先（thanks.html） -->
+            <input type="hidden" name="_redirect" value="https://coroproject.jp/html/thanks.html">
+            <!-- メールの件名 -->
+            <input type="hidden" name="_subject" value="CORO PROJECT お問い合わせ">
 
-            <div style="display:flex; gap:12px; flex-wrap:wrap">
-              <button class="btn btn-primary" type="submit">送信する</button>
-              <a class="btn btn-ghost" href="../index.html">トップに戻る</a>
-            </div>
+            <button class="btn btn-primary btn-lg" type="submit">送信する</button>
           </form>
         </div>
       </section>

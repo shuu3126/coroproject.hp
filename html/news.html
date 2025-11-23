@@ -24,18 +24,21 @@
 </head>
 <body>
   <div id="app" class="app">
-    <!-- Header（auditionと統一） -->
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="../index.html">
           <img src="../images/toukalogo.png" alt="CORO PROJECT ロゴ" class="brand-logo">
           <span class="brand-text">CORO PROJECT</span>
         </a>
+
+        <!-- モバイル用トグル -->
         <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="メニューを開く">
           <span></span><span></span><span></span>
         </button>
+
         <nav class="nav" id="siteNav" aria-label="メインナビゲーション">
-          <a href="./news.html" aria-current="page">News</a>
+          <a href="../index.html#about">About</a>
+          <a href="./news.html">News</a>
           <a href="./talents.html">Talents</a>
           <a href="./audition.html">Audition</a>
           <a href="./contact.html">Contact</a>
@@ -143,43 +146,51 @@
   </div>
 
   <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
+    // ===== 年表示 =====
+    (function () {
+      const y = document.getElementById('year');
+      if (y) y.textContent = new Date().getFullYear();
+    })();
 
-    // ===== モバイルナビ（auditionと同じ） =====
-    (function(){
+    // ===== App フェードイン（即時実行に変更：DOM のイベントは使わない） =====
+    (function () {
+      const app = document.getElementById('app');
+      if (app) app.classList.add('visible');
+    })();
+
+    // ===== モバイルナビ =====
+    (function () {
       const btn = document.getElementById('navToggle');
       const nav = document.getElementById('siteNav');
-      if(!btn || !nav) return;
-      btn.addEventListener('click', ()=>{
+      if (!btn || !nav) return;
+
+      btn.addEventListener('click', () => {
         const opened = btn.getAttribute('aria-expanded') === 'true';
         btn.setAttribute('aria-expanded', String(!opened));
         document.body.classList.toggle('nav-open', !opened);
       });
-      window.addEventListener('keydown', (e)=>{
-        if(e.key === 'Escape' && document.body.classList.contains('nav-open')){
-          btn.setAttribute('aria-expanded','false');
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('nav-open')) {
+          btn.setAttribute('aria-expanded', 'false');
           document.body.classList.remove('nav-open');
         }
-      });
-      window.addEventListener('DOMContentLoaded', ()=>{
-        const app = document.getElementById('app');
-        if (app) app.classList.add('visible');
       });
     })();
 
     // ===== ニュース（JSONから一覧＋詳細を同一ページで描画） =====
-    (async function(){
+    (async function () {
       const params = new URLSearchParams(location.search);
       const filterTag = params.get('tag') || '';
 
-      // フィルタボタン初期化
-      document.querySelectorAll('[data-tag]').forEach(btn=>{
+      // フィルタボタン
+      document.querySelectorAll('[data-tag]').forEach(btn => {
         const t = btn.dataset.tag || '';
         if (t === filterTag) btn.classList.add('btn-primary');
-        btn.addEventListener('click', ()=>{
+        btn.addEventListener('click', () => {
           const u = new URL(location.href);
-          if (t) u.searchParams.set('tag', t); else u.searchParams.delete('tag');
-          // スクロール位置を一覧へ
+          if (t) u.searchParams.set('tag', t);
+          else u.searchParams.delete('tag');
           u.hash = 'list';
           location.href = u.toString();
         });
@@ -187,75 +198,77 @@
 
       // データ取得
       let data = [];
-      try{
-        const res = await fetch('../data/news.json', {cache: 'no-store'});
+      try {
+        const res = await fetch('../data/news.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         data = await res.json();
-      }catch(e){
-        console.error(e);
+      } catch (e) {
+        console.error('news.json を読み込めませんでした', e);
+        data = [];
       }
 
-      // ソート（新しい順）
-      data.sort((a,b)=> a.date < b.date ? 1 : -1);
+      // 新しい順にソート
+      data.sort((a, b) => a.date < b.date ? 1 : -1);
 
-      // フィルタ
-      const items = filterTag ? data.filter(n=>n.tag === filterTag) : data;
+      // フィルタ適用
+      const items = filterTag ? data.filter(n => n.tag === filterTag) : data;
 
-      // 一覧カード
+      // DOM 取得
       const grid = document.getElementById('newsGrid');
-      grid.innerHTML = items.map(n=> cardHTML(n)).join('') || `<p>ニュースはまだありません。</p>`;
-
-      // 詳細（全件。更新順）
       const detail = document.getElementById('newsDetail');
-      detail.innerHTML = items.map((n,i)=> detailHTML(n, i)).join('');
+      if (!grid || !detail) return;
 
-      // カード→詳細のアンカー遷移
-      grid.addEventListener('click', (e)=>{
+      // 一覧カード描画
+      grid.innerHTML = items.length
+        ? items.map(n => cardHTML(n)).join('')
+        : `<p class="news-empty">ニュースはまだありません。</p>`;
+
+      // 詳細描画
+      detail.innerHTML = items.map((n, i) => detailHTML(n, i)).join('');
+
+      // カード → 詳細へスクロール
+      grid.addEventListener('click', (e) => {
         const a = e.target.closest('a[data-anchor]');
-        if(!a) return;
+        if (!a) return;
         e.preventDefault();
         const id = a.getAttribute('href');
         const target = document.querySelector(id);
-        if (target){
-          target.scrollIntoView({behavior:'smooth', block:'start'});
-          // 一瞬だけハイライト
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
           target.classList.add('in');
-          setTimeout(()=>target.classList.remove('in'), 1200);
+          setTimeout(() => target.classList.remove('in'), 1200);
         }
       });
 
-      // JSON-LD（シンプル）
-      try{
-        const ld = {
-          "@context":"https://schema.org",
-          "@type":"ItemList",
-          "itemListElement": items.map((n,i)=>({
-            "@type":"ListItem",
-            "position": i+1,
-            "url": location.origin + location.pathname + '#'+safeId(n),
-            "name": n.title
-          }))
-        };
-        const s = document.createElement('script');
-        s.type = 'application/ld+json';
-        s.textContent = JSON.stringify(ld);
-        document.head.appendChild(s);
-      }catch(_){}
-
       // --- helpers ---
-      function safeId(n){ return (n.id || (n.date+'-'+n.title)).replace(/[^\w\-]+/g,'-'); }
-      function fmtDate(s){
-        const d = new Date(s); const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+      function safeId(n) {
+        return (n.id || (n.date + '-' + n.title)).replace(/[^\w\-]+/g, '-');
+      }
+      function fmtDate(s) {
+        const d = new Date(s);
+        if (isNaN(d)) return s;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
         return `${y}.${m}.${dd}`;
       }
-      function esc(str=''){ return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+      function esc(str = '') {
+        return String(str).replace(/[&<>"']/g, s => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[s]));
+      }
 
-      function cardHTML(n){
-        const anchor = '#'+safeId(n);
-        const bg = n.thumb ? `style="background-image:url('${n.thumb}')"` : '';
+      function cardHTML(n) {
+        const anchor = '#' + safeId(n);
+        const bg = n.thumb ? ` style="background-image:url('${n.thumb}')"` : '';
         return `
           <article class="card">
             <a class="card-body" href="${anchor}" data-anchor>
-              <div class="card-thumb" aria-hidden="true" ${bg}></div>
+              <div class="card-thumb"${bg} aria-hidden="true"></div>
               <div class="card-meta">
                 <time datetime="${esc(n.date)}">${fmtDate(n.date)}</time>
                 <span class="tag">${esc(n.tag || 'News')}</span>
@@ -267,16 +280,17 @@
         `;
       }
 
-      function detailHTML(n, idx){
+      function detailHTML(n, idx) {
         const id = safeId(n);
         const hasThumb = !!n.thumb;
-        // contentは配列（段落）想定。無ければexcerptを本文として使用
-        const paras = Array.isArray(n.content) ? n.content : (n.excerpt ? [n.excerpt] : []);
-        const body = paras.map(p=> `<p>${esc(p)}</p>`).join('') || '<p></p>';
+        const paras = Array.isArray(n.content)
+          ? n.content
+          : (n.excerpt ? [n.excerpt] : []);
+        const body = paras.map(p => `<p>${esc(p)}</p>`).join('') || '<p></p>';
 
         return `
           <li class="time-item" id="${id}">
-            <span class="time-badge">#${String(idx+1).padStart(2,'0')}</span>
+            <span class="time-badge">#${String(idx + 1).padStart(2, '0')}</span>
             <div class="time-body">
               <div class="card" style="padding:18px">
                 <div class="card-meta" style="margin-bottom:6px">
@@ -284,9 +298,12 @@
                   <span class="tag">${esc(n.tag || 'News')}</span>
                 </div>
                 <h3 class="card-title" style="margin:4px 0 10px">${esc(n.title)}</h3>
-                ${hasThumb ? `<div class="card-thumb" aria-hidden="true" style="margin:0 0 12px; background-image:url('${n.thumb}')"></div>` : ''}
+                ${hasThumb ? `<div class="card-thumb" aria-hidden="true"
+                      style="margin:0 0 12px; background-image:url('${n.thumb}')"></div>` : ''}
                 ${body}
-                ${n.url ? `<div style="margin-top:10px"><a class="btn btn-ghost" href="${esc(n.url)}">関連リンク ↗</a></div>` : ''}
+                ${n.url ? `<div style="margin-top:10px">
+                    <a class="btn btn-ghost" href="${esc(n.url)}">関連リンク ↗</a>
+                  </div>` : ''}
               </div>
             </div>
           </li>
