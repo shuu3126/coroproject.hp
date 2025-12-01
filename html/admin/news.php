@@ -171,6 +171,13 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php if ($_GET['msg']==='deleted') echo '削除しました。'; ?>
     </p>
   <?php endif; ?>
+  
+  <div class="nav" style="margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1f2937;font-size:13px;">
+    <a href="index.php">🏠 トップ</a>
+    <a href="news.php">📰 News管理</a>
+    <a href="talents.php">👤 Talents管理</a>
+    <a href="../index.php" target="_blank">🌐 サイトTOP</a>
+  </div>
 
   <div class="layout">
     <!-- 一覧 -->
