@@ -82,7 +82,6 @@ unset($t);
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="stylesheet" href="../css/styles.css">
-  <link rel="stylesheet" href="../css/talents.css"><!-- 一覧用の追記CSS（なければ削ってOK） -->
 
   <link rel="icon" type="image/png" href="../images/logo.png">
   <link rel="apple-touch-icon" href="../images/logo.png">
