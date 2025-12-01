@@ -20,8 +20,8 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
-          protocol: ftps          # ★ ftp → ftps に変更
-          server-dir: /web/
+          protocol: ftp
+          server-dir: /        # ← /web/ じゃなくて ここを「/」にする
           local-dir: ./
           dangerous-clean-slate: false
           log-level: minimal
