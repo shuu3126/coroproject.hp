@@ -1,47 +1,60 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-
-// ===== News（TOP表示用：最新3件） =====
-$TOP_NEWS_LIMIT = 3;
-
-$sql = "
-    SELECT *
-    FROM news
-    WHERE is_published = 1
-    ORDER BY sort_order ASC, date DESC, id DESC
-    LIMIT :limit
-";
-$stmt = $pdo->prepare($sql);
-$stmt->bindValue(':limit', $TOP_NEWS_LIMIT, PDO::PARAM_INT);
-$stmt->execute();
-$topNews = $stmt->fetchAll();
-
-
-// ===== Talents（TOP表示用：最新3名） =====
-$sql = "
-    SELECT *
-    FROM talents
-    ORDER BY sort_order ASC, debut ASC, name ASC
-    LIMIT 3
-";
-$stmt = $pdo->query($sql);
-$topTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// TOP用に avatar のパスを補正（../ を外すなど）
-foreach ($topTalents as &$t) {
-    $avatar = $t['avatar'] ?? '';
-    if (strpos($avatar, '../') === 0) {
-        $avatar = substr($avatar, 3);
-    } elseif (strpos($avatar, './') === 0) {
-        $avatar = substr($avatar, 2);
-    }
-    $t['avatar_for_top'] = $avatar;
+/**
+ * HTMLエスケープ
+ */
+function esc($s) {
+    return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 }
-unset($t);
 
+$topNews    = [];
+$topTalents = [];
 
-// HTML 出力開始
+try {
+    // ===== News（TOP表示用：最新3件） =====
+    $TOP_NEWS_LIMIT = 3;
+
+    $sql = "
+        SELECT *
+        FROM news
+        WHERE is_published = 1
+        ORDER BY sort_order ASC, date DESC, id DESC
+        LIMIT :limit
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':limit', $TOP_NEWS_LIMIT, PDO::PARAM_INT);
+    $stmt->execute();
+    $topNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // ===== Talents（TOP表示用：最新3名） =====
+    $sql = "
+        SELECT *
+        FROM talents
+        ORDER BY sort_order ASC, debut ASC, name ASC
+        LIMIT 3
+    ";
+    $stmt = $pdo->query($sql);
+    $topTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // TOP用 avatar のパス補正（../ や ./ を削る）
+    foreach ($topTalents as &$t) {
+        $avatar = $t['avatar'] ?? '';
+        if (strpos($avatar, '../') === 0) {
+            $avatar = substr($avatar, 3);
+        } elseif (strpos($avatar, './') === 0) {
+            $avatar = substr($avatar, 2);
+        }
+        $t['avatar_for_top'] = $avatar;
+    }
+    unset($t);
+
+} catch (PDOException $e) {
+    // もしDBエラーでも、画面だけは表示できるようにする
+    $topNews    = [];
+    $topTalents = [];
+    // エラー内容はログにだけ出したい場合はここで error_log($e->getMessage());
+}
 ?>
 <!doctype html>
 <html lang="ja">
@@ -327,7 +340,6 @@ unset($t);
           <?php endforeach; ?>
 
           <?php if (count($topTalents) < 3): ?>
-            <!-- 足りない枠だけ COMING SOON を出す -->
             <?php for ($i = count($topTalents); $i < 3; $i++): ?>
               <div class="card" style="
                     opacity:0.25;
@@ -368,7 +380,7 @@ unset($t);
           </ul>
           <div class="cta-actions">
             <a class="btn btn-primary" href="html/audition.html">オーディションの詳細を見る</a>
-            <a class="btn btn-outline" href="html/contact.html">まずは相談してみる</a>
+            <a class="btn class="btn-outline" href="html/contact.html">まずは相談してみる</a>
           </div>
           <p class="cta-note">
             「自分に合っているのかわからない」「少しだけ話を聞きたい」などのご相談もお気軽にどうぞ。
@@ -513,17 +525,14 @@ unset($t);
     })();
   </script>
 
+  <!-- ★ ローダーを必ず消す安全版スクリプト -->
   <script>
-  (function() {
-
+  (function () {
     function hideLoader() {
       const loader = document.getElementById("coro-loader");
       if (!loader) return;
-
       loader.classList.add("coro-loader--hide");
       document.body.classList.remove("is-loading");
-
-      // 完全削除（オーバーレイ残り防止）
       setTimeout(() => {
         if (loader && loader.parentNode) {
           loader.parentNode.removeChild(loader);
@@ -531,14 +540,13 @@ unset($t);
       }, 800);
     }
 
-    // 正常時：ロード完了で消す
+    // 通常：load のあと少し待ってから消す
     window.addEventListener("load", function () {
       setTimeout(hideLoader, 800);
     });
 
-    // 保険：loadが来なくても 5秒後に強制で消す
+    // 保険：5秒経っても load が来なければ強制で消す
     setTimeout(hideLoader, 5000);
-
   })();
   </script>
 
@@ -553,45 +561,11 @@ unset($t);
   </script>
 
   <script>
-  // Talents スライダー
+  // Talents スライダー（今はHTML側に無いのでreturnで終了する）
   (function(){
     const slider = document.getElementById('talentSlider');
     if (!slider) return;
-
-    const slides = Array.from(slider.querySelectorAll('.talent-slide'));
-    const prevBtn = slider.querySelector('.talent-nav--prev');
-    const nextBtn = slider.querySelector('.talent-nav--next');
-    const dotsWrap = document.getElementById('talentDots');
-    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll('button')) : [];
-    let index = 0;
-
-    function show(i){
-      index = (i + slides.length) % slides.length;
-      slides.forEach((el, idx) => {
-        el.classList.toggle('is-active', idx === index);
-      });
-      dots.forEach((el, idx) => {
-        el.classList.toggle('is-active', idx === index);
-      });
-    }
-
-    prevBtn.addEventListener('click', () => show(index - 1));
-    nextBtn.addEventListener('click', () => show(index + 1));
-
-    dots.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const i = Number(btn.dataset.index || 0);
-        show(i);
-      });
-    });
-
-    let timer = setInterval(() => show(index + 1), 10000);
-    slider.addEventListener('mouseenter', () => clearInterval(timer));
-    slider.addEventListener('mouseleave', () => {
-      timer = setInterval(() => show(index + 1), 10000);
-    });
-
-    show(0);
+    // 以下は今は実行されない
   })();
   </script>
 
