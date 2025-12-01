@@ -292,81 +292,59 @@ function esc($s) {
       </div>
     </section>
 
-    <!-- ===== Talents（DBからスライダー表示） ===== -->
+    <!-- ===== Talents（TOP：最新3名） ===== -->
     <section id="talents" class="section section-talents reveal">
       <div class="container">
+
         <div class="section-head">
           <h2 class="section-title">Talents</h2>
           <a class="section-link" href="html/talents.php">一覧を見る</a>
         </div>
 
-        <?php if (empty($talents)): ?>
-          <p style="color:#9ca3c3; font-size:.9rem;">現在表示できるタレントがいません。詳細は <a href="html/talents.php">Talentsページ</a> をご確認ください。</p>
-        <?php else: ?>
-        <div class="talent-slider" id="talentSlider">
-          <button class="talent-nav talent-nav--prev" type="button" aria-label="前のタレント">
-            ‹
-          </button>
+        <div class="grid grid-3" style="gap:24px;">
 
-          <div class="talent-viewport">
-            <?php foreach ($talents as $idx => $t): ?>
-              <?php
-                $isActive = ($idx === 0);
-                $img = $t['avatar'] ? esc($t['avatar']) : 'images/1.png';
-                $platformNames = array_column($t['platforms'], 'name');
-                $platformLabel = $platformNames ? implode(' / ', $platformNames) : 'YouTube / Twitch / X';
-                // X（Twitter）リンクっぽいものを探す
-                $xUrl = '';
-                foreach ($t['platforms'] as $p) {
-                    $n = mb_strtolower($p['name']);
-                    if (mb_strpos($n, 'x') !== false || mb_strpos($n, 'twitter') !== false) {
-                        $xUrl = $p['url'];
-                        break;
-                    }
-                }
-                if (!$xUrl && !empty($t['platforms'][0]['url'])) {
-                    $xUrl = $t['platforms'][0]['url'];
-                }
-                $detailAnchor = 'html/talents.php#' . esc($t['id']);
-              ?>
-              <article class="talent-slide <?= $isActive ? 'is-active' : '' ?>" data-index="<?= $idx ?>">
-                <div class="talent-media">
-                  <div class="talent-media-inner">
-                    <img src="<?= $img ?>" alt="<?= esc($t['name']) ?>のキービジュアル" loading="lazy">
-                  </div>
-                </div>
-                <div class="talent-info">
-                  <p class="talent-label">Coro Project Talent</p>
-                  <h3 class="talent-name-main"><?= esc($t['name']) ?></h3>
-                  <p class="talent-desc">
-                    <?= nl2br(esc($t['bio'] ?: '')) ?>
-                  </p>
-                  <ul class="talent-meta">
-                    <li><span>主な活動</span><?= esc(implode(' / ', $t['tags_json'] ? json_decode($t['tags_json'], true) : [])) ?></li>
-                    <li><span>配信プラットフォーム</span><?= esc($platformLabel) ?></li>
-                  </ul>
-                  <div class="talent-links">
-                    <a href="<?= $detailAnchor ?>" class="btn btn-outline btn-sm">プロフィールを見る</a>
-                    <?php if ($xUrl): ?>
-                      <a href="<?= esc($xUrl) ?>" class="btn btn-primary btn-sm" target="_blank" rel="noopener">X（Twitter）</a>
-                    <?php endif; ?>
-                  </div>
-                </div>
-              </article>
-            <?php endforeach; ?>
-          </div>
+          <?php foreach ($topTalents as $t): ?>
+            <a class="card" href="html/talent.php?id=<?= esc($t['id']) ?>" style="text-decoration:none;">
+              <div class="card-thumb"
+                  style="
+                    width:100%;
+                    height:260px;
+                    background-image:url('<?= esc($t['avatar']) ?>');
+                    background-size:cover;
+                    background-position:center;
+                    border-radius:16px;
+                  ">
+              </div>
 
-          <button class="talent-nav talent-nav--next" type="button" aria-label="次のタレント">
-            ›
-          </button>
-        </div>
-
-        <div class="talent-dots" id="talentDots" aria-label="タレント切り替え">
-          <?php foreach ($talents as $idx => $t): ?>
-            <button type="button" data-index="<?= $idx ?>" <?= $idx === 0 ? 'class="is-active"' : '' ?>></button>
+              <div class="card-body" style="padding:12px 0;">
+                <h3 class="card-title" style="margin:6px 0 4px;">
+                  <?= esc($t['name']) ?>
+                </h3>
+                <p class="card-text" style="color:#b7b7c8; font-size:.9rem;">
+                  <?= esc($t['bio']) ?>
+                </p>
+              </div>
+            </a>
           <?php endforeach; ?>
+
+          <?php if (count($topTalents) < 3): ?>
+            <!-- 足りない枠を自動でダミー表示（スカスカ防止） -->
+            <?php for ($i = count($topTalents); $i < 3; $i++): ?>
+              <div class="card" style="
+                    opacity:0.2;
+                    background:#181828;
+                    border-radius:16px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    height:260px;">
+                <span style="font-size:.9rem;">COMING SOON</span>
+              </div>
+            <?php endfor; ?>
+          <?php endif; ?>
+
         </div>
-        <?php endif; ?>
+
       </div>
     </section>
 
