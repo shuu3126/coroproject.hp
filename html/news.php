@@ -76,7 +76,7 @@ function safeId($id) {
       <nav class="nav" id="siteNav" aria-label="メインナビゲーション">
         <a href="../index.php#about">About</a>
         <a href="./news.php">News</a>
-        <a href="./talents.html">Talents</a>
+        <a href="./talents.php">Talents</a>
         <a href="./audition.html">Audition</a>
         <a href="./contact.html">Contact</a>
       </nav>
@@ -218,7 +218,7 @@ function safeId($id) {
         <h4>Links</h4>
         <ul class="footer-links">
           <li><a href="./news.php">News</a></li>
-          <li><a href="./talents.html">Talents</a></li>
+          <li><a href="./talents.php">Talents</a></li>
           <li><a href="./audition.html">Audition</a></li>
           <li><a href="./privacy.html">Privacy Policy</a></li>
         </ul>

@@ -1,3 +1,48 @@
+<?php
+require_once __DIR__ . '/../db.php';
+
+/**
+ * talents + platforms + links を JSON に近い形でまとめる
+ */
+$talents = [];
+
+// メイン情報
+$stmt = $pdo->query("SELECT * FROM talents ORDER BY debut DESC, id ASC");
+foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $row['longBio'] = $row['long_bio_json'] ? json_decode($row['long_bio_json'], true) : [];
+    $row['tags']    = $row['tags_json'] ? json_decode($row['tags_json'], true) : [];
+    $row['platforms'] = [];
+    $row['links']     = [];
+    $talents[$row['id']] = $row;
+}
+
+// プラットフォーム
+$stmt = $pdo->query("SELECT * FROM talent_platforms ORDER BY id ASC");
+foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $p) {
+    if (!isset($talents[$p['talent_id']])) continue;
+    $talents[$p['talent_id']]['platforms'][] = [
+        'name' => $p['name'],
+        'url'  => $p['url'],
+    ];
+}
+
+// 任意リンク
+$stmt = $pdo->query("SELECT * FROM talent_links ORDER BY id ASC");
+foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $l) {
+    if (!isset($talents[$l['talent_id']])) continue;
+    $talents[$l['talent_id']]['links'][] = [
+        'label' => $l['label'],
+        'url'   => $l['url'],
+    ];
+}
+
+// JSで扱いやすいよう配列に並べ替え
+$talentListForJs = array_values($talents);
+
+function esc($s) {
+    return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+}
+?>
 <!doctype html>
 <html lang="ja">
 <head>
@@ -5,42 +50,37 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CORO PROJECT | Talents</title>
   <meta name="description" content="CORO PROJECT に所属するタレントの一覧とプロフィール。配信リンク、活動状況、タグ検索など。">
-  <link rel="canonical" href="https://coroproject.jp/html/talents.html">
+  <link rel="canonical" href="https://coroproject.jp/html/talents.php">
   <meta property="og:site_name" content="CORO PROJECT">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Talents | CORO PROJECT">
   <meta property="og:description" content="所属タレント一覧と詳細プロフィール。">
-  <meta property="og:url" content="https://coroproject.jp/html/talents.html">
+  <meta property="og:url" content="https://coroproject.jp/html/talents.php">
   <meta property="og:image" content="https://coroproject.jp/images/ogp.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="icon" type="image/png" href="../images/logo.png">
   <link rel="apple-touch-icon" href="../images/logo.png">
-  <!-- ✅ ファビコン -->
-  <link rel="icon" type="image/png" href="../images/logo.png">
-  <link rel="apple-touch-icon" href="images/logo.png">
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
   <div id="app" class="app">
-    <!-- Header（auditionと統一） -->
+    <!-- Header -->
     <header class="site-header">
       <div class="container header-inner">
-        <a class="brand" href="../index.html">
+        <a class="brand" href="../index.php">
           <img src="../images/toukalogo.png" alt="CORO PROJECT ロゴ" class="brand-logo">
           <span class="brand-text">CORO PROJECT</span>
         </a>
 
-        <!-- モバイル用トグル -->
         <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="メニューを開く">
           <span></span><span></span><span></span>
         </button>
 
         <nav class="nav" id="siteNav" aria-label="メインナビゲーション">
-          <a href="../index.html#about">About</a>
+          <a href="../index.php#about">About</a>
           <a href="./news.php">News</a>
-          <a href="./talents.html">Talents</a>
+          <a href="./talents.php" aria-current="page">Talents</a>
           <a href="./audition.html">Audition</a>
           <a href="./contact.html">Contact</a>
         </nav>
@@ -48,7 +88,7 @@
     </header>
 
     <main id="top">
-      <!-- Sub Hero（統一） -->
+      <!-- Sub Hero -->
       <section class="sub-hero">
         <div class="container sub-hero-inner">
           <div class="sub-hero-copy">
@@ -103,7 +143,7 @@
         </div>
       </section>
 
-      <!-- CTA（統一） -->
+      <!-- CTA -->
       <section class="section cta">
         <div class="container cta-inner">
           <div class="cta-copy">
@@ -118,7 +158,7 @@
       </section>
     </main>
 
-    <!-- Footer（統一） -->
+    <!-- Footer -->
     <footer class="site-footer">
       <div class="container footer-inner">
         <div class="footer-col">
@@ -135,7 +175,7 @@
           <h4>Links</h4>
           <ul class="footer-links">
             <li><a href="./news.php">News</a></li>
-            <li><a href="./talents.html" aria-current="page">Talents</a></li>
+            <li><a href="./talents.php" aria-current="page">Talents</a></li>
             <li><a href="./audition.html">Audition</a></li>
             <li><a href="./privacy.html">Privacy Policy</a></li>
           </ul>
@@ -155,10 +195,15 @@
     </footer>
   </div>
 
+  <!-- DBから持ってきたタレントデータを JS に渡す -->
+  <script>
+    window.__TALENTS__ = <?= json_encode($talentListForJs, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); ?>;
+  </script>
+
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // モバイルナビ（auditionと同じ）
+    // モバイルナビ
     (function(){
       const btn = document.getElementById('navToggle');
       const nav = document.getElementById('siteNav');
@@ -174,14 +219,14 @@
           document.body.classList.remove('nav-open');
         }
       });
-      window.addEventListener('DOMContentLoaded', ()=>{
-        const app = document.getElementById('app');
-        if (app) app.classList.add('visible');
-      });
+      const app = document.getElementById('app');
+      if (app) app.classList.add('visible');
     })();
+  </script>
 
-    // ===== Talents（JSONから一覧＋詳細） =====
-    (async function(){
+  <!-- Talents（JSON → DB 版。fetch をやめて window.__TALENTS__ を使う） -->
+  <script>
+    (function(){
       const params = new URLSearchParams(location.search);
       const filterStatus = params.get('status') || '';
       const kwInput = document.getElementById('kw');
@@ -199,14 +244,8 @@
         });
       });
 
-      // データ取得
-      let data = [];
-      try{
-        const res = await fetch('../data/talents.json', {cache: 'no-store'});
-        data = await res.json();
-      }catch(e){
-        console.error(e);
-      }
+      // データ取得（DBから埋め込んだ JS 変数）
+      let data = window.__TALENTS__ || [];
 
       // 初期描画
       stateRender();
@@ -249,7 +288,10 @@
 
       function renderGrid(items){
         const grid = document.getElementById('talentGrid');
-        if (!items.length){ grid.innerHTML = `<p>該当するタレントがいません。</p>`; return; }
+        if (!items.length){
+          grid.innerHTML = `<p>該当するタレントがいません。</p>`;
+          return;
+        }
         grid.innerHTML = items.map(cardHTML).join('');
         grid.addEventListener('click', (e)=>{
           const a = e.target.closest('a[data-anchor]');
@@ -258,7 +300,8 @@
           const target = document.querySelector(a.getAttribute('href'));
           if (target){
             target.scrollIntoView({behavior:'smooth', block:'start'});
-            target.classList.add('in'); setTimeout(()=>target.classList.remove('in'), 1200);
+            target.classList.add('in');
+            setTimeout(()=>target.classList.remove('in'), 1200);
           }
         }, {once:true});
       }
@@ -270,47 +313,58 @@
 
       // --- helpers ---
       function safeId(t){ return (t.id || (t.name+t.debut)).replace(/[^\w\-]+/g,'-'); }
-      function esc(s=''){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[m])); }
-      function fmtDate(s){ if(!s) return ''; const d=new Date(s); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+      function escHtml(s=''){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[m])); }
+      function fmtDate(s){
+        if(!s) return '';
+        const d = new Date(s);
+        if (isNaN(d)) return escHtml(s);
+        return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+      }
       function badge(status){
         const map = {active:'活動中',hiatus:'一時休止',graduated:'卒業'};
         return `<span class="tag">${map[status]||'-'}</span>`;
       }
       function cardHTML(t){
         const id = '#'+safeId(t);
-        const avatar = t.avatar ? `style="background-image:url('${t.avatar}')" ` : '';
-        const plats = (t.platforms||[]).slice(0,3).map(p=>`<span class="tag">${esc(p.name)}</span>`).join(' ');
+        const avatar = t.avatar ? `style="background-image:url('${escHtml(t.avatar)}')"` : '';
+        const plats = (t.platforms||[]).slice(0,3).map(p=>`<span class="tag">${escHtml(p.name)}</span>`).join(' ');
         return `
           <article class="card">
             <a class="card-body" href="${id}" data-anchor>
               <div class="card-thumb" aria-hidden="true" ${avatar}></div>
               <div class="card-meta">
-                ${badge(t.status)} <time datetime="${esc(t.debut||'')}">${fmtDate(t.debut)}</time>
+                ${badge(t.status)} <time datetime="${escHtml(t.debut||'')}">${fmtDate(t.debut)}</time>
               </div>
-              <h3 class="card-title">${esc(t.name)}</h3>
-              <p class="card-text">${esc(t.bio||'')}</p>
+              <h3 class="card-title">${escHtml(t.name)}</h3>
+              <p class="card-text">${escHtml(t.bio||'')}</p>
               <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap">${plats}</div>
             </a>
           </article>
         `;
       }
-      function linkBtn(href, label){ return href ? `<a class="btn btn-ghost" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)} ↗</a>` : ''; }
+      function linkBtn(href, label){
+        return href ? `<a class="btn btn-ghost" href="${escHtml(href)}" target="_blank" rel="noopener">${escHtml(label)} ↗</a>` : '';
+      }
       function detailHTML(t){
         const id = safeId(t);
-        const avatar = t.avatar ? `<div class="card-thumb" aria-hidden="true" style="margin:0 0 12px; background-image:url('${t.avatar}')"></div>` : '';
+        const avatar = t.avatar
+          ? `<div class="card-thumb" aria-hidden="true" style="margin:0 0 12px; background-image:url('${escHtml(t.avatar)}')"></div>`
+          : '';
         const plats = (t.platforms||[]).map(p=>linkBtn(p.url, p.name)).join(' ');
-        const tags  = (t.tags||[]).map(tag=>`<span class="tag">${esc(tag)}</span>`).join(' ');
+        const tags  = (t.tags||[]).map(tag=>`<span class="tag">${escHtml(tag)}</span>`).join(' ');
         const more  = (t.links||[]).map(l=>linkBtn(l.url, l.label)).join(' ');
-        const bio   = Array.isArray(t.longBio) ? t.longBio.map(p=>`<p>${esc(p)}</p>`).join('') : `<p>${esc(t.bio||'')}</p>`;
+        const bio   = Array.isArray(t.longBio) && t.longBio.length
+          ? t.longBio.map(p=>`<p>${escHtml(p)}</p>`).join('')
+          : `<p>${escHtml(t.bio||'')}</p>`;
         return `
           <li class="time-item" id="${id}">
-            <span class="time-badge">${esc(t.group || 'Member')}</span>
+            <span class="time-badge">${escHtml(t.group || 'Member')}</span>
             <div class="time-body">
               <div class="card" style="padding:18px">
                 <div class="card-meta" style="margin-bottom:6px">
                   ${badge(t.status)} ${t.debut?`<span class="tag">Debut: ${fmtDate(t.debut)}</span>`:''}
                 </div>
-                <h3 class="card-title" style="margin:4px 0 10px">${esc(t.name)} <small style="color:#606778">${esc(t.kana||'')}</small></h3>
+                <h3 class="card-title" style="margin:4px 0 10px">${escHtml(t.name)} <small style="color:#606778">${escHtml(t.kana||'')}</small></h3>
                 ${avatar}
                 ${bio}
                 <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">${plats} ${more}</div>

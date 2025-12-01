@@ -127,7 +127,7 @@ function esc($s) {
 
           <div class="hero-actions">
             <a class="btn btn-primary" href="html/audition.html">オーディション</a>
-            <a class="btn btn-outline" href="html/talents.html">タレントを見る</a>
+            <a class="btn btn-outline" href="html/talents.php">タレントを見る</a>
           </div>
         </div>
 
@@ -274,7 +274,7 @@ function esc($s) {
       <div class="container">
         <div class="section-head">
           <h2 class="section-title">Talents</h2>
-          <a class="section-link" href="html/talents.html">一覧を見る</a>
+          <a class="section-link" href="html/talents.php">一覧を見る</a>
         </div>
 
         <div class="talent-slider" id="talentSlider">
@@ -411,7 +411,7 @@ function esc($s) {
         <h4>Links</h4>
         <ul>
           <li><a href="html/news.php">News</a></li>
-          <li><a href="html/talents.html">Talents</a></li>
+          <li><a href="html/talents.php">Talents</a></li>
           <li><a href="html/audition.html">Audition</a></li>
           <li><a href="html/privacy.html">Privacy Policy</a></li>
         </ul>
