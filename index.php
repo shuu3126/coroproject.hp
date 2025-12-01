@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-// トップに出すニュース件数
+
+// ===== News（TOP表示用：最新3件） =====
 $TOP_NEWS_LIMIT = 3;
 
-// ニュース取得
 $sql = "
     SELECT *
     FROM news
@@ -17,32 +17,31 @@ $stmt->bindValue(':limit', $TOP_NEWS_LIMIT, PDO::PARAM_INT);
 $stmt->execute();
 $topNews = $stmt->fetchAll();
 
-// タレント取得（卒業以外をスライダー用に）
-$TALENT_LIMIT = 10;
-$sqlTal = "
+
+// ===== Talents（TOP表示用：最新3名） =====
+$sql = "
     SELECT *
     FROM talents
-    WHERE status IS NULL OR status <> 'graduated'
-    ORDER BY debut ASC, name ASC
-    LIMIT :limit
+    ORDER BY sort_order ASC, debut ASC, name ASC
+    LIMIT 3
 ";
-$stmtTal = $pdo->prepare($sqlTal);
-$stmtTal->bindValue(':limit', $TALENT_LIMIT, PDO::PARAM_INT);
-$stmtTal->execute();
-$talents = $stmtTal->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $pdo->query($sql);
+$topTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 各タレントのプラットフォーム（Xリンクなど）
-$platformStmt = $pdo->prepare("SELECT name, url FROM talent_platforms WHERE talent_id = :tid ORDER BY id ASC");
-foreach ($talents as &$t) {
-    $platformStmt->execute([':tid' => $t['id']]);
-    $t['platforms'] = $platformStmt->fetchAll(PDO::FETCH_ASSOC);
-    // tags / long_bio はここでは使わないので展開しない
+// TOP用に avatar のパスを補正（../ を外すなど）
+foreach ($topTalents as &$t) {
+    $avatar = $t['avatar'] ?? '';
+    if (strpos($avatar, '../') === 0) {
+        $avatar = substr($avatar, 3);
+    } elseif (strpos($avatar, './') === 0) {
+        $avatar = substr($avatar, 2);
+    }
+    $t['avatar_for_top'] = $avatar;
 }
 unset($t);
 
-function esc($s) {
-    return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-}
+
+// HTML 出力開始
 ?>
 <!doctype html>
 <html lang="ja">
@@ -309,7 +308,7 @@ function esc($s) {
                   style="
                     width:100%;
                     height:260px;
-                    background-image:url('<?= esc($t['avatar']) ?>');
+                    background-image:url('<?= esc($t['avatar_for_top']) ?>');
                     background-size:cover;
                     background-position:center;
                     border-radius:16px;
@@ -328,17 +327,21 @@ function esc($s) {
           <?php endforeach; ?>
 
           <?php if (count($topTalents) < 3): ?>
-            <!-- 足りない枠を自動でダミー表示（スカスカ防止） -->
+            <!-- 足りない枠だけ COMING SOON を出す -->
             <?php for ($i = count($topTalents); $i < 3; $i++): ?>
               <div class="card" style="
-                    opacity:0.2;
-                    background:#181828;
-                    border-radius:16px;
+                    opacity:0.25;
+                    background:radial-gradient(circle at top, #273059 0, #181828 55%, #12091d 100%);
+                    border-radius:24px;
                     display:flex;
                     align-items:center;
                     justify-content:center;
-                    height:260px;">
-                <span style="font-size:.9rem;">COMING SOON</span>
+                    height:260px;
+                    font-size:.9rem;
+                    letter-spacing:.14em;
+                    text-transform:uppercase;
+                    color:#c3c6ff;">
+                COMING SOON
               </div>
             <?php endfor; ?>
           <?php endif; ?>
