@@ -1,5 +1,7 @@
 <?php
-// ルート直下の db.php を読む（重要！）
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/../db.php';
 
 function esc($s) {
