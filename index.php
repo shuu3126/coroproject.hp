@@ -316,7 +316,7 @@ try {
         <div class="grid grid-3" style="gap:24px;">
 
           <?php foreach ($topTalents as $t): ?>
-            <a class="card" href="html/talent.php?id=<?= esc($t['id']) ?>" style="text-decoration:none;">
+            <a class="card" href="html/talents.php?id=<?= esc($t['id']) ?>" style="text-decoration:none;">
               <div class="card-thumb"
                   style="
                     width:100%;
