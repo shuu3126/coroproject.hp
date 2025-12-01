@@ -17,6 +17,29 @@ $stmt->bindValue(':limit', $TOP_NEWS_LIMIT, PDO::PARAM_INT);
 $stmt->execute();
 $topNews = $stmt->fetchAll();
 
+// タレント取得（卒業以外をスライダー用に）
+$TALENT_LIMIT = 10;
+$sqlTal = "
+    SELECT *
+    FROM talents
+    WHERE status IS NULL OR status <> 'graduated'
+    ORDER BY debut ASC, name ASC
+    LIMIT :limit
+";
+$stmtTal = $pdo->prepare($sqlTal);
+$stmtTal->bindValue(':limit', $TALENT_LIMIT, PDO::PARAM_INT);
+$stmtTal->execute();
+$talents = $stmtTal->fetchAll(PDO::FETCH_ASSOC);
+
+// 各タレントのプラットフォーム（Xリンクなど）
+$platformStmt = $pdo->prepare("SELECT name, url FROM talent_platforms WHERE talent_id = :tid ORDER BY id ASC");
+foreach ($talents as &$t) {
+    $platformStmt->execute([':tid' => $t['id']]);
+    $t['platforms'] = $platformStmt->fetchAll(PDO::FETCH_ASSOC);
+    // tags / long_bio はここでは使わないので展開しない
+}
+unset($t);
+
 function esc($s) {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
@@ -269,7 +292,7 @@ function esc($s) {
       </div>
     </section>
 
-    <!-- ===== Talents ===== -->
+    <!-- ===== Talents（DBからスライダー表示） ===== -->
     <section id="talents" class="section section-talents reveal">
       <div class="container">
         <div class="section-head">
@@ -277,61 +300,60 @@ function esc($s) {
           <a class="section-link" href="html/talents.php">一覧を見る</a>
         </div>
 
+        <?php if (empty($talents)): ?>
+          <p style="color:#9ca3c3; font-size:.9rem;">現在表示できるタレントがいません。詳細は <a href="html/talents.php">Talentsページ</a> をご確認ください。</p>
+        <?php else: ?>
         <div class="talent-slider" id="talentSlider">
           <button class="talent-nav talent-nav--prev" type="button" aria-label="前のタレント">
             ‹
           </button>
 
           <div class="talent-viewport">
-            <!-- slide 1: 青海しび -->
-            <article class="talent-slide is-active" data-index="0">
-              <div class="talent-media">
-                <div class="talent-media-inner">
-                  <img src="images/1.png" alt="青海しびのキービジュアル" loading="lazy">
+            <?php foreach ($talents as $idx => $t): ?>
+              <?php
+                $isActive = ($idx === 0);
+                $img = $t['avatar'] ? esc($t['avatar']) : 'images/1.png';
+                $platformNames = array_column($t['platforms'], 'name');
+                $platformLabel = $platformNames ? implode(' / ', $platformNames) : 'YouTube / Twitch / X';
+                // X（Twitter）リンクっぽいものを探す
+                $xUrl = '';
+                foreach ($t['platforms'] as $p) {
+                    $n = mb_strtolower($p['name']);
+                    if (mb_strpos($n, 'x') !== false || mb_strpos($n, 'twitter') !== false) {
+                        $xUrl = $p['url'];
+                        break;
+                    }
+                }
+                if (!$xUrl && !empty($t['platforms'][0]['url'])) {
+                    $xUrl = $t['platforms'][0]['url'];
+                }
+                $detailAnchor = 'html/talents.php#' . esc($t['id']);
+              ?>
+              <article class="talent-slide <?= $isActive ? 'is-active' : '' ?>" data-index="<?= $idx ?>">
+                <div class="talent-media">
+                  <div class="talent-media-inner">
+                    <img src="<?= $img ?>" alt="<?= esc($t['name']) ?>のキービジュアル" loading="lazy">
+                  </div>
                 </div>
-              </div>
-              <div class="talent-info">
-                <p class="talent-label">Coro Project Talent</p>
-                <h3 class="talent-name-main">青海しび</h3>
-                <p class="talent-desc">
-                  ゲーム配信とゆる雑談を中心に活動中。<br>
-                  深夜帯の落ち着いたトーンと、たまに出るオタクな早口でコアなファンを惹きつけるストリーマー。
-                </p>
-                <ul class="talent-meta">
-                  <li><span>主な活動</span>ゲーム配信 / 雑談 / コラボ企画</li>
-                  <li><span>配信プラットフォーム</span>Twitch / YouTube / X</li>
-                </ul>
-                <div class="talent-links">
-                  <a href="#" class="btn btn-outline btn-sm">プロフィールを見る</a>
-                  <a href="#" class="btn btn-primary btn-sm">X（Twitter）</a>
+                <div class="talent-info">
+                  <p class="talent-label">Coro Project Talent</p>
+                  <h3 class="talent-name-main"><?= esc($t['name']) ?></h3>
+                  <p class="talent-desc">
+                    <?= nl2br(esc($t['bio'] ?: '')) ?>
+                  </p>
+                  <ul class="talent-meta">
+                    <li><span>主な活動</span><?= esc(implode(' / ', $t['tags_json'] ? json_decode($t['tags_json'], true) : [])) ?></li>
+                    <li><span>配信プラットフォーム</span><?= esc($platformLabel) ?></li>
+                  </ul>
+                  <div class="talent-links">
+                    <a href="<?= $detailAnchor ?>" class="btn btn-outline btn-sm">プロフィールを見る</a>
+                    <?php if ($xUrl): ?>
+                      <a href="<?= esc($xUrl) ?>" class="btn btn-primary btn-sm" target="_blank" rel="noopener">X（Twitter）</a>
+                    <?php endif; ?>
+                  </div>
                 </div>
-              </div>
-            </article>
-
-            <!-- slide 2: 來凛みゅぜ -->
-            <article class="talent-slide" data-index="1">
-              <div class="talent-media">
-                <div class="talent-media-inner">
-                  <img src="images/2.png" alt="來凛みゅぜのキービジュアル" loading="lazy">
-                </div>
-              </div>
-              <div class="talent-info">
-                <p class="talent-label">Coro Project Talent</p>
-                <h3 class="talent-name-main">來凛みゅぜ</h3>
-                <p class="talent-desc">
-                  歌と企画配信を得意とするマルチタレント。<br>
-                  参加型イベントとリスナー巻き込み企画で「一緒に作る楽しさ」を届けている。
-                </p>
-                <ul class="talent-meta">
-                  <li><span>主な活動</span>ゲーム配信 / 企画 / イベント配信</li>
-                  <li><span>配信プラットフォーム</span>YouTube / Twitch / X</li>
-                </ul>
-                <div class="talent-links">
-                  <a href="#" class="btn btn-outline btn-sm">プロフィールを見る</a>
-                  <a href="#" class="btn btn-primary btn-sm">X（Twitter）</a>
-                </div>
-              </div>
-            </article>
+              </article>
+            <?php endforeach; ?>
           </div>
 
           <button class="talent-nav talent-nav--next" type="button" aria-label="次のタレント">
@@ -340,9 +362,11 @@ function esc($s) {
         </div>
 
         <div class="talent-dots" id="talentDots" aria-label="タレント切り替え">
-          <button type="button" class="is-active" data-index="0"></button>
-          <button type="button" data-index="1"></button>
+          <?php foreach ($talents as $idx => $t): ?>
+            <button type="button" data-index="<?= $idx ?>" <?= $idx === 0 ? 'class="is-active"' : '' ?>></button>
+          <?php endforeach; ?>
         </div>
+        <?php endif; ?>
       </div>
     </section>
 
