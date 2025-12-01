@@ -1,50 +1,19 @@
 <?php
-require_once __DIR__ . '/db.php';
+// ルート直下の db.php を読む（重要！）
+require_once __DIR__ . '/../db.php';
 
-/**
- * HTMLエスケープ
- */
 function esc($s) {
-    return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-/**
- * 万が一 talents.php?id=xxx で開かれたら、
- * 正しい詳細ページ talent.php?id=xxx へリダイレクトさせる
- */
-if (isset($_GET['id']) && $_GET['id'] !== '') {
-    header('Location: talent.php?id=' . urlencode($_GET['id']));
-    exit;
-}
-
-$talents = [];
-
-try {
-    // 一覧用：全部取得（公開中だけに絞りたいときは WHERE を足す）
-    $sql = "
-        SELECT *
-        FROM talents
-        ORDER BY sort_order ASC, debut ASC, name ASC
-    ";
-    $stmt = $pdo->query($sql);
-    $talents = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // 画像パス補正（../ や ./ を外す）
-    foreach ($talents as &$t) {
-        $avatar = $t['avatar'] ?? '';
-        if (strpos($avatar, '../') === 0) {
-            $avatar = substr($avatar, 3);
-        } elseif (strpos($avatar, './') === 0) {
-            $avatar = substr($avatar, 2);
-        }
-        $t['avatar_for_list'] = $avatar;
-    }
-    unset($t);
-
-} catch (PDOException $e) {
-    $talents = [];
-    // error_log($e->getMessage());
-}
+// タレント一覧を取得
+$sql = "
+    SELECT *
+    FROM talents
+    ORDER BY sort_order ASC, debut ASC, name ASC
+";
+$stmt = $pdo->query($sql);
+$talents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
 <html lang="ja">
@@ -61,7 +30,6 @@ try {
   <meta property="og:url" content="https://coroproject.jp/html/talents.php">
   <meta property="og:image" content="https://coroproject.jp/images/ogp.png">
   <meta name="twitter:card" content="summary_large_image">
-
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="icon" type="image/png" href="../images/logo.png">
   <link rel="apple-touch-icon" href="../images/logo.png">
@@ -97,7 +65,7 @@ try {
           <div class="sub-hero-copy">
             <p class="eyebrow">Talents</p>
             <h1>所属タレント一覧</h1>
-            <p class="lead">プロフィール・配信リンク・活動状況をまとめて掲載しています。</p>
+            <p class="lead">所属タレントのプロフィールや配信リンクをまとめています。カードをクリックすると詳細ページへ移動します。</p>
           </div>
           <div class="sub-hero-art" aria-hidden="true">
             <div class="audition-visual"></div>
@@ -105,30 +73,36 @@ try {
         </div>
       </section>
 
-      <!-- タレント一覧 -->
-      <section class="section" id="list">
+      <!-- 一覧 -->
+      <section class="section">
         <div class="container">
           <div class="section-head">
             <h2 class="section-title">Talents</h2>
           </div>
 
-          <div class="grid grid-3" aria-live="polite">
+          <div class="grid grid-3" style="gap:24px;">
             <?php if (empty($talents)): ?>
-              <p style="color:#b7b7c8; font-size:.9rem;">
-                現在、公開中の所属タレント情報はありません。
-              </p>
+              <p>現在、表示できるタレント情報がありません。</p>
             <?php else: ?>
               <?php foreach ($talents as $t): ?>
+                <?php
+                  $avatar = $t['avatar'] ?? '';
+                  if (strpos($avatar, '../') === 0) {
+                      $avatar = substr($avatar, 3);
+                  } elseif (strpos($avatar, './') === 0) {
+                      $avatar = substr($avatar, 2);
+                  }
+                ?>
                 <a class="card" href="talent.php?id=<?= esc($t['id']) ?>" style="text-decoration:none;">
                   <div class="card-thumb"
-                      style="
-                        width:100%;
-                        height:260px;
-                        background-image:url('<?= esc($t['avatar_for_list']) ?>');
-                        background-size:cover;
-                        background-position:center;
-                        border-radius:16px;
-                      ">
+                       style="
+                         width:100%;
+                         height:260px;
+                         background-image:url('<?= esc($avatar) ?>');
+                         background-size:cover;
+                         background-position:center;
+                         border-radius:16px;
+                       ">
                   </div>
                   <div class="card-body" style="padding:12px 0;">
                     <h3 class="card-title" style="margin:6px 0 4px;">
@@ -145,7 +119,7 @@ try {
         </div>
       </section>
 
-      <!-- CTA -->
+      <!-- CTA（共通） -->
       <section class="section cta">
         <div class="container cta-inner">
           <div class="cta-copy">
@@ -169,12 +143,15 @@ try {
             <span class="brand-text">CORO PROJECT</span>
           </div>
           <p class="footer-desc">CORO PROJECTはVTuberのプロデュース・配信支援・クリエイティブ制作を行うプロダクションです。</p>
+          <div class="footer-actions">
+            <a class="btn btn-primary" href="./contact.html">問い合わせ</a>
+          </div>
         </div>
         <div class="footer-col">
           <h4>Links</h4>
           <ul class="footer-links">
             <li><a href="./news.php">News</a></li>
-            <li><a href="./talents.php" aria-current="page">Talents</a></li>
+            <li><a href="./talents.php">Talents</a></li>
             <li><a href="./audition.html">Audition</a></li>
             <li><a href="./privacy.html">Privacy Policy</a></li>
           </ul>
@@ -182,7 +159,9 @@ try {
         <div class="footer-col">
           <h4>Social</h4>
           <ul class="footer-links">
-            <li><a href="https://x.com/CoroProject0111" target="_blank" rel="noopener">X</a></li>
+            <li><a href="#" target="_blank">YouTube</a></li>
+            <li><a href="#" target="_blank">X</a></li>
+            <li><a href="mailto:info@coroproject.jp">Mail</a></li>
           </ul>
         </div>
       </div>
@@ -194,7 +173,6 @@ try {
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-
     (function(){
       const btn = document.getElementById('navToggle');
       const nav = document.getElementById('siteNav');
