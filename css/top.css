@@ -919,6 +919,9 @@ body.home .site-header{
   inset: 0;
   background: linear-gradient(to top, rgba(4, 0, 24, 0.9), transparent 55%);
   pointer-events: none;
+  opacity: 0;
+  z-index: 1;                    /* ← ふだんは見えない */
+  transition: opacity 0.35s ease;
 }
 
 #talents .talent-top-info {
@@ -927,6 +930,11 @@ body.home .site-header{
   right: 18px;
   bottom: 18px;
   z-index: 2;
+  opacity: 0;                    /* ← ふだんは非表示 */
+  transform: translateY(10px);   /* ← 少し下にずらしておく */
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
 }
 
 #talents .talent-top-label {
@@ -962,7 +970,24 @@ body.home .site-header{
   text-transform: uppercase;
   opacity: 0.6;
 }
+/* ホバーでグラデ＋テキストがふわっと出る */
+#talents .talent-top-card:hover::after {
+  opacity: 1;
+}
+#talents .talent-top-card:hover .talent-top-info {
+  opacity: 1;
+  transform: translateY(0);
+}
 
+/* COMING SOON カードは常にテキスト出しておく */
+#talents .talent-top-card--empty::after {
+  opacity: 1;
+}
+#talents .talent-top-card--empty .talent-top-info {
+  opacity: 1;
+  transform: translateY(0);
+  text-align: center;
+}
 /* ============================
    CTA / Audition
    ============================ */
