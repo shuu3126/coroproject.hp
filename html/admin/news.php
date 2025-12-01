@@ -120,7 +120,7 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
     a{color:#60a5fa;text-decoration:none;}
     a:hover{text-decoration:underline;}
     h1{font-size:20px;margin-bottom:12px;}
-    .layout{display:flex;gap:24px;align-items:flex-start;}
+    .layout{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;}
     .panel{background:#020617;border-radius:12px;padding:16px;border:1px solid #1f2937;box-shadow:0 8px 20px rgba(0,0,0,.5);}
     .panel h2{margin-top:0;font-size:16px;margin-bottom:8px;}
     table{width:100%;border-collapse:collapse;font-size:12px;}
@@ -137,9 +137,29 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     textarea{min-height:120px;resize:vertical;}
     label{display:block;font-size:12px;margin-top:6px;margin-bottom:2px;color:#9ca3af;}
-    .row{display:flex;gap:8px;}
+    .row{display:flex;gap:8px;flex-wrap:wrap;}
     .row>div{flex:1;}
     .msg{margin-bottom:8px;font-size:12px;color:#a5b4fc;}
+
+    /* プレビュー用 */
+    .preview-wrap{margin-top:16px;border-top:1px dashed #1f2937;padding-top:12px;}
+    .preview-title{font-size:13px;color:#9ca3af;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+    .preview-title span{font-size:10px;padding:2px 6px;border-radius:999px;background:#1f2937;}
+    .preview-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.2fr);gap:12px;}
+    .preview-card,.preview-detail{background:#020617;border-radius:10px;border:1px solid #1f2937;padding:10px;}
+    .preview-card-thumb{width:100%;padding-top:56%;border-radius:8px;background:#0b1120 center/cover no-repeat;margin-bottom:6px;position:relative;overflow:hidden;}
+    .preview-card-thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(15,23,42,.7));opacity:.4;}
+    .preview-card-meta{display:flex;justify-content:space-between;font-size:11px;color:#9ca3af;margin-bottom:4px;}
+    .preview-card-title{font-size:14px;font-weight:600;margin:0 0 4px;}
+    .preview-card-text{font-size:12px;color:#cbd5f5;margin:0;}
+    .preview-detail h3{font-size:14px;margin:0 0 4px;}
+    .preview-detail-meta{font-size:11px;color:#9ca3af;margin-bottom:6px;}
+    .preview-detail-body p{font-size:12px;margin:0 0 4px;}
+    .preview-link{font-size:11px;margin-top:4px;}
+    @media (max-width:1024px){
+      .layout{flex-direction:column;}
+      .preview-grid{grid-template-columns:1fr;}
+    }
   </style>
 </head>
 <body>
@@ -153,7 +173,7 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   <div class="layout">
     <!-- 一覧 -->
-    <div class="panel" style="flex:1.4;max-height:80vh;overflow:auto;">
+    <div class="panel" style="flex:1.4;max-height:80vh;overflow:auto;min-width:320px;">
       <h2>一覧</h2>
       <table>
         <thead>
@@ -184,10 +204,10 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </table>
     </div>
 
-    <!-- 編集フォーム -->
-    <div class="panel" style="flex:1;">
+    <!-- 編集フォーム + プレビュー -->
+    <div class="panel" style="flex:1;min-width:320px;">
       <h2><?= $editNews ? 'ニュース編集' : '新規追加' ?></h2>
-      <form method="post" action="news.php">
+      <form method="post" action="news.php" id="newsForm">
         <input type="hidden" name="mode" value="<?= $editNews ? 'update' : 'create' ?>">
 
         <label>ニュースID（URLなどに使うID。空なら自動生成）</label>
@@ -232,11 +252,41 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
           公開する
         </label>
 
-        <div style="margin-top:12px; display:flex; gap:8px;">
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
           <button type="submit" class="btn btn-primary">保存する</button>
           <a href="news.php" class="btn btn-secondary">新規作成に戻る</a>
         </div>
       </form>
+
+      <!-- ▼ ライブプレビュー -->
+      <div class="preview-wrap">
+        <div class="preview-title">
+          プレビュー
+          <span>Newsページのイメージ表示（保存前に確認用）</span>
+        </div>
+        <div class="preview-grid">
+          <!-- カード側（一覧） -->
+          <div class="preview-card">
+            <div class="preview-card-thumb" id="pv-thumb"></div>
+            <div class="preview-card-meta">
+              <span id="pv-date"></span>
+              <span id="pv-tag" class="tag"></span>
+            </div>
+            <h3 class="preview-card-title" id="pv-title"></h3>
+            <p class="preview-card-text" id="pv-excerpt"></p>
+          </div>
+          <!-- 詳細側 -->
+          <div class="preview-detail">
+            <div class="preview-detail-meta">
+              <span id="pv-date-detail"></span>
+              <span id="pv-tag-detail" class="tag"></span>
+            </div>
+            <h3 id="pv-title-detail"></h3>
+            <div class="preview-detail-body" id="pv-body"></div>
+            <div class="preview-link" id="pv-link"></div>
+          </div>
+        </div>
+      </div>
 
       <p style="font-size:11px;color:#6b7280;margin-top:12px;">
         ※「本文」は1行＝1段落として、サイト側では自動で&lt;p&gt;に分割して表示されます。<br>
@@ -244,5 +294,107 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </p>
     </div>
   </div>
+
+  <script>
+    // ライブプレビュー
+    (function(){
+      const form = document.getElementById('newsForm');
+      if (!form) return;
+
+      const $ = name => form.querySelector('[name="'+name+'"]');
+
+      const elTitle   = $('title');
+      const elDate    = $('date');
+      const elTag     = $('tag');
+      const elThumb   = $('thumb');
+      const elExcerpt = $('excerpt');
+      const elContent = $('content');
+      const elUrl     = $('url');
+
+      const pvThumb   = document.getElementById('pv-thumb');
+      const pvDate    = document.getElementById('pv-date');
+      const pvTag     = document.getElementById('pv-tag');
+      const pvTitle   = document.getElementById('pv-title');
+      const pvExcerpt = document.getElementById('pv-excerpt');
+
+      const pvDateD   = document.getElementById('pv-date-detail');
+      const pvTagD    = document.getElementById('pv-tag-detail');
+      const pvTitleD  = document.getElementById('pv-title-detail');
+      const pvBody    = document.getElementById('pv-body');
+      const pvLink    = document.getElementById('pv-link');
+
+      function escHtml(str){
+        return String(str || '').replace(/[&<>"']/g, s => ({
+          '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[s]));
+      }
+
+      function fmtDateInput(v){
+        if(!v) return '';
+        const d = new Date(v);
+        if (isNaN(d)) return v;
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const dd= String(d.getDate()).padStart(2,'0');
+        return `${y}.${m}.${dd}`;
+      }
+
+      function render(){
+        const title   = elTitle.value.trim();
+        const date    = elDate.value.trim();
+        const tag     = elTag.value.trim() || 'お知らせ';
+        const thumb   = elThumb.value.trim();
+        const excerpt = elExcerpt.value.trim();
+        const url     = elUrl.value.trim();
+        const content = elContent.value;
+
+        // カード側
+        pvTitle.textContent   = title || 'タイトル';
+        pvExcerpt.textContent = excerpt || 'ここに抜粋が表示されます。';
+        pvTag.textContent     = tag;
+        pvDate.textContent    = fmtDateInput(date) || '----.--.--';
+        if (thumb){
+          pvThumb.style.backgroundImage = `url('${thumb}')`;
+        } else {
+          pvThumb.style.backgroundImage = 'linear-gradient(135deg,#4f46e5,#ec4899)';
+        }
+
+        // 詳細側
+        pvTitleD.textContent = title || 'タイトル';
+        pvTagD.textContent   = tag;
+        pvDateD.textContent  = fmtDateInput(date) || '----.--.--';
+
+        // 本文：1行ごとに<p>
+        pvBody.innerHTML = '';
+        const lines = content.split(/\r?\n/).filter(l => l.trim().length);
+        if (!lines.length){
+          const p = document.createElement('p');
+          p.textContent = 'ここに本文が表示されます。';
+          pvBody.appendChild(p);
+        } else {
+          lines.forEach(line=>{
+            const p = document.createElement('p');
+            p.textContent = line;
+            pvBody.appendChild(p);
+          });
+        }
+
+        if (url){
+          pvLink.innerHTML = `<a href="${escHtml(url)}" target="_blank" style="color:#60a5fa;">関連リンク（クリックで新しいタブ）</a>`;
+        } else {
+          pvLink.textContent = '';
+        }
+      }
+
+      ['input','change'].forEach(ev=>{
+        form.addEventListener(ev, e=>{
+          if (e.target.matches('input,textarea')) render();
+        });
+      });
+
+      // 初期表示
+      render();
+    })();
+  </script>
 </body>
 </html>
