@@ -3,7 +3,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '../db.php';
 
 // db.php 側に同名関数があっても落ちないようにガード
 if (!function_exists('esc')) {
