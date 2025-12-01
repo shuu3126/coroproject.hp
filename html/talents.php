@@ -37,7 +37,7 @@ $talents = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <link rel="apple-touch-icon" href="../images/logo.png">
 </head>
 <body>
-  <div id="app" class="app">
+  <div id="app" class="app visible">
     <!-- Header -->
     <header class="site-header">
       <div class="container header-inner">

@@ -49,7 +49,7 @@ if (!empty($talent['tags_json'])) {
   <link rel="apple-touch-icon" href="../images/logo.png">
 </head>
 <body>
-  <div id="app" class="app">
+  <div id="app" class="app visible">
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="../index.php">
