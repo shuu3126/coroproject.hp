@@ -176,7 +176,7 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <a href="index.php">🏠 トップ</a>
     <a href="news.php">📰 News管理</a>
     <a href="talents.php">👤 Talents管理</a>
-    <a href="../index.php" target="_blank">🌐 サイトTOP</a>
+    <a href="../../index.php" target="_blank">🌐 サイトTOP</a>
   </div>
 
   <div class="layout">
