@@ -1,7 +1,7 @@
 <?php
 // db.php（ミニムサーバー用）
 
-$DB_HOST = 'mysql.coroproject.minim.ne.jp';
+$DB_HOST = 'localhost';
 $DB_NAME = 'db_coroproject_1';
 $DB_USER = 'db_coroproject';
 $DB_PASS = '4SLawVX2';
