@@ -514,15 +514,32 @@ unset($t);
   </script>
 
   <script>
-    window.addEventListener("load", function () {
+  (function() {
+
+    function hideLoader() {
       const loader = document.getElementById("coro-loader");
       if (!loader) return;
 
-      setTimeout(function () {
-        loader.classList.add("coro-loader--hide");
-        document.body.classList.remove("is-loading");
-      }, 3200);
+      loader.classList.add("coro-loader--hide");
+      document.body.classList.remove("is-loading");
+
+      // 完全削除（オーバーレイ残り防止）
+      setTimeout(() => {
+        if (loader && loader.parentNode) {
+          loader.parentNode.removeChild(loader);
+        }
+      }, 800);
+    }
+
+    // 正常時：ロード完了で消す
+    window.addEventListener("load", function () {
+      setTimeout(hideLoader, 800);
     });
+
+    // 保険：loadが来なくても 5秒後に強制で消す
+    setTimeout(hideLoader, 5000);
+
+  })();
   </script>
 
   <script>
