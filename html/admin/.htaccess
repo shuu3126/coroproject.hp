@@ -1,0 +1,4 @@
+AuthUserFile /home/sites/coroproject/web/.htpasswd
+AuthType Basic
+AuthName "CORO PROJECT ADMIN"
+Require valid-user
