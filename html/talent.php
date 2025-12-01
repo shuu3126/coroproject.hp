@@ -140,8 +140,8 @@ if (!empty($talent['long_bio_json'])) {
 </head>
 <body class="talent-page">
 <div id="app" class="app visible">
-  
-  <!-- ================== Header ================== -->
+
+  <!-- ===== Header ===== -->
   <header class="site-header">
     <div class="container header-inner">
       <a class="brand" href="../index.php">
@@ -165,7 +165,7 @@ if (!empty($talent['long_bio_json'])) {
 
   <main id="top">
 
-    <!-- ========== Hero / Basic Info ========== -->
+    <!-- ===== Talent Hero（上部） ===== -->
     <section class="talent-hero">
       <div class="talent-hero-bg" aria-hidden="true"></div>
 
@@ -191,14 +191,14 @@ if (!empty($talent['long_bio_json'])) {
         </div>
 
         <?php if ($avatar): ?>
-          <div class="talent-hero-visual">
-            <div class="talent-hero-avatar" style="background-image:url('<?= esc($avatar) ?>');"></div>
-          </div>
+          <!-- ★ ここが 16:9 の横長バナー -->
+          <div class="talent-hero-banner"
+               style="background-image:url('<?= esc($avatar) ?>');"></div>
         <?php endif; ?>
       </div>
     </section>
 
-    <!-- ========== Profile + Side Info ========== -->
+    <!-- ===== Profile + サイド情報 ===== -->
     <section class="section talent-profile-section">
       <div class="container talent-profile-inner">
         <div class="talent-profile-main">
@@ -262,7 +262,7 @@ if (!empty($talent['long_bio_json'])) {
             </dl>
           </section>
 
-          <!-- Streaming Platforms -->
+          <!-- Streaming -->
           <section class="talent-card">
             <h3 class="talent-card-title">Streaming</h3>
             <?php if ($platforms): ?>
@@ -280,7 +280,7 @@ if (!empty($talent['long_bio_json'])) {
             <?php endif; ?>
           </section>
 
-          <!-- Other Links (SNS etc.) -->
+          <!-- Links -->
           <section class="talent-card">
             <h3 class="talent-card-title">Links</h3>
             <?php if ($links): ?>
@@ -297,28 +297,6 @@ if (!empty($talent['long_bio_json'])) {
               <p class="talent-card-note">準備中です。</p>
             <?php endif; ?>
           </section>
-
-          <!-- Hashtags（あれば） -->
-          <?php
-          $hashtags = [];
-          if (is_array($extra['hashtags'])) {
-              $hashtags = $extra['hashtags'];
-          }
-          ?>
-          <?php if ($hashtags): ?>
-          <section class="talent-card">
-            <h3 class="talent-card-title">Hashtags</h3>
-            <dl class="talent-meta-list">
-              <?php foreach ($hashtags as $k => $v): ?>
-                <div>
-                  <dt><?= esc(ucfirst($k)) ?></dt>
-                  <dd><?= esc($v) ?></dd>
-                </div>
-              <?php endforeach; ?>
-            </dl>
-          </section>
-          <?php endif; ?>
-
         </aside>
       </div>
     </section>

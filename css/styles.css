@@ -1095,196 +1095,187 @@ select{
 }
 
 /* ============================
-   Talent Detail Overrides
-   （talent.php 専用の上書き）
+   Talent detail page
    ============================ */
 
-body.talent-page {
-  /* 他ページとトーンを合わせた背景 */
-  background:
-    radial-gradient(140% 140% at 0% 0%, #35166b 0, transparent 55%),
-    radial-gradient(140% 140% at 100% 0%, #54206d 0, transparent 55%),
-    radial-gradient(120% 120% at 50% 100%, #14092f 0, #050414 60%, #03010a 100%);
-}
-
-/* ---------- Hero 部分 ---------- */
-
-body.talent-page .talent-hero {
+/* 背景のブラー帯だけ敷く */
+.talent-page .talent-hero {
   position: relative;
-  padding: 96px 0 56px;
+  padding: 72px 0 36px;
   color: #fff;
+  overflow: hidden;
+}
+
+.talent-page .talent-hero-bg {
+  position: absolute;
+  inset: 0;
   background:
-    radial-gradient(120% 160% at 0% 0%, rgba(199,125,255,.32), transparent 60%),
-    radial-gradient(120% 160% at 100% 0%, rgba(111,198,255,.32), transparent 60%),
-    #050314;
+    radial-gradient(130% 150% at 0% 0%, rgba(199,125,255,.25), transparent 55%),
+    radial-gradient(130% 150% at 100% 0%, rgba(104,188,255,.25), transparent 55%),
+    #050414;
+  pointer-events: none;
 }
 
-body.talent-page .talent-hero-bg {
-  display: none; /* いま出ている謎の「点」などを消す用 */
+.talent-page .talent-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-body.talent-page .talent-hero-inner{
+/* 左側テキスト */
+.talent-page .talent-hero-main {
+  max-width: 460px;
+}
+
+.talent-page .talent-name-main {
+  margin: 10px 0 4px;
+  font-family: 'Keifont', system-ui, sans-serif;
+  font-size: clamp(26px, 3vw, 34px);
+}
+
+.talent-page .talent-name-kana {
+  margin: 0 0 6px;
+  font-size: .9rem;
+  color: var(--muted);
+}
+
+.talent-page .talent-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+.talent-page .talent-tags span {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .75rem;
+  border: 1px solid rgba(255,255,255,.4);
+  background: rgba(12,8,36,.7);
+}
+
+/* 右側 16:9 バナー画像 */
+.talent-page .talent-hero-banner {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+/* PC では左右２カラムレイアウト */
+@media (min-width: 960px) {
+  .talent-page .talent-hero-inner {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 40px;
+  }
+  .talent-page .talent-hero-main {
+    flex: 0 0 40%;
+  }
+  .talent-page .talent-hero-banner {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+}
+
+/* ===== Profile セクション ===== */
+.talent-page .talent-profile-section {
+  padding: 56px 0 96px;
+}
+
+.talent-page .talent-profile-inner {
   display: grid;
-  gap: 40px;
-  align-items: center;
+  gap: 36px;
 }
 
-/* PC は 2 カラム、SP は縦並び */
-@media (min-width: 960px){
-  body.talent-page .talent-hero-inner{
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+@media (min-width: 960px) {
+  .talent-page .talent-profile-inner {
+    grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.3fr);
+    align-items: flex-start;
   }
 }
 
-body.talent-page .talent-hero-main{
-  max-width: 520px;
+.talent-page .talent-profile-main p {
+  margin: .4rem 0;
+  color: #e7e1ff;
+  font-size: .95rem;
 }
 
-body.talent-page .talent-name-main{
-  margin: 8px 0 2px;
-  font-size: clamp(26px, 3vw, 32px);
+/* 右カラムのカード類 */
+.talent-page .talent-profile-side {
+  display: grid;
+  gap: 16px;
 }
 
-body.talent-page .talent-tags{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin:12px 0 10px;
-}
-body.talent-page .talent-tags span{
-  padding:3px 10px;
-  border-radius:999px;
-  font-size:.75rem;
-  border:1px solid rgba(255,255,255,.28);
-  background:rgba(0,0,0,.26);
+.talent-page .talent-card {
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+  padding: 14px 16px 12px;
+  font-size: .85rem;
 }
 
-body.talent-page .talent-catch{
-  margin:4px 0 0;
-  font-size:.9rem;
-  color:#e5e7ff;
+.talent-page .talent-card-title {
+  margin: 0 0 8px;
+  font-size: .9rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-/* ★ ここが画像（16:9 長方形・フルに近いサイズ） */
-body.talent-page .talent-hero-visual{
-  display:block;
+/* 概要の dl を横並びで見やすく */
+.talent-page .talent-meta-list {
+  margin: 0;
+  padding: 0;
+}
+.talent-page .talent-meta-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0;
+}
+.talent-page .talent-meta-list dt {
+  margin: 0;
+  color: var(--muted);
+}
+.talent-page .talent-meta-list dd {
+  margin: 0;
+  text-align: right;
 }
 
-body.talent-page .talent-hero-avatar{
-  width:100%;
-  aspect-ratio:16 / 9;       /* 1920x1080 前提 */
-  border-radius:18px;
-  background-size:cover;
-  background-position:center;
-  box-shadow:0 28px 80px rgba(0,0,0,.85);
+/* リンクのリスト */
+.talent-page .talent-link-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.talent-page .talent-link-list a {
+  color: #dbe4ff;
+  font-size: .85rem;
+  text-decoration: none;
+}
+.talent-page .talent-link-list a:hover {
+  color: #fff;
 }
 
-/* SP のときは画像を下に回す */
-@media (max-width: 959px){
-  body.talent-page .talent-hero-inner{
-    grid-template-columns: 1fr;
-  }
-  body.talent-page .talent-hero-visual{
-    order: -1;
-  }
+.talent-page .talent-card-note {
+  margin: 0;
+  font-size: .8rem;
+  color: var(--muted);
 }
 
-/* ---------- Profile ＋ サイド情報 ---------- */
-
-body.talent-page .talent-profile-section{
-  padding: 80px 0 96px;
-  background:#050314;
-}
-
-body.talent-page .talent-profile-inner{
-  display:grid;
-  gap:32px;
-}
-
-@media (min-width:960px){
-  body.talent-page .talent-profile-inner{
-    grid-template-columns:minmax(0,1.4fr) minmax(0,1.1fr);
-    align-items:flex-start;
-  }
-}
-
-body.talent-page .talent-profile-main{
-  font-size:.95rem;
-  color:#e5e7ff;
-}
-body.talent-page .talent-profile-main p{
-  margin:.4rem 0;
-}
-
-/* 右カラムのカード郡 */
-body.talent-page .talent-profile-side{
-  display:grid;
-  gap:16px;
-}
-
-body.talent-page .talent-card{
-  border-radius:18px;
-  background:rgba(10,6,35,.96);
-  border:1px solid rgba(148,163,255,.4);
-  box-shadow:0 20px 60px rgba(5,0,40,.7);
-  padding:16px 18px 14px;
-}
-
-body.talent-page .talent-card-title{
-  margin:0 0 8px;
-  font-size:.9rem;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:#c7d2ff;
-}
-
-/* 概要のメタ情報（Status / Group / Debut ...） */
-body.talent-page .talent-meta-list{
-  margin:0;
-  padding:0;
-  display:grid;
-  gap:4px;
-  font-size:.85rem;
-}
-body.talent-page .talent-meta-list div{
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-}
-body.talent-page .talent-meta-list dt{
-  font-weight:600;
-  color:#a5b4ff;
-}
-body.talent-page .talent-meta-list dd{
-  margin:0;
-  color:#e5e7ff;
-}
-
-/* Streaming / Links のリスト */
-body.talent-page .talent-link-list{
-  list-style:none;
-  margin:0;
-  padding:0;
-  display:grid;
-  gap:4px;
-  font-size:.88rem;
-}
-body.talent-page .talent-link-list a{
-  color:#e0e7ff;
-  text-decoration:none;
-}
-body.talent-page .talent-link-list a:hover{
-  color:#f9a8ff;
-}
-
-body.talent-page .talent-card-note{
-  margin:0;
-  font-size:.85rem;
-  color:#9ca3c3;
-}
-
-/* ---------- 下の巨大ロゴ（惑星）を消す ---------- */
-/* talent.php の <main> の一番最後に残っている旧セクションを非表示にする */
-body.talent-page main > *:last-child:not(.talent-profile-section){
-  display:none;
+/* ===== このページだけ巨大な惑星ロゴを消す ===== */
+.talent-page .audition-visual,
+.talent-page .planet-visual,
+.talent-page .hero-planet {
+  display: none !important;
 }
