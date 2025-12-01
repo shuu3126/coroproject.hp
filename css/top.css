@@ -880,6 +880,86 @@ body.home .site-header{
     gap:10px;
   }
 }
+/* ==== TOP Talents（画像メインカード） ==== */
+.talents-top-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.talent-top-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  text-decoration: none;
+  color: #fff;
+  background: radial-gradient(circle at top, #273059 0, #181828 55%, #12091d 100%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.talent-top-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+  filter: saturate(1.05);
+  transition:
+    transform 0.6s ease,
+    filter 0.6s ease,
+    opacity 0.6s ease;
+}
+
+/* 下からうっすらグラデかけて名前を読みやすく */
+.talent-top-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(4, 0, 24, 0.9), transparent 55%);
+  pointer-events: none;
+}
+
+.talent-top-info {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+}
+
+.talent-top-label {
+  margin: 0 0 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.talent-top-name {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+}
+
+/* ホバーでちょっとだけズーム＆発色 */
+.talent-top-card:hover .talent-top-thumb {
+  transform: scale(1.07);
+  filter: saturate(1.25);
+}
+
+/* COMING SOON カード */
+.talent-top-card--empty .talent-top-thumb {
+  background: radial-gradient(circle at top, #273059 0, #181828 55%, #12091d 100%);
+}
+
+.talent-top-coming {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
 
 /* ============================
    CTA / Audition

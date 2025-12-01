@@ -304,7 +304,7 @@ try {
       </div>
     </section>
 
-    <!-- ===== Talents（TOP：最新3名） ===== -->
+    <!-- ===== Talents（TOP：画像メイン3枚） ===== -->
     <section id="talents" class="section section-talents reveal">
       <div class="container">
 
@@ -313,51 +313,27 @@ try {
           <a class="section-link" href="html/talents.php">一覧を見る</a>
         </div>
 
-        <div class="grid grid-3" style="gap:24px;">
-
+        <div class="talents-top-grid">
           <?php foreach ($topTalents as $t): ?>
-            <a class="card" href="html/talent.php?id=<?= esc($t['id']) ?>" style="text-decoration:none;">
-              <div class="card-thumb"
-                  style="
-                    width:100%;
-                    height:260px;
-                    background-image:url('<?= esc($t['avatar_for_top']) ?>');
-                    background-size:cover;
-                    background-position:center;
-                    border-radius:16px;
-                  ">
-              </div>
+            <a class="talent-top-card" href="html/talent.php?id=<?= esc($t['id']) ?>">
+              <div class="talent-top-thumb"
+                   style="background-image:url('<?= esc($t['avatar_for_top']) ?>');"></div>
 
-              <div class="card-body" style="padding:12px 0;">
-                <h3 class="card-title" style="margin:6px 0 4px;">
-                  <?= esc($t['name']) ?>
-                </h3>
-                <p class="card-text" style="color:#b7b7c8; font-size:.9rem;">
-                  <?= esc($t['bio']) ?>
-                </p>
+              <div class="talent-top-info">
+                <p class="talent-top-label">Coro Project Talent</p>
+                <h3 class="talent-top-name"><?= esc($t['name']) ?></h3>
               </div>
             </a>
           <?php endforeach; ?>
 
-          <?php if (count($topTalents) < 3): ?>
-            <?php for ($i = count($topTalents); $i < 3; $i++): ?>
-              <div class="card" style="
-                    opacity:0.25;
-                    background:radial-gradient(circle at top, #273059 0, #181828 55%, #12091d 100%);
-                    border-radius:24px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    height:260px;
-                    font-size:.9rem;
-                    letter-spacing:.14em;
-                    text-transform:uppercase;
-                    color:#c3c6ff;">
-                COMING SOON
+          <?php for ($i = count($topTalents); $i < 3; $i++): ?>
+            <div class="talent-top-card talent-top-card--empty">
+              <div class="talent-top-thumb"></div>
+              <div class="talent-top-info">
+                <p class="talent-top-coming">COMING SOON</p>
               </div>
-            <?php endfor; ?>
-          <?php endif; ?>
-
+            </div>
+          <?php endfor; ?>
         </div>
 
       </div>
