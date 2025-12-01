@@ -28,7 +28,7 @@
     <a href="index.php">🏠 トップ</a>
     <a href="news.php">📰 News管理</a>
     <a href="talents.php">👤 Talents管理</a>
-    <a href="../../index.php" target="_blank">🌐 サイトTOPを開く</a>
+    <a href="https://coroproject.jp/index.php" target="_blank">🌐 サイトTOPを開く</a>
   </div>
 
   <div class="cards">
