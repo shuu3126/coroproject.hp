@@ -1095,95 +1095,184 @@ select{
 }
 
 /* ============================
-   Talent Detail - Profile layout
+   Talent detail page overrides
    ============================ */
 
-.talent-profile-section{
-  padding: 80px 0 110px;
+/* ヒーロー部分：背景＆レイアウト */
+.talent-page .talent-hero{
+  position: relative;
+  padding: 96px 0 72px;
   background:
-    radial-gradient(120% 150% at 0% 100%, #31245d 0%, transparent 60%),
+    radial-gradient(130% 160% at 0% 0%, #31245d 0%, transparent 55%),
+    radial-gradient(130% 160% at 100% 0%, #1e3a8a 0%, transparent 55%),
     #050314;
+  color:#f9f9ff;
 }
 
-.talent-profile-inner{
-  display:grid;
-  gap:32px;
+.talent-page .talent-hero-inner{
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 32px;
+  align-items: center;
 }
 
-@media (min-width: 920px){
-  .talent-profile-inner{
-    grid-template-columns:minmax(0, 1.6fr) minmax(0, 1.1fr);
-    align-items:flex-start;
+/* PCはテキスト＋画像の2カラム */
+@media (min-width: 960px){
+  .talent-page .talent-hero-inner{
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
   }
 }
 
-.talent-profile-main{
+/* テキスト側 */
+.talent-page .talent-hero-main{
+  max-width: 520px;
+}
+
+.talent-page .talent-name-main{
+  margin: 8px 0 4px;
+  font-size: clamp(28px, 3.4vw, 36px);
+}
+
+.talent-page .talent-catch{
+  margin: 8px 0 0;
+  font-size: .95rem;
+  color:#e5e7ff;
+}
+
+/* タグ */
+.talent-page .talent-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin:12px 0 4px;
+}
+.talent-page .talent-tags span{
+  padding:3px 10px;
+  border-radius:999px;
+  border:1px solid rgba(191,219,254,.7);
+  font-size:.75rem;
+}
+
+/* 画像側：16:9の長方形でフルに見せる */
+.talent-page .talent-hero-visual{
+  display:flex;
+  justify-content:flex-end;
+}
+
+.talent-page .talent-hero-avatar{
+  width:100%;
+  max-width: 640px;          /* 好きなら 720px とかにしてOK */
+  aspect-ratio:16 / 9;
+  border-radius: 22px;
+  background-size:cover;
+  background-position:center;
+  box-shadow:
+    0 26px 80px rgba(15,23,42,.95),
+    0 0 80px rgba(79,209,230,.45);
+}
+
+/* SPは1カラムで画像を上に */
+@media (max-width: 959px){
+  .talent-page .talent-hero-inner{
+    grid-template-columns: 1fr;
+  }
+  .talent-page .talent-hero-main{
+    order:2;
+    text-align:left;
+  }
+  .talent-page .talent-hero-visual{
+    order:1;
+  }
+}
+
+/* -------- プロフィール＋サイド情報 -------- */
+
+.talent-page .talent-profile-section{
+  padding: 80px 0 120px;
+  background: radial-gradient(140% 180% at 50% 0%, #111827 0%, #020617 55%);
+}
+
+.talent-page .talent-profile-inner{
+  display:grid;
+  gap:36px;
+  align-items:flex-start;
+}
+
+/* PCでは2カラム */
+@media (min-width: 960px){
+  .talent-page .talent-profile-inner{
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+}
+
+.talent-page .talent-profile-main{
+  max-width: 640px;
+}
+
+.talent-page .talent-profile-main p{
+  margin:0 0 12px;
   font-size:.95rem;
   color:#e7e1ff;
 }
-.talent-profile-main .section-title{
-  margin:0 0 14px;
-}
-.talent-profile-main p{
-  margin:.4rem 0;
-}
 
-/* 右側サイドカード */
-.talent-profile-side{
+/* 右側のカード群 */
+.talent-page .talent-profile-side{
   display:grid;
   gap:16px;
 }
 
-/* 上で .talent-card を一覧と共用しているので装飾だけ微調整したい場合はここで上書きしてもOK */
-.talent-card-title{
-  margin:0 0 8px;
-  font-size:.9rem;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:#a5b4ff;
+/* ここで高さを固定しない：中身に合わせて伸びる */
+.talent-page .talent-profile-side .talent-card{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  border:1px solid var(--border-soft);
+  box-shadow:var(--shadow-soft);
+  padding:16px 18px 14px;
 }
 
-.talent-meta-list{
+/* Overview の中身を読みやすく */
+.talent-page .talent-meta-list{
   margin:0;
   padding:0;
   display:grid;
   gap:6px;
-  font-size:.86rem;
+  font-size:.9rem;
 }
-.talent-meta-list div{
+.talent-page .talent-meta-list > div{
   display:flex;
   justify-content:space-between;
-  gap:10px;
+  gap:8px;
 }
-.talent-meta-list dt{
+.talent-page .talent-meta-list dt{
   font-weight:600;
   color:#cbd5ff;
 }
-.talent-meta-list dd{
+.talent-page .talent-meta-list dd{
   margin:0;
   color:#e5e7ff;
+  text-align:right;
 }
 
-/* Streaming / Links */
-.talent-link-list{
+/* Streaming / Links のリスト */
+.talent-page .talent-link-list{
   list-style:none;
-  margin:0;
+  margin:4px 0 0;
   padding:0;
   display:grid;
-  gap:6px;
-  font-size:.88rem;
+  gap:4px;
+  font-size:.9rem;
 }
-.talent-link-list a{
+.talent-page .talent-link-list a{
   color:#bfdbfe;
   text-decoration:none;
 }
-.talent-link-list a:hover{
+.talent-page .talent-link-list a:hover{
   color:#fff;
-  text-decoration:underline;
 }
 
-.talent-card-note{
-  margin:0;
-  font-size:.85rem;
-  color:#9ca3c3;
+/* このページでは、main の一番下に残っている
+   古い“惑星ロゴだけのセクション”を丸ごと非表示にする */
+.talent-page main > section:last-of-type{
+  display:none;
 }

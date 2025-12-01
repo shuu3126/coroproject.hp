@@ -138,9 +138,9 @@ if (!empty($talent['long_bio_json'])) {
   <link rel="icon" type="image/png" href="../images/logo.png">
   <link rel="apple-touch-icon" href="../images/logo.png">
 </head>
-<body>
+<body class="talent-page">
 <div id="app" class="app visible">
-
+  
   <!-- ================== Header ================== -->
   <header class="site-header">
     <div class="container header-inner">
