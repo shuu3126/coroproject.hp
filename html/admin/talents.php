@@ -21,18 +21,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete' && !empty($_GET['id']
 
 // ===== 保存（新規/更新） =====
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $mode       = $_POST['mode'] ?? 'create';   // create / update
-    $id         = trim($_POST['id'] ?? '');
-    $name       = trim($_POST['name'] ?? '');
-    $kana       = trim($_POST['kana'] ?? '');
-    $groupLabel = trim($_POST['group_label'] ?? '');
-    $status     = trim($_POST['status'] ?? 'active');
-    $debut      = trim($_POST['debut'] ?? '');
-    $lastActive = trim($_POST['last_active'] ?? '');
-    $avatar     = trim($_POST['avatar'] ?? '');
-    $bio        = trim($_POST['bio'] ?? '');
-    $sortOrder  = (int)($_POST['sort_order'] ?? 0);
-    $isPub      = isset($_POST['is_published']) ? 1 : 0;
+    $mode        = $_POST['mode'] ?? 'create';   // create / update
+    $id          = trim($_POST['id'] ?? '');
+    $name        = trim($_POST['name'] ?? '');
+    $kana        = trim($_POST['kana'] ?? '');
+    // ★ DB カラム名に合わせて talent_group に統一
+    $talentGroup = trim($_POST['talent_group'] ?? '');
+    $status      = trim($_POST['status'] ?? 'active');
+    $debut       = trim($_POST['debut'] ?? '');
+    $lastActive  = trim($_POST['last_active'] ?? '');
+    $avatar      = trim($_POST['avatar'] ?? '');
+    $bio         = trim($_POST['bio'] ?? '');
+    $sortOrder   = (int)($_POST['sort_order'] ?? 0);
+    $isPub       = isset($_POST['is_published']) ? 1 : 0;
 
     // longBio：1行＝1段落 → JSON配列
     $longBioText = trim($_POST['long_bio'] ?? '');
@@ -98,28 +99,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($mode === 'update') {
         $sql = "UPDATE talents SET
-                    name = :name,
-                    kana = :kana,
-                    group_label = :group_label,
-                    status = :status,
-                    debut = :debut,
-                    last_active = :last_active,
-                    avatar = :avatar,
-                    bio = :bio,
-                    long_bio_json = :long_bio_json,
+                    name           = :name,
+                    kana           = :kana,
+                    talent_group   = :talent_group,
+                    status         = :status,
+                    debut          = :debut,
+                    last_active    = :last_active,
+                    avatar         = :avatar,
+                    bio            = :bio,
+                    long_bio_json  = :long_bio_json,
                     platforms_json = :platforms_json,
-                    links_json = :links_json,
-                    tags_json = :tags_json,
-                    sort_order = :sort_order,
-                    is_published = :is_published
+                    links_json     = :links_json,
+                    tags_json      = :tags_json,
+                    sort_order     = :sort_order,
+                    is_published   = :is_published
                 WHERE id = :id";
     } else {
         $sql = "INSERT INTO talents
-                    (id, name, kana, group_label, status, debut, last_active, avatar,
+                    (id, name, kana, talent_group, status, debut, last_active, avatar,
                      bio, long_bio_json, platforms_json, links_json, tags_json,
                      sort_order, is_published)
                 VALUES
-                    (:id, :name, :kana, :group_label, :status, :debut, :last_active, :avatar,
+                    (:id, :name, :kana, :talent_group, :status, :debut, :last_active, :avatar,
                      :bio, :long_bio_json, :platforms_json, :links_json, :tags_json,
                      :sort_order, :is_published)";
     }
@@ -129,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':id'             => $id,
         ':name'           => $name,
         ':kana'           => $kana,
-        ':group_label'    => $groupLabel,
+        ':talent_group'   => $talentGroup,
         ':status'         => $status,
         ':debut'          => $debut ?: null,
         ':last_active'    => $lastActive ?: null,
@@ -256,6 +257,7 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
           <tr>
             <th>ID</th>
             <th>名前</th>
+            <th>期</th>
             <th>ステータス</th>
             <th>デビュー日</th>
             <th>並び順</th>
@@ -268,10 +270,11 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <tr>
               <td><?= esc($t['id']) ?></td>
               <td><?= esc($t['name']) ?></td>
+              <td><?= esc($t['talent_group'] ?? '') ?></td>
               <td><?= esc($t['status']) ?></td>
               <td><?= esc($t['debut']) ?></td>
               <td><?= (int)$t['sort_order'] ?></td>
-              <td><?= $t['is_published'] ? '公開' : '非公開' ?></td>
+              <td><?= !empty($t['is_published']) ? '公開' : '非公開' ?></td>
               <td>
                 <a href="talents.php?action=edit&id=<?= esc($t['id']) ?>">編集</a> /
                 <a href="talents.php?action=delete&id=<?= esc($t['id']) ?>" onclick="return confirm('本当に削除しますか？');" style="color:#f97373;">削除</a>
@@ -305,14 +308,12 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="row">
           <div>
             <label>グループ（例：1st / 2nd）</label>
-            <input type="text" name="group_label" value="<?= esc($editTalent['group_label'] ?? '') ?>">
+            <input type="text" name="talent_group" value="<?= esc($editTalent['talent_group'] ?? '') ?>">
           </div>
           <div>
             <label>ステータス</label>
             <select name="status">
-              <?php
-              $st = $editTalent['status'] ?? 'active';
-              ?>
+              <?php $st = $editTalent['status'] ?? 'active'; ?>
               <option value="active"    <?= $st==='active'    ? 'selected' : '' ?>>活動中</option>
               <option value="hiatus"    <?= $st==='hiatus'    ? 'selected' : '' ?>>一時休止</option>
               <option value="graduated" <?= $st==='graduated' ? 'selected' : '' ?>>卒業</option>
