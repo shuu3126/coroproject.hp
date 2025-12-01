@@ -134,9 +134,9 @@ if (!empty($talent['long_bio_json'])) {
   <meta name="twitter:card" content="summary_large_image">
 
   <!-- CSS は styles.css だけでOK（top.css は不要） -->
-  <link rel="stylesheet" href="/../css/styles.css">
-  <link rel="icon" type="image/png" href="/../images/logo.png">
-  <link rel="apple-touch-icon" href="/../images/logo.png">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" type="image/png" href="../images/logo.png">
+  <link rel="apple-touch-icon" href="../images/logo.png">
 </head>
 <body>
 <div id="app" class="app visible">
