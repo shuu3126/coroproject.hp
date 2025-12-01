@@ -1,3 +1,26 @@
+<?php
+require_once __DIR__ . '/db.php';
+
+// トップに出すニュース件数
+$TOP_NEWS_LIMIT = 3;
+
+// ニュース取得
+$sql = "
+    SELECT *
+    FROM news
+    WHERE is_published = 1
+    ORDER BY sort_order ASC, date DESC, id DESC
+    LIMIT :limit
+";
+$stmt = $pdo->prepare($sql);
+$stmt->bindValue(':limit', $TOP_NEWS_LIMIT, PDO::PARAM_INT);
+$stmt->execute();
+$topNews = $stmt->fetchAll();
+
+function esc($s) {
+    return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+}
+?>
 <!doctype html>
 <html lang="ja">
 <head>
@@ -61,6 +84,7 @@
       <p class="coro-loader__status">Preparing stage for talents...</p>
     </div>
   </div>
+
   <!-- ↓ここから既存のトップページ -->
   <div id="app">
   <!-- ===== Header ===== -->
@@ -107,7 +131,7 @@
           </div>
         </div>
 
-        <!-- Right: Shorts phone visual（縦スワイプ風） -->
+        <!-- Right: Shorts phone visual -->
         <div class="hero-visual">
           <div class="hero-visual-inner">
             <div class="hero-aurora" aria-hidden="true"></div>
@@ -132,7 +156,6 @@
               <div class="shorts-phone-bar"></div>
             </div>
 
-            <!-- 外側に出しておくバッジ / ハッシュタグ -->
             <div class="hero-badge">
               <span class="badge-label">Coro Project Shorts</span>
               <span class="badge-dot"></span>
@@ -208,27 +231,45 @@
       </div>
     </section>
 
-    <!-- ===== News（JSON から最新3件を表示） ===== -->
+    <!-- ===== News（DBから最新3件を表示） ===== -->
     <section id="news" class="section section-news reveal">
       <div class="container">
         <div class="section-head">
           <h2 class="section-title">News</h2>
-          <a class="section-link" href="html/news.html">すべて見る</a>
+          <a class="section-link" href="html/news.php">すべて見る</a>
         </div>
 
         <div id="top-news-list" class="news-grid">
-          <!-- JS で JSON から最新3件を挿入 -->
+          <?php if (empty($topNews)): ?>
+            <p class="news-empty" style="color:#9ca3c3; font-size:.9rem;">
+              現在表示できるニュースはありません。詳細は <a href="html/news.php">Newsページ</a> をご確認ください。
+            </p>
+          <?php else: ?>
+            <?php foreach ($topNews as $n): ?>
+              <article class="news-card">
+                <a href="<?= $n['url'] ? esc($n['url']) : 'html/news.php' ?>">
+                  <div class="card-thumb"
+                       aria-hidden="true"
+                       style="<?= $n['thumb'] ? "background-image:url('".esc($n['thumb'])."')" : '' ?>"></div>
+                  <span class="news-label"><?= esc($n['tag'] ?: 'News') ?></span>
+                  <span class="news-date"><?= esc($n['date']) ?></span>
+                  <h3 class="news-title"><?= esc($n['title']) ?></h3>
+                  <p class="news-text"><?= esc($n['excerpt'] ?? '') ?></p>
+                </a>
+              </article>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </div>
 
         <noscript>
           <p style="font-size:.85rem; color:#9ca3c3;">
-            JavaScriptが無効になっています。最新情報は<a href="html/news.html">Newsページ</a>からご確認ください。
+            JavaScriptが無効になっています。最新情報は<a href="html/news.php">Newsページ</a>からご確認ください。
           </p>
         </noscript>
       </div>
     </section>
 
-    <!-- ===== Talents（フルHDスライダー） ===== -->
+    <!-- ===== Talents ===== -->
     <section id="talents" class="section section-talents reveal">
       <div class="container">
         <div class="section-head">
@@ -305,7 +346,7 @@
       </div>
     </section>
 
-    <!-- ===== Audition CTA（しっかり作り込み） ===== -->
+    <!-- ===== Audition CTA ===== -->
     <section class="section section-cta section-cta--audition reveal">
       <div class="container cta-audition">
         <div class="cta-audition-copy">
@@ -369,7 +410,7 @@
       <div class="footer-col">
         <h4>Links</h4>
         <ul>
-          <li><a href="html/news.html">News</a></li>
+          <li><a href="html/news.php">News</a></li>
           <li><a href="html/talents.html">Talents</a></li>
           <li><a href="html/audition.html">Audition</a></li>
           <li><a href="html/privacy.html">Privacy Policy</a></li>
@@ -388,6 +429,7 @@
       <small>© <span id="year"></span> CORO PROJECT</small>
     </div>
   </footer>
+  </div> <!-- /#app -->
 
   <!-- ===== Scripts ===== -->
   <script>
@@ -406,7 +448,6 @@
         document.body.classList.toggle('nav-open', !open);
       });
 
-      // SPでリンク押したら閉じる
       nav.querySelectorAll('a').forEach(a => {
         a.addEventListener('click', () => {
           document.body.classList.remove('nav-open');
@@ -417,7 +458,7 @@
   </script>
 
   <script>
-    // Hero ショート動画（縦スワイプ風） 8秒ごと切り替え
+    // Hero ショート動画（縦スワイプ風）
     (function(){
       const track = document.getElementById('shortsTrack');
       if (!track) return;
@@ -425,7 +466,7 @@
       const items  = Array.from(track.querySelectorAll('.shorts-item'));
       const videos = items.map(it => it.querySelector('video'));
       const dots   = Array.from(document.querySelectorAll('.shorts-dots button'));
-      const DURATION = 8000; // 8秒
+      const DURATION = 8000;
 
       let index = 0;
       let timer = null;
@@ -447,7 +488,6 @@
         });
 
         dots.forEach((d,i)=>d.classList.toggle('is-active', i === index));
-
         restart();
       }
 
@@ -456,14 +496,10 @@
         timer = setTimeout(()=>go(index + 1), DURATION);
       }
 
-      // ドットクリックで手動切り替え
       dots.forEach((btn,i)=>{
-        btn.addEventListener('click', ()=>{
-          go(i);
-        });
+        btn.addEventListener('click', ()=>{ go(i); });
       });
 
-      // 初期化
       videos.forEach(v=>{
         v.setAttribute('playsinline','');
         v.muted = true;
@@ -471,64 +507,30 @@
       go(0);
     })();
   </script>
+
   <script>
     window.addEventListener("load", function () {
       const loader = document.getElementById("coro-loader");
       if (!loader) return;
 
-      // 演出のために少しだけ余裕を持たせる（好みで調整可）
       setTimeout(function () {
         loader.classList.add("coro-loader--hide");
         document.body.classList.remove("is-loading");
-      }, 3200); // 3.2秒後にフェードアウト開始
+      }, 3200);
     });
   </script>
+
   <script>
     // ページを開いたら常に最上部に戻す
     window.history.scrollRestoration = "manual";
-    
     window.addEventListener("load", () => {
       setTimeout(() => {
         window.scrollTo(0, 0);
-      }, 10); // ローダーと干渉しないように軽く遅延
+      }, 10);
     });
   </script>
+
   <script>
-    // Top News（最新3件を表示）
-    (async function(){
-      const wrap = document.getElementById('topNewsGrid'); // ★後述のHTMLとidを揃える
-      if (!wrap) return;
-
-      try{
-        const res = await fetch('./data/news.json', { cache: 'no-store' });
-        const all = await res.json();
-
-        // 日付の新しい順に並べ替えて3件だけ
-        const latest = all
-          .slice()
-          .sort((a,b) => a.date < b.date ? 1 : -1)
-          .slice(0, 3);
-
-        wrap.innerHTML = latest.map(n => `
-          <article class="news-card">
-            <a href="${n.url || './html/news.html'}">
-              <div class="card-thumb"
-                  aria-hidden="true"
-                  style="${n.thumb ? `background-image:url('${n.thumb}')` : ''}"></div>
-              <span class="news-label">${n.tag || 'News'}</span>
-              <span class="news-date">${n.date}</span>
-              <h3 class="news-title">${n.title}</h3>
-              <p class="news-text">${n.excerpt || ''}</p>
-            </a>
-          </article>
-        `).join('');
-      }catch(err){
-        console.error('トップニュース読込エラー', err);
-      }
-    })();
-  </script>
-
-<script>
   // Talents スライダー
   (function(){
     const slider = document.getElementById('talentSlider');
@@ -561,7 +563,6 @@
       });
     });
 
-    // 自動でゆっくり切り替える場合（いらなければコメントアウト）
     let timer = setInterval(() => show(index + 1), 10000);
     slider.addEventListener('mouseenter', () => clearInterval(timer));
     slider.addEventListener('mouseleave', () => {
@@ -570,31 +571,31 @@
 
     show(0);
   })();
-</script>
+  </script>
 
-<script>
-  // スクロール時のフェードイン（.reveal に is-visible 付与）
-  (function(){
-    const reveals = Array.from(document.querySelectorAll('.reveal'));
-    if (!('IntersectionObserver' in window) || !reveals.length) {
-      reveals.forEach(el => el.classList.add('is-visible'));
-      return;
-    }
+  <script>
+    // スクロール時のフェードイン（.reveal に is-visible 付与）
+    (function(){
+      const reveals = Array.from(document.querySelectorAll('.reveal'));
+      if (!('IntersectionObserver' in window) || !reveals.length) {
+        reveals.forEach(el => el.classList.add('is-visible'));
+        return;
+      }
 
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting){
-          entry.target.classList.add('is-visible');
-          io.unobserve(entry.target);
-        }
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting){
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        });
+      }, {
+        root:null,
+        threshold:0.15
       });
-    }, {
-      root:null,
-      threshold:0.15
-    });
 
-    reveals.forEach(el => io.observe(el));
-  })();
-</script>
+      reveals.forEach(el => io.observe(el));
+    })();
+  </script>
 </body>
 </html>
