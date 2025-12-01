@@ -1279,3 +1279,11 @@ select{
 .talent-page .hero-planet {
   display: none !important;
 }
+/* Talentページだけフッターの巨大ロゴを非表示にする */
+.talent-page .footer-bg,
+.talent-page .footer-planet,
+.talent-page .site-footer::before,
+.talent-page .site-footer::after {
+    display: none !important;
+    background: none !important;
+}
