@@ -1,8 +1,15 @@
 <?php
+// デバッグ用：一旦エラー内容を画面に出す
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 require_once __DIR__ . '/db.php';
 
-function esc($s) {
-    return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+// db.php 側に同名関数があっても落ちないようにガード
+if (!function_exists('esc')) {
+    function esc($s) {
+        return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    }
 }
 
 // ---- タレント本体 ----
@@ -82,6 +89,7 @@ unset($t);
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="stylesheet" href="../css/styles.css">
+  <!-- talents.css は使ってないのでリンク削除 -->
 
   <link rel="icon" type="image/png" href="../images/logo.png">
   <link rel="apple-touch-icon" href="../images/logo.png">
