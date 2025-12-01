@@ -1287,3 +1287,10 @@ select{
     display: none !important;
     background: none !important;
 }
+body.talent-page img[src*="logo.png"] {
+  width: 80px !important;  /* 好きなサイズに調整してOK */
+  height: auto !important;
+  border-radius: 0 !important;  /* 丸くしたくなければ 0、丸くしたければ 50% */
+  display: inline-block;
+  margin: 0;
+}
