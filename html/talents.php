@@ -243,37 +243,40 @@ unset($t);
       </section>
     </main>
 
-    <!-- ===== Footer ===== -->
+    <!-- ===== Footer（共通） ===== -->
     <footer class="site-footer">
       <div class="container footer-inner">
         <div class="footer-col">
-          <div class="footer-brand">
-            <img src="../images/logo.png" alt="CORO PROJECT ロゴ" class="footer-logo">
-            <span class="footer-name">CORO PROJECT</span>
+          <div class="brand brand--footer">
+            <img src="../images/logo.png" alt="CORO PROJECT" class="footer-logo">
+            <span class="brand-text">CORO PROJECT</span>
           </div>
-          <p class="footer-text">
-            VTuberのプロデュース・配信サポートを行うプロダクションです。
-          </p>
+          <p class="footer-desc">CORO PROJECTはVTuberのプロデュース・配信支援・クリエイティブ制作を行うプロダクションです。</p>
+          <div class="footer-actions">
+            <a class="btn btn-primary" href="./contact.html">問い合わせ</a>
+          </div>
         </div>
+
         <div class="footer-col">
           <h4>Links</h4>
-          <ul>
+          <ul class="footer-links">
             <li><a href="./news.php">News</a></li>
             <li><a href="./talents.php">Talents</a></li>
             <li><a href="./audition.html">Audition</a></li>
             <li><a href="./privacy.html">Privacy Policy</a></li>
           </ul>
         </div>
+
         <div class="footer-col">
           <h4>Social</h4>
-          <ul>
-            <li><a href="https://x.com/CoroProject0111" target="_blank" rel="noopener">X（Twitter）</a></li>
+          <ul class="footer-links">
             <li><a href="#">YouTube</a></li>
+            <li><a href="#">X</a></li>
             <li><a href="#">Twitch</a></li>
           </ul>
         </div>
       </div>
-      <div class="footer-bottom">
+      <div class="container footer-copy">
         <small>© <span id="year"></span> CORO PROJECT</small>
       </div>
     </footer>
