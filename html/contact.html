@@ -16,12 +16,11 @@
   <link rel="stylesheet" href="../css/styles.css">
   <link rel="icon" type="image/png" href="../images/logo.png">
   <link rel="apple-touch-icon" href="../images/logo.png">
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
+
 <body>
   <div id="app" class="app">
-    <!-- Header -->
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="../index.php">
@@ -29,7 +28,6 @@
           <span class="brand-text">CORO PROJECT</span>
         </a>
 
-        <!-- モバイル用トグル -->
         <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="メニューを開く">
           <span></span><span></span><span></span>
         </button>
@@ -45,7 +43,6 @@
     </header>
 
     <main>
-      <!-- Sub Hero -->
       <section class="sub-hero">
         <div class="container sub-hero-inner">
           <div class="sub-hero-copy">
@@ -63,15 +60,14 @@
         </div>
       </section>
 
-      <!-- フォーム -->
       <section id="form" class="section">
         <div class="container">
           <div class="section-head">
             <h2 class="section-title">お問い合わせフォーム</h2>
           </div>
 
-          <!-- ✅ Formspreeは使わない：fetchで ./api/contact.php に送信 -->
-          <form class="contact-form" id="contactForm" novalidate>
+          <!-- ✅ 通常フォーム送信（fetchしない） -->
+          <form class="contact-form" action="./api/contact.php" method="post">
             <div class="form-grid">
               <label class="field">
                 <span>お名前</span>
@@ -118,18 +114,16 @@
               </span>
             </label>
 
-            <!-- ✅ スパム対策（ハニーポット）: 人間は触らない想定 -->
+            <!-- ✅ スパム対策（ハニーポット） -->
             <div style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;">
               <label>Company <input type="text" name="company" autocomplete="off"></label>
             </div>
 
             <button class="btn btn-primary btn-lg" id="submitBtn" type="submit">送信する</button>
-            <p id="formMsg" style="margin-top:12px;"></p>
           </form>
         </div>
       </section>
 
-      <!-- CTA -->
       <section class="section cta">
         <div class="container cta-inner">
           <div class="cta-copy">
@@ -144,7 +138,6 @@
       </section>
     </main>
 
-    <!-- Footer -->
     <footer class="site-footer">
       <div class="container footer-inner">
         <div class="footer-col">
@@ -206,59 +199,6 @@
       window.addEventListener('DOMContentLoaded', ()=>{
         const app = document.getElementById('app');
         if (app) app.classList.add('visible');
-      });
-    })();
-
-    // お問い合わせ送信（同一ページ完結 → 成功で thanks.html へ）
-    (function(){
-      const form = document.getElementById('contactForm');
-      const msg  = document.getElementById('formMsg');
-      const btn  = document.getElementById('submitBtn');
-      if(!form || !msg || !btn) return;
-
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        msg.textContent = '';
-
-        if (!form.checkValidity()) {
-          msg.textContent = '未入力、または形式が正しくない項目があります。';
-          return;
-        }
-
-        btn.disabled = true;
-        const oldText = btn.textContent;
-        btn.textContent = '送信中...';
-
-        const payload = {
-          name: form.name.value.trim(),
-          email: form.email.value.trim(),
-          topic: form.topic.value,
-          url: (form.url.value || '').trim(),
-          message: form.message.value.trim(),
-          agree: form.agree.checked ? 1 : 0,
-          company: (form.company?.value || '').trim(), // honeypot
-        };
-
-        try {
-          const res = await fetch('./api/contact.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-
-          const json = await res.json().catch(() => ({}));
-
-          if (res.ok && json.ok) {
-            window.location.href = './thanks.html';
-            return;
-          }
-          msg.textContent = json.error || '送信に失敗しました。時間を置いて再度お試しください。';
-        } catch (err) {
-          msg.textContent = '通信に失敗しました。電波状況をご確認ください。';
-        } finally {
-          btn.disabled = false;
-          btn.textContent = oldText;
-        }
       });
     })();
   </script>
