@@ -255,5 +255,6 @@ if (wants_json()) {
     'mail_auto_ok'  => $mailAutoOk,
   ]);
 }
+
 header('Location: ../thanks.html', true, 303);
 exit;
