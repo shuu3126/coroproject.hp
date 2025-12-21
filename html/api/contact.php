@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -9,7 +10,7 @@ error_reporting(E_ALL);
 // - 成功時：通常は thanks.html へリダイレクト
 // - fetch等でJSONが欲しい場合：Accept: application/json で JSON を返す
 
-declare(strict_types=1);
+
 
 header('X-Content-Type-Options: nosniff');
 
