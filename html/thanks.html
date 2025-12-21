@@ -18,7 +18,7 @@
   <link rel="apple-touch-icon" href="../images/logo.png">
   <!-- ✅ ファビコン -->
   <link rel="icon" type="image/png" href="../images/logo.png">
-  <link rel="apple-touch-icon" href="images/logo.png">
+  <link rel="apple-touch-icon" href="../images/logo.png">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -130,155 +130,41 @@
     </footer>
   </div>
   <script>
-    (async function () {
-      const basePath = location.pathname.includes('/html/') ? '..' : '.';
-      const JSON_URL = `${basePath}/data/talents.json`;
+    // 年表示
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-      let data = [];
-      try {
-        const res = await fetch(JSON_URL);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        data = await res.json();
-      } catch (err) {
-        console.error('タレントJSONの読み込みに失敗しました', err);
-        const wrap = document.getElementById('talentList');
-        if (wrap) {
-          wrap.innerHTML = '<p class="news-empty">タレント情報を読み込めませんでした。</p>';
+    // 受付番号（簡易）
+    const ticketEl = document.getElementById('ticket');
+    if (ticketEl) {
+      const t = Math.random().toString(36).slice(2, 8).toUpperCase();
+      ticketEl.textContent = `${new Date().getFullYear()}-${t}`;
+    }
+
+    // モバイルナビ（contact.htmlと同じ）
+    (function(){
+      const btn = document.getElementById('navToggle');
+      const nav = document.getElementById('siteNav');
+      if(!btn || !nav) return;
+
+      btn.addEventListener('click', ()=>{
+        const opened = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!opened));
+        document.body.classList.toggle('nav-open', !opened);
+      });
+
+      window.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape' && document.body.classList.contains('nav-open')){
+          btn.setAttribute('aria-expanded','false');
+          document.body.classList.remove('nav-open');
         }
-        return;
-      }
+      });
 
-      if (!Array.isArray(data)) data = [];
-
-      // ===== ユーティリティ =====
-      function esc(s = '') {
-        return String(s).replace(/[&<>"']/g, m => ({
-          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[m]));
-      }
-      function safeId(t) {
-        return (t.id || (t.name_ja || t.name_en || 'talent'))
-          .replace(/[^\w\-]+/g, '-');
-      }
-      function fmtDate(s) {
-        if (!s) return '';
-        const d = new Date(s);
-        if (isNaN(d)) return esc(s);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${y}.${m}.${dd}`;
-      }
-      function badge(status) {
-        const map = { active: '活動中', hiatus: '一時休止', graduated: '卒業' };
-        return `<span class="tag">${map[status] || ''}</span>`;
-      }
-
-      // ===== カード / 詳細の HTML =====
-      function cardHTML(t) {
-        const id = '#' + safeId(t);
-        const avatar = t.avatar ? `style="background-image:url('${esc(t.avatar)}')"` : '';
-        const plats = (t.platforms || [])
-          .slice(0, 3)
-          .map(p => `<span class="tag">${esc(p.name)}</span>`)
-          .join(' ');
-        return `
-          <article class="card">
-            <a class="card-body" href="${id}" data-anchor>
-              <div class="card-thumb" aria-hidden="true" ${avatar}></div>
-              <div class="card-meta">
-                ${badge(t.status)}
-                <time datetime="${esc(t.debut || '')}">${fmtDate(t.debut)}</time>
-              </div>
-              <h3 class="card-title">${esc(t.name_ja || t.name_en)}</h3>
-              <p class="card-text">${esc(t.profile || '')}</p>
-              <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap">${plats}</div>
-            </a>
-          </article>
-        `;
-      }
-
-      function linkBtn(href, label) {
-        return href
-          ? `<a class="btn btn-ghost" href="${esc(href)}" target="_blank" rel="noopener">${esc(label)} ↗</a>`
-          : '';
-      }
-
-      function detailHTML(t) {
-        const id = safeId(t);
-        const hero = t.heroImage
-          ? `<div class="talent-hero-image" style="background-image:url('${esc(t.heroImage)}')"></div>`
-          : '';
-        const avatar = t.avatar
-          ? `<div class="talent-avatar" style="background-image:url('${esc(t.avatar)}')"></div>`
-          : '';
-        const plats = (t.platforms || [])
-          .map(p => linkBtn(p.url, p.name))
-          .join(' ');
-        const tags = (t.tags || [])
-          .map(tag => `<span class="tag">${esc(tag)}</span>`)
-          .join(' ');
-
-        const bio = Array.isArray(t.longProfile)
-          ? t.longProfile.map(p => `<p>${esc(p)}</p>`).join('')
-          : `<p>${esc(t.profile || '')}</p>`;
-
-        return `
-          <li class="time-item" id="${id}">
-            <span class="time-badge">${esc(t.group || 'Talent')}</span>
-            <div class="time-body">
-              <div class="card talent-detail-card">
-                ${hero}
-                <div class="talent-detail-main">
-                  ${avatar}
-                  <div class="talent-detail-text">
-                    <h3 class="card-title">
-                      ${esc(t.name_ja || '')}
-                      ${t.name_en ? `<span class="talent-name-en">${esc(t.name_en)}</span>` : ''}
-                    </h3>
-                    <div class="card-meta">
-                      ${badge(t.status)}
-                      <time datetime="${esc(t.debut || '')}">${fmtDate(t.debut)}</time>
-                    </div>
-                    <div class="talent-tags">${tags}</div>
-                    <div class="talent-bio">${bio}</div>
-                    <div class="talent-links">
-                      ${plats}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </li>
-        `;
-      }
-
-      // ===== レンダリング =====
-      const listWrap = document.getElementById('talentList');
-      const detailWrap = document.getElementById('talentDetail');
-
-      if (listWrap) {
-        listWrap.innerHTML = data.length
-          ? data.map(cardHTML).join('')
-          : '<p class="news-empty">現在表示できるタレントがいません。</p>';
-
-        // カードクリック → 詳細へスクロール
-        listWrap.addEventListener('click', e => {
-          const a = e.target.closest('a[data-anchor]');
-          if (!a) return;
-          e.preventDefault();
-          const target = document.querySelector(a.getAttribute('href'));
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            target.classList.add('in');
-            setTimeout(() => target.classList.remove('in'), 1200);
-          }
-        });
-      }
-
-      if (detailWrap) {
-        detailWrap.innerHTML = data.map(detailHTML).join('');
-      }
+      // ★これが本命：appを表示
+      window.addEventListener('DOMContentLoaded', ()=>{
+        const app = document.getElementById('app');
+        if (app) app.classList.add('visible');
+      });
     })();
   </script>
 </body>
