@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // html/api/contact.php
 // お問い合わせAPI（DB保存 + 管理者通知 + 自動返信）
 // - フォームPOST (application/x-www-form-urlencoded) と JSON POST の両対応
