@@ -1,16 +1,14 @@
 <?php
 declare(strict_types=1);
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
+
+// ===== デバッグ（原因特定が終わったらOFF推奨）=====
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
-// html/api/contact.php
-// お問い合わせAPI（DB保存 + 管理者通知 + 自動返信）
-// - フォームPOST (application/x-www-form-urlencoded) と JSON POST の両対応
-// - 成功時：通常は thanks.html へリダイレクト
-// - fetch等でJSONが欲しい場合：Accept: application/json で JSON を返す
-
-
+// ===== ログに残す（画面に出ない/JSが握りつぶす時に便利）=====
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/contact_error.log'); // html/api/contact_error.log に出ます
 
 header('X-Content-Type-Options: nosniff');
 
@@ -41,7 +39,8 @@ function server_error(string $msg = 'サーバー側でエラーが発生しま�
   exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+// GETで開いたら正常系は405を返す（500にならなければOK）
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   if (wants_json()) json_out(405, ['ok' => false, 'error' => 'Method not allowed']);
   http_response_code(405);
   exit('Method not allowed');
@@ -58,13 +57,11 @@ if (stripos($ct, 'application/json') !== false) {
   $payload = json_decode($raw ?: '', true);
   if (!is_array($payload)) $payload = [];
 } else {
-  // 通常フォームPOST
   $payload = $_POST;
 }
 
 // ハニーポット（スパム対策）: company が入ってたら捨てる
 if (!empty($payload['company'])) {
-  // スパムに成功レスを返して手応えを与えない
   if (wants_json()) json_out(200, ['ok' => true]);
   header('Location: ../thanks.html', true, 303);
   exit;
@@ -76,7 +73,6 @@ $topic   = trim((string)($payload['topic'] ?? ''));
 $url     = trim((string)($payload['url'] ?? ''));
 $message = trim((string)($payload['message'] ?? ''));
 
-// agree は form の checkbox だと "on" のことがある
 $agreeRaw = $payload['agree'] ?? null;
 $agree = ($agreeRaw === 1 || $agreeRaw === '1' || $agreeRaw === 'on' || $agreeRaw === true);
 
@@ -111,7 +107,6 @@ try {
       }
     }
   } catch (Throwable $e) {
-    // 連投対策が失敗しても致命ではないので続行
     error_log('[contact] rate-limit check failed: ' . $e->getMessage());
   }
 
@@ -133,82 +128,67 @@ try {
 
 } catch (Throwable $e) {
   error_log('[contact] DB error: ' . $e->getMessage());
-  server_error();
+  server_error('DB保存に失敗しました。');
 }
 
 // =====================================================
-// PHPMailer 読み込み（2パターン対応）
-// A) /lib/PHPMailer/PHPMailer.php …（推奨構成）
-// B) /lib/PHPMailer.php …（あなたが今こう置いてる可能性がある）
+// PHPMailer 読み込み（あなたの構成：/lib に3ファイルがある）
 // =====================================================
-$phpmailerLoaded = false;
+$libBase = __DIR__ . '/../../lib';
 
-$tryPaths = [
-  __DIR__ . '/../../lib/PHPMailer/PHPMailer.php',
-  __DIR__ . '/../../lib/PHPMailer.php',
+$paths = [
+  $libBase . '/Exception.php',
+  $libBase . '/PHPMailer.php',
+  $libBase . '/SMTP.php',
 ];
 
-foreach ($tryPaths as $p) {
-  if (is_file($p)) { $phpmailerLoaded = true; break; }
+foreach ($paths as $p) {
+  if (!is_file($p)) {
+    error_log('[contact] PHPMailer file missing: ' . $p);
+    // DB保存は成功してるのでユーザー体験優先で成功扱い
+    if (wants_json()) json_out(200, ['ok' => true, 'id' => $inquiryId, 'mail_admin_ok' => false, 'mail_auto_ok' => false]);
+    header('Location: ../thanks.html', true, 303);
+    exit;
+  }
 }
 
-if (!$phpmailerLoaded) {
-  error_log('[contact] PHPMailer not found in /lib.');
-  // メール送信できなくてもDB保存は成功してるので、ユーザー体験優先で成功扱いにする（運用でログを見る）
-  if (wants_json()) json_out(200, ['ok' => true, 'id' => $inquiryId, 'mail_admin_ok' => false, 'mail_auto_ok' => false]);
-  header('Location: ../thanks.html', true, 303);
-  exit;
-}
-
-// 実際に読み込み
-if (is_file(__DIR__ . '/../../lib/PHPMailer/PHPMailer.php')) {
-  require_once __DIR__ . '/../../lib/PHPMailer/Exception.php';
-  require_once __DIR__ . '/../../lib/PHPMailer/PHPMailer.php';
-  require_once __DIR__ . '/../../lib/PHPMailer/SMTP.php';
-} else {
-  require_once __DIR__ . '/../../lib/Exception.php';
-  require_once __DIR__ . '/../../lib/PHPMailer.php';
-  require_once __DIR__ . '/../../lib/SMTP.php';
-}
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+require_once $libBase . '/Exception.php';
+require_once $libBase . '/PHPMailer.php';
+require_once $libBase . '/SMTP.php';
 
 // =====================================================
-// SMTP設定（ここをあなたのMINIMに合わせて埋める）
+// SMTP設定（MINIMのスクショ確定値）
 // =====================================================
-// 例：MINIMで作ったアカウント info@coroproject.minim.ne.jp が内部実体でも、
-// SMTPログインは info@coroproject.jp でOKなケースが多いです（MINIM側の仕様）。
-$SMTP_HOST = 'mail.coroproject.minim.ne.jp';
-$SMTP_PORT = 587;
-$SMTP_SEC  = 'tls';
+$SMTP_HOST = 'mail.coroproject.minim.ne.jp'; // スクショのSMTP
+$SMTP_PORT = 587;                           // STARTTLS
+$SMTP_SEC  = 'tls';                         // tls or ssl
 $SMTP_USER = 'info@coroproject.jp';
-$SMTP_PASS = 'coroproject0111';
+$SMTP_PASS = 'coroproject0111';             // ←あなたのMINIMメールパスワード（後で変更推奨）
 
 $FROM_MAIL = 'info@coroproject.jp';
 $FROM_NAME = 'CORO PROJECT';
 $ADMIN_TO  = 'info@coroproject.jp';
 
 // =====================================================
-// メール送信（管理者宛 + 自動返信）
+// メール送信（管理者通知 + 自動返信）
 // =====================================================
 $mailAdminOk = false;
 $mailAutoOk  = false;
 
-$makeMailer = function() use ($SMTP_HOST, $SMTP_PORT, $SMTP_SEC, $SMTP_USER, $SMTP_PASS, $FROM_MAIL, $FROM_NAME): PHPMailer {
-  $m = new PHPMailer(true);
+$makeMailer = function() use ($SMTP_HOST, $SMTP_PORT, $SMTP_SEC, $SMTP_USER, $SMTP_PASS, $FROM_MAIL, $FROM_NAME) {
+  $m = new \PHPMailer\PHPMailer\PHPMailer(true);
   $m->isSMTP();
-  $m->Host       = $SMTP_HOST;
-  $m->SMTPAuth   = true;
-  $m->Username   = $SMTP_USER;
-  $m->Password   = $SMTP_PASS;
-  $m->Port       = $SMTP_PORT;
-  $m->CharSet    = 'UTF-8';
+  $m->Host     = $SMTP_HOST;
+  $m->SMTPAuth = true;
+  $m->Username = $SMTP_USER;
+  $m->Password = $SMTP_PASS;
+  $m->Port     = $SMTP_PORT;
+  $m->CharSet  = 'UTF-8';
 
   if ($SMTP_SEC === 'ssl') {
-    $m->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // 465
+    $m->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;     // 465
   } else {
-    $m->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // 587
+    $m->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;  // 587
   }
 
   $m->setFrom($FROM_MAIL, $FROM_NAME);
@@ -276,8 +256,8 @@ Web  : https://coroproject.jp
   $mailAutoOk = true;
 
 } catch (Throwable $e) {
-  // DB保存は完了しているのでユーザー体験はOKにしてログだけ残す
   error_log('[contact] mail error: ' . $e->getMessage());
+  // DB保存は完了しているので、ユーザーには成功扱いにして運用ログで追う
 }
 
 // =====================================================
