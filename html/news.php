@@ -227,7 +227,7 @@ function safeId($id) {
         <h4>Social</h4>
         <ul class="footer-links">
           <li><a href="https://youtube.com/@YourChannel" target="_blank">YouTube</a></li>
-          <li><a href="https://x.com/YourAccount" target="_blank">X</a></li>
+          <li><a href="https://x.com/CoroProjectJP" target="_blank">X</a></li>
           <li><a href="mailto:info@coroproject.jp">Mail</a></li>
         </ul>
       </div>

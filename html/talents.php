@@ -271,7 +271,7 @@ unset($t);
           <h4>Social</h4>
           <ul class="footer-links">
             <li><a href="#">YouTube</a></li>
-            <li><a href="#">X</a></li>
+            <li><a href="https://x.com/CoroProjectJP">X</a></li>
             <li><a href="#">Twitch</a></li>
           </ul>
         </div>

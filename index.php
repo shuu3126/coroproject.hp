@@ -412,7 +412,7 @@ try {
       <div class="footer-col">
         <h4>Social</h4>
         <ul>
-          <li><a href="https://x.com/CoroProject0111" target="_blank" rel="noopener">X（Twitter）</a></li>
+          <li><a href="https://x.com/CoroProjectJP" target="_blank" rel="noopener">X（Twitter）</a></li>
           <li><a href="#">YouTube</a></li>
           <li><a href="#">Twitch</a></li>
         </ul>
