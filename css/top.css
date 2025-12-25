@@ -1259,45 +1259,36 @@ body.home .site-header{
 }
 
 /* ============================
-   Loader
+   Loader (Simple / Clean)
    ============================ */
+
 body.is-loading{
   overflow:hidden;
 }
 
+/* ローダー全体 */
 .coro-loader{
   position:fixed;
   inset:0;
   z-index:9999;
-  background: var(--grad);
-  transition: opacity .8s ease, filter .8s ease, visibility .8s ease;
-}
-.coro-loader{
   display:flex;
   align-items:center;
   justify-content:center;
-}
-.coro-loader{
-  opacity: 1;
-}
-.coro-loader.coro-loader--hide{
-  opacity: 0;
+  background: var(--grad);
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transition: opacity .8s ease, visibility .8s ease;
 }
 
+/* フェードアウト */
 .coro-loader--hide{
   opacity:0;
-  filter:blur(10px);
   visibility:hidden;
   pointer-events:none;
 }
 
-/* シンプルローダー本体 */
-.coro-loader--simple{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
+/* 中央のロゴ＋タイトル */
 .coro-loader__simple-inner{
   display:flex;
   flex-direction:column;
@@ -1308,6 +1299,8 @@ body.is-loading{
 
 .coro-loader__simple-logo{
   width:min(160px, 44vw);
+  height:auto;
+  display:block;
   filter:drop-shadow(0 18px 40px rgba(0,0,0,.45));
 }
 
@@ -1315,15 +1308,20 @@ body.is-loading{
   font-family:'Keifont', system-ui, sans-serif;
   font-size:clamp(26px, 4.6vw, 44px);
   letter-spacing:.12em;
+  line-height:1.2;
+  text-shadow:0 10px 26px rgba(0,0,0,.35);
 }
-body.is-loading #app{
-  opacity: 0;
-  transform: translateY(6px);
+
+/* 本編を最初は隠して、loadedで出す */
+#app{
+  opacity:0;
+  transform:translateY(6px);
   pointer-events:none;
+  transition: opacity .8s ease, transform .8s ease;
 }
 
 body.is-loaded #app{
-  opacity: 1;
-  transform: translateY(0);
+  opacity:1;
+  transform:translateY(0);
   pointer-events:auto;
 }
