@@ -331,7 +331,7 @@ try {
           </ul>
           <div class="cta-actions">
             <a class="btn btn-primary" href="html/audition.html">オーディションの詳細を見る</a>
-            <a class="btn class="btn-outline" href="html/contact.html">まずは相談してみる</a>
+            <a class="btn btn-outline" href="html/contact.html">まずは相談してみる</a>
           </div>
           <p class="cta-note">
             「自分に合っているのかわからない」「少しだけ話を聞きたい」などのご相談もお気軽にどうぞ。
