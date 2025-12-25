@@ -90,37 +90,12 @@ try {
   <link rel="stylesheet" href="css/top.css">
 </head>
 <body class="home">
-  <div id="coro-loader" class="coro-loader">
-    <!-- 背景の粒子 -->
-    <div class="coro-loader__noise" aria-hidden="true"></div>
-
-    <!-- 画面のど真ん中に来る“コア部分”（ロゴ＋波紋） -->
-    <div class="coro-loader__core">
-      <div class="coro-loader__ripples" aria-hidden="true">
-        <div class="coro-loader__ripple ripple-1"></div>
-        <div class="coro-loader__ripple ripple-2"></div>
-        <div class="coro-loader__ripple ripple-3"></div>
-      </div>
-
-      <div class="coro-loader__logo-inner">
-        <img src="images/logo.png" alt="CORO PROJECT" class="coro-loader__logo-img">
-      </div>
-    </div>
-
-    <!-- ロゴの“下側”にまとめて配置するテキスト群 -->
-    <div class="coro-loader__bottom">
-      <p class="coro-loader__domain">coroproject.jp</p>
-      <p class="coro-loader__tagline">CREATOR FIRST, CREATIVE NEXT</p>
-
-      <div class="coro-loader__bar">
-        <div class="coro-loader__bar-inner"></div>
-      </div>
-
-      <p class="coro-loader__status">Preparing stage for talents...</p>
+  <div id="coro-loader" class="coro-loader coro-loader--simple" aria-label="Loading">
+    <div class="coro-loader__simple-inner">
+      <img src="images/logo.png" alt="CORO PROJECT" class="coro-loader__simple-logo">
+      <div class="coro-loader__simple-title">ころぷろじぇくと！</div>
     </div>
   </div>
-
-  <!-- ↓ここから既存のトップページ -->
   <div id="app">
   <!-- ===== Header ===== -->
   <header class="site-header">
