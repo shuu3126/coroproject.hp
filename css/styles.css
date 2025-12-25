@@ -49,6 +49,15 @@ body{
   font-size:16px;
   line-height:1.7;
   color:var(--text);
+  background: var(--bg);
+}
+
+/* 背景は固定で1枚だけ（全ページ共通） */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
   background:
     radial-gradient(140% 140% at 0% 0%, #35166b 0, transparent 55%),
     radial-gradient(140% 140% at 100% 0%, #54206d 0, transparent 55%),
@@ -70,14 +79,34 @@ body{
   }
 }
 
+/* =====================================================
+   section-alt：箱っぽい“塗り”をやめて、薄い膜にする
+   - 背景の同じ帯が積み重なる現象を防ぐ
+   ===================================================== */
 .section-alt{
   position:relative;
   padding:72px 0;
+  background:transparent;      /* ← 塗らない */
+  border-block:none;           /* ← 境界線で段差が出るので消す */
+}
+
+/* 薄いオーバーレイ（光の膜）だけ敷く */
+.section-alt::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
   background:
-    radial-gradient(60% 60% at 0% 0%, rgba(199,125,255,.18), transparent 60%),
-    radial-gradient(80% 80% at 100% 100%, rgba(255,143,215,.15), transparent 65%),
-    rgba(6, 3, 26, 0.96);
-  border-block:1px solid rgba(255,255,255,.08);
+    radial-gradient(60% 60% at 0% 0%, rgba(199,125,255,.12), transparent 60%),
+    radial-gradient(80% 80% at 100% 100%, rgba(255,143,215,.10), transparent 65%),
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0));
+  opacity:.75;
+}
+
+/* 中身を膜より上へ */
+.section-alt > *{
+  position:relative;
+  z-index:1;
 }
 
 .section-head{
@@ -102,6 +131,7 @@ body{
 .section-more:hover{
   color:#fff;
 }
+
 
 /* ===== Buttons ===== */
 .btn{
