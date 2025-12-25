@@ -1305,3 +1305,14 @@ body.is-loading{
   font-size:clamp(26px, 4.6vw, 44px);
   letter-spacing:.12em;
 }
+/* ローダー中は本編を隠す */
+#app{
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .8s ease, transform .8s ease;
+}
+
+body.is-loaded #app{
+  opacity: 1;
+  transform: translateY(0);
+}

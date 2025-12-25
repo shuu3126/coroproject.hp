@@ -89,7 +89,7 @@ try {
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/top.css">
 </head>
-<body class="home">
+<body class="home is-loading">
   <div id="coro-loader" class="coro-loader coro-loader--simple" aria-label="Loading">
     <div class="coro-loader__simple-inner">
       <img src="images/logo.png" alt="CORO PROJECT" class="coro-loader__simple-logo">
@@ -479,38 +479,32 @@ try {
   <!-- ★ ローダーを必ず消す安全版スクリプト -->
   <script>
   (function () {
-    function hideLoader() {
+    const MIN_SHOW_MS = 1800; // 表示したい秒数（例：1.8秒）
+    const FADE_MS     = 800;  // .coro-loader の transition と同じ
+    const FAILSAFE_MS = 6000;
+
+    const start = performance.now();
+
+    function finish() {
       const loader = document.getElementById("coro-loader");
-      if (!loader) return;
-      loader.classList.add("coro-loader--hide");
+      if (loader) loader.classList.add("coro-loader--hide");
+
       document.body.classList.remove("is-loading");
+      document.body.classList.add("is-loaded");
+
       setTimeout(() => {
-        if (loader && loader.parentNode) {
-          loader.parentNode.removeChild(loader);
-        }
-      }, 800);
+        if (loader) loader.remove();
+      }, FADE_MS);
     }
 
-    // 通常：load のあと少し待ってから消す
-    window.addEventListener("load", function () {
-      setTimeout(hideLoader, 800);
+    window.addEventListener("load", () => {
+      const elapsed = performance.now() - start;
+      setTimeout(finish, Math.max(0, MIN_SHOW_MS - elapsed));
     });
 
-    // 保険：5秒経っても load が来なければ強制で消す
-    setTimeout(hideLoader, 5000);
+    setTimeout(finish, FAILSAFE_MS);
   })();
   </script>
-
-  <script>
-    // ページを開いたら常に最上部に戻す
-    window.history.scrollRestoration = "manual";
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 10);
-    });
-  </script>
-
   <script>
   // Talents スライダー（今はHTML側に無いのでreturnで終了する）
   (function(){
