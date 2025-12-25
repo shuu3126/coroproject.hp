@@ -56,14 +56,6 @@ body{
 }
 
 /* ---- Layout utilities ---- */
-.app{
-  opacity:0;
-  transition:opacity 1s ease;
-}
-.app.visible{
-  opacity:1;
-}
-
 .container{
   width:min(100% - 32px, var(--container));
   margin-inline:auto;
