@@ -185,6 +185,89 @@ function fetchLinkRows(PDO $pdo, string $talentId): array {
     return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
+function ensureTalentImageDir(): array {
+    $rootDir = dirname(__DIR__, 2);
+    $relativeDir = 'images/talents';
+    $absoluteDir = $rootDir . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'talents';
+
+    if (!is_dir($absoluteDir)) {
+        if (!mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+            throw new RuntimeException('画像保存フォルダを作成できませんでした: ' . $absoluteDir);
+        }
+    }
+
+    if (!is_writable($absoluteDir)) {
+        throw new RuntimeException('画像保存フォルダに書き込みできません: ' . $absoluteDir);
+    }
+
+    return [$absoluteDir, $relativeDir];
+}
+
+function normalizeFileStem(string $value): string {
+    $value = preg_replace('/[^a-zA-Z0-9\-_]+/u', '-', trim($value));
+    $value = trim((string)$value, '-_');
+    $value = strtolower(substr((string)$value, 0, 50));
+    return $value !== '' ? $value : 'talent';
+}
+
+function saveAvatarUpload(array $file, string $baseName): ?string {
+    if (!isset($file['error'])) {
+        return null;
+    }
+
+    if ((int)$file['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    if ((int)$file['error'] !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('画像アップロードに失敗しました。（エラーコード: ' . (int)$file['error'] . '）');
+    }
+
+    if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        throw new RuntimeException('アップロードされた画像ファイルを確認できませんでした。');
+    }
+
+    if (!empty($file['size']) && (int)$file['size'] > 5 * 1024 * 1024) {
+        throw new RuntimeException('画像サイズは5MB以下にしてください。');
+    }
+
+    $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $originalName = (string)($file['name'] ?? '');
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+    if ($ext === '' || !in_array($ext, $allowedExts, true)) {
+        $finfo = function_exists('finfo_open') ? finfo_open(FILEINFO_MIME_TYPE) : false;
+        $mime = $finfo ? finfo_file($finfo, $file['tmp_name']) : '';
+        if ($finfo) {
+            finfo_close($finfo);
+        }
+
+        $mimeMap = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+        $ext = $mimeMap[$mime] ?? '';
+    }
+
+    if ($ext === '' || !in_array($ext, $allowedExts, true)) {
+        throw new RuntimeException('アップロードできる画像形式は jpg / jpeg / png / gif / webp のみです。');
+    }
+
+    [$absoluteDir, $relativeDir] = ensureTalentImageDir();
+
+    $stem = normalizeFileStem($baseName);
+    $filename = $stem . '-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $ext;
+    $destination = $absoluteDir . DIRECTORY_SEPARATOR . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        throw new RuntimeException('画像ファイルを保存できませんでした。');
+    }
+
+    return $relativeDir . '/' . $filename;
+}
+
 $errorMessage = '';
 
 // ===== 削除 =====
@@ -257,6 +340,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             if (talentIdExists($pdo, $id)) {
                 $id = generateSafeTalentId($pdo, $id);
+            }
+        }
+
+        if (!empty($_FILES['avatar_file'])) {
+            $uploadedAvatarPath = saveAvatarUpload($_FILES['avatar_file'], $id !== '' ? $id : $name);
+            if ($uploadedAvatarPath !== null) {
+                $avatar = $uploadedAvatarPath;
             }
         }
 
@@ -422,9 +512,10 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .btn{display:inline-block;padding:6px 10px;border-radius:6px;border:none;cursor:pointer;font-size:13px;}
     .btn-primary{background:#6366f1;color:#fff;}
     .btn-secondary{background:#374151;color:#e5e7eb;}
-    input[type="text"],input[type="date"],input[type="number"],textarea,select{
+    input[type="text"],input[type="date"],input[type="number"],input[type="file"],textarea,select{
       width:100%;padding:6px 8px;border-radius:6px;border:1px solid #4b5563;background:#020617;color:#e5e7eb;font-size:13px;
     }
+    input[type="file"]{padding:5px;}
     textarea{min-height:80px;resize:vertical;}
     label{display:block;font-size:12px;margin-top:6px;margin-bottom:2px;color:#9ca3af;}
     .row{display:flex;gap:8px;flex-wrap:wrap;}
@@ -433,6 +524,10 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .error{margin-bottom:8px;font-size:12px;color:#fca5a5;white-space:pre-wrap;}
     .nav{margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1f2937;font-size:13px;}
     .nav a{margin-right:12px;}
+    .help{font-size:11px;color:#94a3b8;margin-top:4px;}
+    .preview{margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .preview img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #334155;background:#0f172a;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;word-break:break-all;}
     @media (max-width:1024px){
       .layout{flex-direction:column;}
     }
@@ -459,7 +554,6 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <?php endif; ?>
 
   <div class="layout">
-    <!-- 一覧 -->
     <div class="panel" style="flex:1.4;max-height:80vh;overflow:auto;min-width:320px;">
       <h2>タレント一覧</h2>
       <table>
@@ -495,10 +589,9 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </table>
     </div>
 
-    <!-- 編集フォーム -->
     <div class="panel" style="flex:1;min-width:320px;">
       <h2><?= $editTalent ? 'タレント編集' : '新規タレント追加' ?></h2>
-      <form method="post" action="talents.php">
+      <form method="post" action="talents.php" enctype="multipart/form-data">
         <input type="hidden" name="mode" value="<?= $editTalent ? 'update' : 'create' ?>">
         <?php if ($editTalent): ?>
           <input type="hidden" name="original_id" value="<?= esc($editTalent['id']) ?>">
@@ -545,8 +638,35 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </div>
 
-        <label>アバター画像パス（例：../images/1.png）</label>
-        <input type="text" name="avatar" value="<?= esc($editTalent['avatar'] ?? '') ?>">
+        <label>アバター画像アップロード</label>
+        <input type="file" name="avatar_file" accept="image/jpeg,image/png,image/gif,image/webp">
+        <p class="help">アップロードした画像は <span class="mono">images/talents/</span> に保存され、画像パスより優先して使われます。対応形式: jpg / jpeg / png / gif / webp、5MBまで。</p>
+
+        <label>アバター画像パス（手入力したい場合）</label>
+        <input type="text" name="avatar" value="<?= esc($editTalent['avatar'] ?? '') ?>" placeholder="images/talents/example.png または ../images/1.png">
+        <p class="help">既存の手入力運用もそのまま使えます。画像をアップロードした場合は、保存時にこの値を自動更新します。</p>
+
+        <?php if (!empty($editTalent['avatar'])): ?>
+          <div class="preview">
+            <?php
+              $previewAvatar = $editTalent['avatar'];
+              if (strpos($previewAvatar, '../') === 0) {
+                  $previewSrc = $previewAvatar;
+              } elseif (strpos($previewAvatar, './') === 0) {
+                  $previewSrc = '../' . ltrim(substr($previewAvatar, 2), '/');
+              } elseif (strpos($previewAvatar, 'images/') === 0) {
+                  $previewSrc = '../../' . $previewAvatar;
+              } else {
+                  $previewSrc = $previewAvatar;
+              }
+            ?>
+            <img src="<?= esc($previewSrc) ?>" alt="現在のアバター">
+            <div>
+              <div class="help">現在の画像</div>
+              <div class="mono"><?= esc($editTalent['avatar']) ?></div>
+            </div>
+          </div>
+        <?php endif; ?>
 
         <label>短い紹介文（カード用）</label>
         <textarea name="bio"><?= esc($editTalent['bio'] ?? '') ?></textarea>
@@ -584,7 +704,8 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       <p style="font-size:11px;color:#6b7280;margin-top:12px;">
         ※ プラットフォーム・リンク・タグは JSON と関連テーブルの両方へ同期保存します。<br>
-        ※ 既存の公開ページ（talents.php / talent.php）の表示も崩さないようにしています。
+        ※ 既存の公開ページ（talents.php / talent.php）の表示も崩さないようにしています。<br>
+        ※ 画像ファイル自体は削除時に自動削除しません。既存運用を壊さないためです。
       </p>
     </div>
   </div>
