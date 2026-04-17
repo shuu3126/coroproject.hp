@@ -9,91 +9,268 @@ function esc($s) {
     return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+function normalizeFileStem(string $value): string {
+    $value = preg_replace('/[^a-zA-Z0-9\-_]+/u', '-', trim($value));
+    $value = trim((string)$value, '-_');
+    $value = strtolower(substr((string)$value, 0, 50));
+    return $value !== '' ? $value : 'news';
+}
+
+function normalizeNewsIdBase(string $value): string {
+    $value = preg_replace('/\s+/u', '-', trim($value));
+    $value = preg_replace('/[^a-zA-Z0-9\-_]+/u', '-', (string)$value);
+    $value = trim((string)$value, '-_');
+    $value = strtolower(substr((string)$value, 0, 80));
+    return $value !== '' ? $value : 'news';
+}
+
+function newsIdExists(PDO $pdo, string $id, ?string $excludeId = null): bool {
+    if ($excludeId !== null && $excludeId !== '') {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM news WHERE id = :id AND id <> :exclude_id');
+        $stmt->execute([':id' => $id, ':exclude_id' => $excludeId]);
+    } else {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM news WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+    }
+    return (int)$stmt->fetchColumn() > 0;
+}
+
+function generateSafeNewsId(PDO $pdo, string $title, string $date = ''): string {
+    $datePart = $date !== '' ? str_replace('-', '', $date) : date('Ymd');
+    $titlePart = normalizeNewsIdBase($title);
+    $base = normalizeNewsIdBase($datePart . '-' . $titlePart);
+
+    if (!newsIdExists($pdo, $base)) {
+        return $base;
+    }
+
+    for ($i = 2; $i <= 999; $i++) {
+        $candidate = $base . '-' . $i;
+        if (!newsIdExists($pdo, $candidate)) {
+            return $candidate;
+        }
+    }
+
+    return $base . '-' . date('His');
+}
+
+function ensureNewsImageDir(): array {
+    $rootDir = dirname(__DIR__, 2);
+    $relativeDir = 'images/news';
+    $absoluteDir = $rootDir . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'news';
+
+    if (!is_dir($absoluteDir)) {
+        if (!mkdir($absoluteDir, 0775, true) && !is_dir($absoluteDir)) {
+            throw new RuntimeException('ニュース画像保存フォルダを作成できませんでした: ' . $absoluteDir);
+        }
+    }
+
+    if (!is_writable($absoluteDir)) {
+        throw new RuntimeException('ニュース画像保存フォルダに書き込みできません: ' . $absoluteDir);
+    }
+
+    return [$absoluteDir, $relativeDir];
+}
+
+function saveNewsThumbUpload(array $file, string $baseName): ?string {
+    if (!isset($file['error'])) {
+        return null;
+    }
+
+    if ((int)$file['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    if ((int)$file['error'] !== UPLOAD_ERR_OK) {
+        throw new RuntimeException('画像アップロードに失敗しました。（エラーコード: ' . (int)$file['error'] . '）');
+    }
+
+    if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        throw new RuntimeException('アップロードされた画像ファイルを確認できませんでした。');
+    }
+
+    if (!empty($file['size']) && (int)$file['size'] > 5 * 1024 * 1024) {
+        throw new RuntimeException('画像サイズは5MB以下にしてください。');
+    }
+
+    $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $originalName = (string)($file['name'] ?? '');
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+    if ($ext === '' || !in_array($ext, $allowedExts, true)) {
+        $finfo = function_exists('finfo_open') ? finfo_open(FILEINFO_MIME_TYPE) : false;
+        $mime = $finfo ? finfo_file($finfo, $file['tmp_name']) : '';
+        if ($finfo) {
+            finfo_close($finfo);
+        }
+
+        $mimeMap = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+        $ext = $mimeMap[$mime] ?? '';
+    }
+
+    if ($ext === '' || !in_array($ext, $allowedExts, true)) {
+        throw new RuntimeException('アップロードできる画像形式は jpg / jpeg / png / gif / webp のみです。');
+    }
+
+    [$absoluteDir, $relativeDir] = ensureNewsImageDir();
+
+    $stem = normalizeFileStem($baseName);
+    $filename = $stem . '-' . date('YmdHis') . '-' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $ext;
+    $destination = $absoluteDir . DIRECTORY_SEPARATOR . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        throw new RuntimeException('画像ファイルを保存できませんでした。');
+    }
+
+    return $relativeDir . '/' . $filename;
+}
+
+$errorMessage = '';
+
 // ------- 削除処理 -------
 if (isset($_GET['action']) && $_GET['action'] === 'delete' && !empty($_GET['id'])) {
-    $id = $_GET['id'];
-    $stmt = $pdo->prepare("DELETE FROM news WHERE id = :id");
-    $stmt->execute([':id' => $id]);
-    header('Location: news.php?msg=deleted');
-    exit;
+    try {
+        $id = $_GET['id'];
+        $stmt = $pdo->prepare('DELETE FROM news WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        header('Location: news.php?msg=deleted');
+        exit;
+    } catch (Throwable $e) {
+        $errorMessage = '削除中にエラーが発生しました: ' . $e->getMessage();
+    }
 }
 
 // ------- 保存処理（新規＆更新） -------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id         = trim($_POST['id'] ?? '');
-    $mode       = $_POST['mode'] ?? 'create'; // create or update
-    $title      = trim($_POST['title'] ?? '');
-    $date       = trim($_POST['date'] ?? '');
-    $tag        = trim($_POST['tag'] ?? '');
-    $thumb      = trim($_POST['thumb'] ?? '');
-    $excerpt    = trim($_POST['excerpt'] ?? '');
-    $url        = trim($_POST['url'] ?? '');
-    $sort_order = (int)($_POST['sort_order'] ?? 0);
-    $is_pub     = isset($_POST['is_published']) ? 1 : 0;
+    try {
+        $mode       = $_POST['mode'] ?? 'create';
+        $originalId = trim($_POST['original_id'] ?? '');
+        $id         = trim($_POST['id'] ?? '');
+        $title      = trim($_POST['title'] ?? '');
+        $date       = trim($_POST['date'] ?? '');
+        $tag        = trim($_POST['tag'] ?? '');
+        $thumb      = trim($_POST['thumb'] ?? '');
+        $excerpt    = trim($_POST['excerpt'] ?? '');
+        $url        = trim($_POST['url'] ?? '');
+        $sort_order = (int)($_POST['sort_order'] ?? 0);
+        $is_pub     = isset($_POST['is_published']) ? 1 : 0;
 
-    // 本文：1行＝1段落 → JSON配列に変換
-    $contentText = trim($_POST['content'] ?? '');
-    if ($contentText === '') {
-        $contentJson = json_encode([], JSON_UNESCAPED_UNICODE);
-    } else {
-        $lines = preg_split('/\R/u', $contentText);
-        $lines = array_values(array_filter($lines, 'strlen'));
-        $contentJson = json_encode($lines, JSON_UNESCAPED_UNICODE);
+        if ($title === '') {
+            throw new RuntimeException('タイトルは必須です。');
+        }
+
+        if ($mode === 'update' && $originalId === '') {
+            throw new RuntimeException('更新対象のニュースIDが見つかりません。');
+        }
+
+        // 本文：1行＝1段落 → JSON配列に変換
+        $contentText = trim($_POST['content'] ?? '');
+        if ($contentText === '') {
+            $contentJson = json_encode([], JSON_UNESCAPED_UNICODE);
+        } else {
+            $lines = preg_split('/\R/u', $contentText);
+            $lines = array_values(array_filter(array_map('trim', $lines), 'strlen'));
+            $contentJson = json_encode($lines, JSON_UNESCAPED_UNICODE);
+        }
+
+        // id 未入力なら安全なIDを自動生成
+        if ($id === '') {
+            if ($mode === 'update' && $originalId !== '') {
+                $id = $originalId;
+            } else {
+                $id = generateSafeNewsId($pdo, $title, $date);
+            }
+        }
+
+        if ($mode === 'update') {
+            if (newsIdExists($pdo, $id, $originalId)) {
+                throw new RuntimeException('そのニュースIDはすでに使われています。別のIDにしてください。');
+            }
+        } else {
+            if (newsIdExists($pdo, $id)) {
+                throw new RuntimeException('そのニュースIDはすでに使われています。別のIDにしてください。');
+            }
+        }
+
+        // 画像アップロードがあれば thumb より優先
+        $uploadThumb = saveNewsThumbUpload($_FILES['thumb_file'] ?? [], $id !== '' ? $id : $title);
+        if ($uploadThumb !== null) {
+            $thumb = $uploadThumb;
+        }
+
+        if ($mode === 'update') {
+            $sql = "UPDATE news SET
+                        id = :new_id,
+                        title = :title,
+                        date = :date,
+                        tag = :tag,
+                        thumb = :thumb,
+                        excerpt = :excerpt,
+                        content = :content,
+                        url = :url,
+                        is_published = :is_published,
+                        sort_order = :sort_order
+                    WHERE id = :original_id";
+        } else {
+            $sql = "INSERT INTO news
+                        (id, title, date, tag, thumb, excerpt, content, url, is_published, sort_order)
+                    VALUES
+                        (:new_id, :title, :date, :tag, :thumb, :excerpt, :content, :url, :is_published, :sort_order)";
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $params = [
+            ':new_id'       => $id,
+            ':title'        => $title,
+            ':date'         => $date ?: date('Y-m-d'),
+            ':tag'          => $tag ?: 'お知らせ',
+            ':thumb'        => $thumb,
+            ':excerpt'      => $excerpt,
+            ':content'      => $contentJson,
+            ':url'          => $url,
+            ':is_published' => $is_pub,
+            ':sort_order'   => $sort_order,
+        ];
+        if ($mode === 'update') {
+            $params[':original_id'] = $originalId;
+        }
+        $stmt->execute($params);
+
+        header('Location: news.php?msg=saved');
+        exit;
+    } catch (Throwable $e) {
+        $errorMessage = '保存中にエラーが発生しました: ' . $e->getMessage();
+        $editNews = [
+            'id'           => $_POST['id'] ?? '',
+            'title'        => $_POST['title'] ?? '',
+            'date'         => $_POST['date'] ?? date('Y-m-d'),
+            'tag'          => $_POST['tag'] ?? '',
+            'thumb'        => $_POST['thumb'] ?? '',
+            'excerpt'      => $_POST['excerpt'] ?? '',
+            'content'      => json_encode([], JSON_UNESCAPED_UNICODE),
+            '_content_text'=> $_POST['content'] ?? '',
+            'url'          => $_POST['url'] ?? '',
+            'is_published' => isset($_POST['is_published']) ? 1 : 0,
+            'sort_order'   => $_POST['sort_order'] ?? 0,
+        ];
     }
-
-    // id 未入力なら、自動で生成（date-titleスラッグ）
-    if ($id === '') {
-        $base = ($date ?: date('Y-m-d')) . '-' . mb_substr(preg_replace('/\s+/', '-', $title), 0, 20);
-        $base = preg_replace('/[^a-zA-Z0-9\-_]/', '-', $base);
-        $id = strtolower($base);
-    }
-
-    if ($mode === 'update') {
-        $sql = "UPDATE news SET
-                    title = :title,
-                    date = :date,
-                    tag = :tag,
-                    thumb = :thumb,
-                    excerpt = :excerpt,
-                    content = :content,
-                    url = :url,
-                    is_published = :is_published,
-                    sort_order = :sort_order
-                WHERE id = :id";
-    } else {
-        $sql = "INSERT INTO news
-                    (id, title, date, tag, thumb, excerpt, content, url, is_published, sort_order)
-                VALUES
-                    (:id, :title, :date, :tag, :thumb, :excerpt, :content, :url, :is_published, :sort_order)";
-    }
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        ':id'           => $id,
-        ':title'        => $title,
-        ':date'         => $date ?: date('Y-m-d'),
-        ':tag'          => $tag ?: 'お知らせ',
-        ':thumb'        => $thumb,
-        ':excerpt'      => $excerpt,
-        ':content'      => $contentJson,
-        ':url'          => $url,
-        ':is_published' => $is_pub,
-        ':sort_order'   => $sort_order,
-    ]);
-
-    header('Location: news.php?msg=saved');
-    exit;
 }
 
 // ------- 編集用データの取得 -------
-$editNews = null;
-if (isset($_GET['action']) && $_GET['action'] === 'edit' && !empty($_GET['id'])) {
-    $stmt = $pdo->prepare("SELECT * FROM news WHERE id = :id");
+if (!isset($editNews)) {
+    $editNews = null;
+}
+if ($editNews === null && isset($_GET['action']) && $_GET['action'] === 'edit' && !empty($_GET['id'])) {
+    $stmt = $pdo->prepare('SELECT * FROM news WHERE id = :id');
     $stmt->execute([':id' => $_GET['id']]);
     $editNews = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($editNews) {
-        // JSONをテキストに戻す（1行＝1段落）
         $contentText = '';
         $decoded = json_decode($editNews['content'], true);
         if (is_array($decoded)) {
@@ -106,9 +283,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && !empty($_GET['id']))
 }
 
 // ------- 一覧を取得 -------
-$stmt = $pdo->query("SELECT * FROM news ORDER BY date DESC, sort_order ASC, id DESC");
+$stmt = $pdo->query('SELECT * FROM news ORDER BY date DESC, sort_order ASC, id DESC');
 $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 ?>
 <!doctype html>
 <html lang="ja">
@@ -133,16 +309,20 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .btn-primary{background:#6366f1;color:#fff;}
     .btn-danger{background:#b91c1c;color:#fff;}
     .btn-secondary{background:#374151;color:#e5e7eb;}
-    input[type="text"],input[type="date"],input[type="number"],textarea{
-      width:100%;padding:6px 8px;border-radius:6px;border:1px solid #4b5563;background:#020617;color:#e5e7eb;font-size:13px;
+    input[type="text"],input[type="date"],input[type="number"],input[type="file"],textarea{
+      width:100%;padding:6px 8px;border-radius:6px;border:1px solid #4b5563;background:#020617;color:#e5e7eb;font-size:13px;box-sizing:border-box;
     }
+    input[type="file"]{padding:5px;}
     textarea{min-height:120px;resize:vertical;}
     label{display:block;font-size:12px;margin-top:6px;margin-bottom:2px;color:#9ca3af;}
     .row{display:flex;gap:8px;flex-wrap:wrap;}
     .row>div{flex:1;}
     .msg{margin-bottom:8px;font-size:12px;color:#a5b4fc;}
+    .error{margin-bottom:8px;font-size:12px;color:#fca5a5;white-space:pre-wrap;}
+    .help{font-size:11px;color:#94a3b8;margin:4px 0 0;}
+    .current-thumb{margin-top:8px;}
+    .current-thumb img{display:block;max-width:220px;max-height:140px;border-radius:8px;border:1px solid #1f2937;background:#0b1120;object-fit:cover;}
 
-    /* プレビュー用 */
     .preview-wrap{margin-top:16px;border-top:1px dashed #1f2937;padding-top:12px;}
     .preview-title{font-size:13px;color:#9ca3af;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
     .preview-title span{font-size:10px;padding:2px 6px;border-radius:999px;background:#1f2937;}
@@ -171,7 +351,10 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php if ($_GET['msg']==='deleted') echo '削除しました。'; ?>
     </p>
   <?php endif; ?>
-  
+  <?php if ($errorMessage !== ''): ?>
+    <p class="error"><?= esc($errorMessage) ?></p>
+  <?php endif; ?>
+
   <div class="nav" style="margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1f2937;font-size:13px;">
     <a href="index.php">🏠 トップ</a>
     <a href="news.php">📰 News管理</a>
@@ -180,7 +363,6 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </div>
 
   <div class="layout">
-    <!-- 一覧 -->
     <div class="panel" style="flex:1.4;max-height:80vh;overflow:auto;min-width:320px;">
       <h2>一覧</h2>
       <table>
@@ -212,11 +394,13 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </table>
     </div>
 
-    <!-- 編集フォーム + プレビュー -->
     <div class="panel" style="flex:1;min-width:320px;">
       <h2><?= $editNews ? 'ニュース編集' : '新規追加' ?></h2>
-      <form method="post" action="news.php" id="newsForm">
+      <form method="post" action="news.php" id="newsForm" enctype="multipart/form-data">
         <input type="hidden" name="mode" value="<?= $editNews ? 'update' : 'create' ?>">
+        <?php if ($editNews): ?>
+          <input type="hidden" name="original_id" value="<?= esc($editNews['id']) ?>">
+        <?php endif; ?>
 
         <label>ニュースID（URLなどに使うID。空なら自動生成）</label>
         <input type="text" name="id" value="<?= esc($editNews['id'] ?? '') ?>">
@@ -243,8 +427,19 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </div>
         </div>
 
-        <label>サムネイル画像パス（例：../images/news/audition-1.jpg）</label>
-        <input type="text" name="thumb" value="<?= esc($editNews['thumb'] ?? '') ?>">
+        <label>サムネイル画像アップロード</label>
+        <input type="file" name="thumb_file" id="thumb_file" accept="image/jpeg,image/png,image/gif,image/webp">
+        <p class="help">アップロードした画像は <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">images/news/</span> に保存され、画像パスより優先して使われます。対応形式: jpg / jpeg / png / gif / webp、5MBまで。</p>
+
+        <label>サムネイル画像パス（アップロードしない場合のみ使用）</label>
+        <input type="text" name="thumb" id="thumb_input" value="<?= esc($editNews['thumb'] ?? '') ?>" placeholder="images/news/example.jpg または ../images/news/example.jpg">
+
+        <?php if (!empty($editNews['thumb'])): ?>
+          <div class="current-thumb">
+            <div class="help" style="margin-bottom:6px;">現在のサムネイル</div>
+            <img src="<?= esc($editNews['thumb']) ?>" alt="現在のサムネイル" onerror="this.style.display='none'">
+          </div>
+        <?php endif; ?>
 
         <label>抜粋（一覧カードに表示される短い説明）</label>
         <textarea name="excerpt"><?= esc($editNews['excerpt'] ?? '') ?></textarea>
@@ -266,14 +461,12 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       </form>
 
-      <!-- ▼ ライブプレビュー -->
       <div class="preview-wrap">
         <div class="preview-title">
           プレビュー
           <span>Newsページのイメージ表示（保存前に確認用）</span>
         </div>
         <div class="preview-grid">
-          <!-- カード側（一覧） -->
           <div class="preview-card">
             <div class="preview-card-thumb" id="pv-thumb"></div>
             <div class="preview-card-meta">
@@ -283,7 +476,6 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <h3 class="preview-card-title" id="pv-title"></h3>
             <p class="preview-card-text" id="pv-excerpt"></p>
           </div>
-          <!-- 詳細側 -->
           <div class="preview-detail">
             <div class="preview-detail-meta">
               <span id="pv-date-detail"></span>
@@ -298,13 +490,13 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       <p style="font-size:11px;color:#6b7280;margin-top:12px;">
         ※「本文」は1行＝1段落として、サイト側では自動で&lt;p&gt;に分割して表示されます。<br>
-        ※ 「並び順」は小さい数字が上に来ます（0,1,2...）。同じなら日付の新しいものが上。
+        ※「並び順」は小さい数字が上に来ます（0,1,2...）。同じなら日付の新しいものが上。<br>
+        ※削除時、アップロード済み画像ファイル自体は自動削除しません。
       </p>
     </div>
   </div>
 
   <script>
-    // ライブプレビュー
     (function(){
       const form = document.getElementById('newsForm');
       if (!form) return;
@@ -315,6 +507,7 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
       const elDate    = $('date');
       const elTag     = $('tag');
       const elThumb   = $('thumb');
+      const elThumbF  = $('thumb_file');
       const elExcerpt = $('excerpt');
       const elContent = $('content');
       const elUrl     = $('url');
@@ -347,6 +540,18 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return `${y}.${m}.${dd}`;
       }
 
+      let uploadedPreviewUrl = '';
+      function refreshUploadPreview(){
+        if (uploadedPreviewUrl) {
+          URL.revokeObjectURL(uploadedPreviewUrl);
+          uploadedPreviewUrl = '';
+        }
+        const file = elThumbF && elThumbF.files && elThumbF.files[0] ? elThumbF.files[0] : null;
+        if (file) {
+          uploadedPreviewUrl = URL.createObjectURL(file);
+        }
+      }
+
       function render(){
         const title   = elTitle.value.trim();
         const date    = elDate.value.trim();
@@ -356,23 +561,22 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
         const url     = elUrl.value.trim();
         const content = elContent.value;
 
-        // カード側
         pvTitle.textContent   = title || 'タイトル';
         pvExcerpt.textContent = excerpt || 'ここに抜粋が表示されます。';
         pvTag.textContent     = tag;
         pvDate.textContent    = fmtDateInput(date) || '----.--.--';
-        if (thumb){
-          pvThumb.style.backgroundImage = `url('${thumb}')`;
+
+        const previewThumb = uploadedPreviewUrl || thumb;
+        if (previewThumb){
+          pvThumb.style.backgroundImage = `url('${previewThumb.replace(/'/g, "\\'")}')`;
         } else {
           pvThumb.style.backgroundImage = 'linear-gradient(135deg,#4f46e5,#ec4899)';
         }
 
-        // 詳細側
         pvTitleD.textContent = title || 'タイトル';
         pvTagD.textContent   = tag;
         pvDateD.textContent  = fmtDateInput(date) || '----.--.--';
 
-        // 本文：1行ごとに<p>
         pvBody.innerHTML = '';
         const lines = content.split(/\r?\n/).filter(l => l.trim().length);
         if (!lines.length){
@@ -396,11 +600,16 @@ $allNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
       ['input','change'].forEach(ev=>{
         form.addEventListener(ev, e=>{
-          if (e.target.matches('input,textarea')) render();
+          if (e.target.matches('input,textarea')) {
+            if (e.target === elThumbF) {
+              refreshUploadPreview();
+            }
+            render();
+          }
         });
       });
 
-      // 初期表示
+      refreshUploadPreview();
       render();
     })();
   </script>
