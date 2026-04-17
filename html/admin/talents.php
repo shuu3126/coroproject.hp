@@ -11,178 +11,383 @@ function esc($s) {
     return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-// ===== 削除 =====
-if (isset($_GET['action']) && $_GET['action'] === 'delete' && !empty($_GET['id'])) {
-    $stmt = $pdo->prepare("DELETE FROM talents WHERE id = :id");
-    $stmt->execute([':id' => $_GET['id']]);
-    header('Location: talents.php?msg=deleted');
-    exit;
+function parseLongBioToJson(string $text): string {
+    $text = trim($text);
+    if ($text === '') {
+        return json_encode([], JSON_UNESCAPED_UNICODE);
+    }
+
+    $lines = preg_split('/\R/u', $text);
+    $lines = array_values(array_filter(array_map('trim', $lines), 'strlen'));
+    return json_encode($lines, JSON_UNESCAPED_UNICODE);
 }
 
-// ===== 保存（新規/更新） =====
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $mode        = $_POST['mode'] ?? 'create';   // create / update
-    $id          = trim($_POST['id'] ?? '');
-    $name        = trim($_POST['name'] ?? '');
-    $kana        = trim($_POST['kana'] ?? '');
-    // ★ DB カラム名に合わせて talent_group に統一
-    $talentGroup = trim($_POST['talent_group'] ?? '');
-    $status      = trim($_POST['status'] ?? 'active');
-    $debut       = trim($_POST['debut'] ?? '');
-    $lastActive  = trim($_POST['last_active'] ?? '');
-    $avatar      = trim($_POST['avatar'] ?? '');
-    $bio         = trim($_POST['bio'] ?? '');
-    $sortOrder   = (int)($_POST['sort_order'] ?? 0);
-    $isPub       = isset($_POST['is_published']) ? 1 : 0;
-
-    // longBio：1行＝1段落 → JSON配列
-    $longBioText = trim($_POST['long_bio'] ?? '');
-    if ($longBioText === '') {
-        $longBioJson = json_encode([], JSON_UNESCAPED_UNICODE);
-    } else {
-        $lines = preg_split('/\R/u', $longBioText);
-        $lines = array_values(array_filter($lines, 'strlen'));
-        $longBioJson = json_encode($lines, JSON_UNESCAPED_UNICODE);
-    }
-
-    // platforms：1行 "名前|URL"
-    $platformText = trim($_POST['platforms'] ?? '');
+function parsePlatforms(string $text): array {
+    $text = trim($text);
     $platforms = [];
-    if ($platformText !== '') {
-        foreach (preg_split('/\R/u', $platformText) as $line) {
-            $line = trim($line);
-            if ($line === '') continue;
-            $parts = explode('|', $line, 2);
-            $pname = trim($parts[0] ?? '');
-            $purl  = trim($parts[1] ?? '');
-            if ($pname === '' && $purl === '') continue;
-            $platforms[] = ['name' => $pname, 'url' => $purl];
-        }
+    if ($text === '') {
+        return $platforms;
     }
-    $platformsJson = json_encode($platforms, JSON_UNESCAPED_UNICODE);
 
-    // links：1行 "ラベル|URL"
-    $linksText = trim($_POST['links'] ?? '');
+    foreach (preg_split('/\R/u', $text) as $line) {
+        $line = trim($line);
+        if ($line === '') continue;
+
+        $parts = explode('|', $line, 2);
+        $name = trim($parts[0] ?? '');
+        $url  = trim($parts[1] ?? '');
+
+        if ($name === '' && $url === '') continue;
+        $platforms[] = ['name' => $name, 'url' => $url];
+    }
+
+    return $platforms;
+}
+
+function parseLinks(string $text): array {
+    $text = trim($text);
     $links = [];
-    if ($linksText !== '') {
-        foreach (preg_split('/\R/u', $linksText) as $line) {
-            $line = trim($line);
-            if ($line === '') continue;
-            $parts = explode('|', $line, 2);
-            $label = trim($parts[0] ?? '');
-            $lurl  = trim($parts[1] ?? '');
-            if ($label === '' && $lurl === '') continue;
-            $links[] = ['label' => $label, 'url' => $lurl];
-        }
+    if ($text === '') {
+        return $links;
     }
-    $linksJson = json_encode($links, JSON_UNESCAPED_UNICODE);
 
-    // tags：カンマ区切り or 改行
-    $tagsText = trim($_POST['tags'] ?? '');
+    foreach (preg_split('/\R/u', $text) as $line) {
+        $line = trim($line);
+        if ($line === '') continue;
+
+        $parts = explode('|', $line, 2);
+        $label = trim($parts[0] ?? '');
+        $url   = trim($parts[1] ?? '');
+
+        if ($label === '' && $url === '') continue;
+        $links[] = ['label' => $label, 'url' => $url];
+    }
+
+    return $links;
+}
+
+function parseTagsToJson(string $text): string {
+    $text = trim($text);
     $tags = [];
-    if ($tagsText !== '') {
-        $tmp = preg_split('/[,\r\n]+/u', $tagsText);
+    if ($text !== '') {
+        $tmp = preg_split('/[,\r\n]+/u', $text);
         foreach ($tmp as $t) {
             $t = trim($t);
             if ($t !== '') $tags[] = $t;
         }
     }
-    $tagsJson = json_encode($tags, JSON_UNESCAPED_UNICODE);
 
-    // id 自動生成（空なら name を元に）
-    if ($id === '') {
-        $tmp = preg_replace('/\s+/', '-', $name);
-        $tmp = preg_replace('/[^a-zA-Z0-9\-_]/', '-', $tmp);
-        $tmp = substr($tmp, 0, 20);
-        $id = strtolower($tmp ?: ('talent-' . date('YmdHis')));
+    return json_encode(array_values($tags), JSON_UNESCAPED_UNICODE);
+}
+
+function generateSafeTalentId(PDO $pdo, string $name, string $excludeId = ''): string {
+    $base = trim($name);
+    $base = preg_replace('/\s+/u', '-', $base);
+    $base = preg_replace('/[^a-zA-Z0-9\-_]+/u', '-', $base);
+    $base = trim((string)$base, '-_');
+    $base = strtolower(substr((string)$base, 0, 40));
+
+    if ($base === '') {
+        $base = 'talent-' . date('YmdHis');
     }
 
-    if ($mode === 'update') {
-        $sql = "UPDATE talents SET
-                    name           = :name,
-                    kana           = :kana,
-                    talent_group   = :talent_group,
-                    status         = :status,
-                    debut          = :debut,
-                    last_active    = :last_active,
-                    avatar         = :avatar,
-                    bio            = :bio,
-                    long_bio_json  = :long_bio_json,
-                    platforms_json = :platforms_json,
-                    links_json     = :links_json,
-                    tags_json      = :tags_json,
-                    sort_order     = :sort_order,
-                    is_published   = :is_published
-                WHERE id = :id";
+    $candidate = $base;
+    $i = 2;
+    while (talentIdExists($pdo, $candidate, $excludeId)) {
+        $suffix = '-' . $i;
+        $candidate = substr($base, 0, max(1, 40 - strlen($suffix))) . $suffix;
+        $i++;
+    }
+
+    return $candidate;
+}
+
+function talentIdExists(PDO $pdo, string $id, string $excludeId = ''): bool {
+    if ($excludeId !== '') {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM talents WHERE id = :id AND id <> :exclude_id');
+        $stmt->execute([
+            ':id' => $id,
+            ':exclude_id' => $excludeId,
+        ]);
     } else {
-        $sql = "INSERT INTO talents
-                    (id, name, kana, talent_group, status, debut, last_active, avatar,
-                     bio, long_bio_json, platforms_json, links_json, tags_json,
-                     sort_order, is_published)
-                VALUES
-                    (:id, :name, :kana, :talent_group, :status, :debut, :last_active, :avatar,
-                     :bio, :long_bio_json, :platforms_json, :links_json, :tags_json,
-                     :sort_order, :is_published)";
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM talents WHERE id = :id');
+        $stmt->execute([':id' => $id]);
     }
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        ':id'             => $id,
-        ':name'           => $name,
-        ':kana'           => $kana,
-        ':talent_group'   => $talentGroup,
-        ':status'         => $status,
-        ':debut'          => $debut ?: null,
-        ':last_active'    => $lastActive ?: null,
-        ':avatar'         => $avatar,
-        ':bio'            => $bio,
-        ':long_bio_json'  => $longBioJson,
-        ':platforms_json' => $platformsJson,
-        ':links_json'     => $linksJson,
-        ':tags_json'      => $tagsJson,
-        ':sort_order'     => $sortOrder,
-        ':is_published'   => $isPub,
-    ]);
+    return (int)$stmt->fetchColumn() > 0;
+}
 
-    header('Location: talents.php?msg=saved');
-    exit;
+function syncTalentRelations(PDO $pdo, string $oldId, string $newId, array $platforms, array $links): void {
+    $idsToDelete = [$newId];
+    if ($oldId !== '' && $oldId !== $newId) {
+        $idsToDelete[] = $oldId;
+    }
+    $idsToDelete = array_values(array_unique(array_filter($idsToDelete, 'strlen')));
+
+    if ($idsToDelete) {
+        $placeholders = implode(',', array_fill(0, count($idsToDelete), '?'));
+
+        $stmt = $pdo->prepare("DELETE FROM talent_platforms WHERE talent_id IN ($placeholders)");
+        $stmt->execute($idsToDelete);
+
+        $stmt = $pdo->prepare("DELETE FROM talent_links WHERE talent_id IN ($placeholders)");
+        $stmt->execute($idsToDelete);
+    }
+
+    if ($platforms) {
+        $stmt = $pdo->prepare('INSERT INTO talent_platforms (talent_id, name, url) VALUES (:talent_id, :name, :url)');
+        foreach ($platforms as $p) {
+            $stmt->execute([
+                ':talent_id' => $newId,
+                ':name'      => $p['name'] ?? '',
+                ':url'       => $p['url'] ?? '',
+            ]);
+        }
+    }
+
+    if ($links) {
+        $stmt = $pdo->prepare('INSERT INTO talent_links (talent_id, label, url) VALUES (:talent_id, :label, :url)');
+        foreach ($links as $l) {
+            $stmt->execute([
+                ':talent_id' => $newId,
+                ':label'     => $l['label'] ?? '',
+                ':url'       => $l['url'] ?? '',
+            ]);
+        }
+    }
+}
+
+function platformsToText(array $platforms): string {
+    $lines = [];
+    foreach ($platforms as $p) {
+        $lines[] = trim((string)($p['name'] ?? '')) . '|' . trim((string)($p['url'] ?? ''));
+    }
+    return implode("\n", $lines);
+}
+
+function linksToText(array $links): string {
+    $lines = [];
+    foreach ($links as $l) {
+        $lines[] = trim((string)($l['label'] ?? '')) . '|' . trim((string)($l['url'] ?? ''));
+    }
+    return implode("\n", $lines);
+}
+
+function fetchPlatformRows(PDO $pdo, string $talentId): array {
+    $stmt = $pdo->prepare('SELECT name, url FROM talent_platforms WHERE talent_id = :id ORDER BY id ASC');
+    $stmt->execute([':id' => $talentId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function fetchLinkRows(PDO $pdo, string $talentId): array {
+    $stmt = $pdo->prepare('SELECT label, url FROM talent_links WHERE talent_id = :id ORDER BY id ASC');
+    $stmt->execute([':id' => $talentId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+$errorMessage = '';
+
+// ===== 削除 =====
+if (isset($_GET['action']) && $_GET['action'] === 'delete' && !empty($_GET['id'])) {
+    try {
+        $pdo->beginTransaction();
+
+        $stmt = $pdo->prepare('DELETE FROM talent_platforms WHERE talent_id = :id');
+        $stmt->execute([':id' => $_GET['id']]);
+
+        $stmt = $pdo->prepare('DELETE FROM talent_links WHERE talent_id = :id');
+        $stmt->execute([':id' => $_GET['id']]);
+
+        $stmt = $pdo->prepare('DELETE FROM talents WHERE id = :id');
+        $stmt->execute([':id' => $_GET['id']]);
+
+        $pdo->commit();
+        header('Location: talents.php?msg=deleted');
+        exit;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $errorMessage = '削除中にエラーが発生しました: ' . $e->getMessage();
+    }
+}
+
+// ===== 保存（新規/更新） =====
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        $mode        = $_POST['mode'] ?? 'create';
+        $originalId  = trim($_POST['original_id'] ?? '');
+        $id          = trim($_POST['id'] ?? '');
+        $name        = trim($_POST['name'] ?? '');
+        $kana        = trim($_POST['kana'] ?? '');
+        $talentGroup = trim($_POST['talent_group'] ?? '');
+        $status      = trim($_POST['status'] ?? 'active');
+        $debut       = trim($_POST['debut'] ?? '');
+        $lastActive  = trim($_POST['last_active'] ?? '');
+        $avatar      = trim($_POST['avatar'] ?? '');
+        $bio         = trim($_POST['bio'] ?? '');
+        $sortOrder   = (int)($_POST['sort_order'] ?? 0);
+        $isPub       = isset($_POST['is_published']) ? 1 : 0;
+
+        $longBioText  = trim($_POST['long_bio'] ?? '');
+        $platformText = trim($_POST['platforms'] ?? '');
+        $linksText    = trim($_POST['links'] ?? '');
+        $tagsText     = trim($_POST['tags'] ?? '');
+
+        if ($name === '') {
+            throw new RuntimeException('名前は必須です。');
+        }
+
+        if ($mode === 'update' && $originalId === '') {
+            throw new RuntimeException('更新対象のIDが見つかりません。');
+        }
+
+        if ($id === '') {
+            if ($mode === 'update' && $originalId !== '') {
+                $id = $originalId;
+            } else {
+                $id = generateSafeTalentId($pdo, $name);
+            }
+        }
+
+        if ($mode === 'update') {
+            if (talentIdExists($pdo, $id, $originalId)) {
+                throw new RuntimeException('そのIDはすでに使われています。別のIDにしてください。');
+            }
+        } else {
+            if (talentIdExists($pdo, $id)) {
+                $id = generateSafeTalentId($pdo, $id);
+            }
+        }
+
+        $longBioJson   = parseLongBioToJson($longBioText);
+        $platforms     = parsePlatforms($platformText);
+        $platformsJson = json_encode($platforms, JSON_UNESCAPED_UNICODE);
+        $links         = parseLinks($linksText);
+        $linksJson     = json_encode($links, JSON_UNESCAPED_UNICODE);
+        $tagsJson      = parseTagsToJson($tagsText);
+
+        $pdo->beginTransaction();
+
+        if ($mode === 'update') {
+            $sql = "UPDATE talents SET
+                        id             = :new_id,
+                        name           = :name,
+                        kana           = :kana,
+                        talent_group   = :talent_group,
+                        status         = :status,
+                        debut          = :debut,
+                        last_active    = :last_active,
+                        avatar         = :avatar,
+                        bio            = :bio,
+                        long_bio_json  = :long_bio_json,
+                        platforms_json = :platforms_json,
+                        links_json     = :links_json,
+                        tags_json      = :tags_json,
+                        sort_order     = :sort_order,
+                        is_published   = :is_published
+                    WHERE id = :original_id";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':new_id'         => $id,
+                ':original_id'    => $originalId,
+                ':name'           => $name,
+                ':kana'           => $kana,
+                ':talent_group'   => $talentGroup,
+                ':status'         => $status,
+                ':debut'          => $debut ?: null,
+                ':last_active'    => $lastActive ?: null,
+                ':avatar'         => $avatar,
+                ':bio'            => $bio,
+                ':long_bio_json'  => $longBioJson,
+                ':platforms_json' => $platformsJson,
+                ':links_json'     => $linksJson,
+                ':tags_json'      => $tagsJson,
+                ':sort_order'     => $sortOrder,
+                ':is_published'   => $isPub,
+            ]);
+
+            syncTalentRelations($pdo, $originalId, $id, $platforms, $links);
+        } else {
+            $sql = "INSERT INTO talents
+                        (id, name, kana, talent_group, status, debut, last_active, avatar,
+                         bio, long_bio_json, platforms_json, links_json, tags_json,
+                         sort_order, is_published)
+                    VALUES
+                        (:id, :name, :kana, :talent_group, :status, :debut, :last_active, :avatar,
+                         :bio, :long_bio_json, :platforms_json, :links_json, :tags_json,
+                         :sort_order, :is_published)";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':id'             => $id,
+                ':name'           => $name,
+                ':kana'           => $kana,
+                ':talent_group'   => $talentGroup,
+                ':status'         => $status,
+                ':debut'          => $debut ?: null,
+                ':last_active'    => $lastActive ?: null,
+                ':avatar'         => $avatar,
+                ':bio'            => $bio,
+                ':long_bio_json'  => $longBioJson,
+                ':platforms_json' => $platformsJson,
+                ':links_json'     => $linksJson,
+                ':tags_json'      => $tagsJson,
+                ':sort_order'     => $sortOrder,
+                ':is_published'   => $isPub,
+            ]);
+
+            syncTalentRelations($pdo, $id, $id, $platforms, $links);
+        }
+
+        $pdo->commit();
+        header('Location: talents.php?msg=saved');
+        exit;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $errorMessage = '保存中にエラーが発生しました: ' . $e->getMessage();
+    }
 }
 
 // ===== 編集対象1件取得 =====
 $editTalent = null;
 if (isset($_GET['action']) && $_GET['action'] === 'edit' && !empty($_GET['id'])) {
-    $stmt = $pdo->prepare("SELECT * FROM talents WHERE id = :id");
+    $stmt = $pdo->prepare('SELECT * FROM talents WHERE id = :id');
     $stmt->execute([':id' => $_GET['id']]);
     $editTalent = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($editTalent) {
-        // JSON -> テキスト
         $long = json_decode($editTalent['long_bio_json'] ?? '[]', true);
-        $editTalent['_long_bio_text'] = is_array($long) ? implode("\n", $long) : '';
+        $editTalent['_long_bio_text'] = is_array($long)
+            ? implode("\n", array_filter(array_map('strval', $long), 'strlen'))
+            : '';
 
-        $plats = json_decode($editTalent['platforms_json'] ?? '[]', true);
-        if (is_array($plats)) {
-            $lines = [];
-            foreach ($plats as $p) {
-                $lines[] = ($p['name'] ?? '') . '|' . ($p['url'] ?? '');
-            }
-            $editTalent['_platforms_text'] = implode("\n", $lines);
+        $jsonPlatforms = json_decode($editTalent['platforms_json'] ?? '[]', true);
+        $jsonLinks     = json_decode($editTalent['links_json'] ?? '[]', true);
+        $tags          = json_decode($editTalent['tags_json'] ?? '[]', true);
+
+        $relatedPlatforms = fetchPlatformRows($pdo, $editTalent['id']);
+        $relatedLinks     = fetchLinkRows($pdo, $editTalent['id']);
+
+        if (!empty($relatedPlatforms)) {
+            $editTalent['_platforms_text'] = platformsToText($relatedPlatforms);
+        } elseif (is_array($jsonPlatforms)) {
+            $editTalent['_platforms_text'] = platformsToText($jsonPlatforms);
         } else {
             $editTalent['_platforms_text'] = '';
         }
 
-        $lnks = json_decode($editTalent['links_json'] ?? '[]', true);
-        if (is_array($lnks)) {
-            $lines = [];
-            foreach ($lnks as $l) {
-                $lines[] = ($l['label'] ?? '') . '|' . ($l['url'] ?? '');
-            }
-            $editTalent['_links_text'] = implode("\n", $lines);
+        if (!empty($relatedLinks)) {
+            $editTalent['_links_text'] = linksToText($relatedLinks);
+        } elseif (is_array($jsonLinks)) {
+            $editTalent['_links_text'] = linksToText($jsonLinks);
         } else {
             $editTalent['_links_text'] = '';
         }
 
-        $tags = json_decode($editTalent['tags_json'] ?? '[]', true);
         if (is_array($tags)) {
             $editTalent['_tags_text'] = implode(', ', $tags);
         } else {
@@ -192,7 +397,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'edit' && !empty($_GET['id']))
 }
 
 // ===== 一覧取得 =====
-$stmt = $pdo->query("SELECT * FROM talents ORDER BY sort_order ASC, debut ASC, name ASC");
+$stmt = $pdo->query('SELECT * FROM talents ORDER BY sort_order ASC, debut ASC, name ASC');
 $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
@@ -225,6 +430,7 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .row{display:flex;gap:8px;flex-wrap:wrap;}
     .row>div{flex:1;}
     .msg{margin-bottom:8px;font-size:12px;color:#a5b4fc;}
+    .error{margin-bottom:8px;font-size:12px;color:#fca5a5;white-space:pre-wrap;}
     .nav{margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1f2937;font-size:13px;}
     .nav a{margin-right:12px;}
     @media (max-width:1024px){
@@ -246,6 +452,10 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <?php if ($_GET['msg']==='saved') echo '保存しました。'; ?>
       <?php if ($_GET['msg']==='deleted') echo '削除しました。'; ?>
     </p>
+  <?php endif; ?>
+
+  <?php if ($errorMessage !== ''): ?>
+    <p class="error"><?= esc($errorMessage) ?></p>
   <?php endif; ?>
 
   <div class="layout">
@@ -290,6 +500,9 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <h2><?= $editTalent ? 'タレント編集' : '新規タレント追加' ?></h2>
       <form method="post" action="talents.php">
         <input type="hidden" name="mode" value="<?= $editTalent ? 'update' : 'create' ?>">
+        <?php if ($editTalent): ?>
+          <input type="hidden" name="original_id" value="<?= esc($editTalent['id']) ?>">
+        <?php endif; ?>
 
         <label>ID（英数字。空なら自動生成）</label>
         <input type="text" name="id" value="<?= esc($editTalent['id'] ?? '') ?>">
@@ -370,8 +583,8 @@ $allTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
       </form>
 
       <p style="font-size:11px;color:#6b7280;margin-top:12px;">
-        ※ プラットフォーム・リンク・タグは、JSONとしてDBに保存されます。<br>
-        ※ フロント側（talentsページ）の実装も、このテーブルを読むように順次差し替えていけます。
+        ※ プラットフォーム・リンク・タグは JSON と関連テーブルの両方へ同期保存します。<br>
+        ※ 既存の公開ページ（talents.php / talent.php）の表示も崩さないようにしています。
       </p>
     </div>
   </div>
