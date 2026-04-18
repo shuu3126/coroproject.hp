@@ -1,11 +1,9 @@
 <?php
-function current_admin_user(): ?array
-{
-    return $_SESSION['admin_user'] ?? null;
+function current_admin_user() {
+    return (isset($_SESSION['admin_user']) ? $_SESSION['admin_user'] : null);
 }
 
-function require_admin_login(): void
-{
+function require_admin_login() {
     global $baseUrl;
     if (empty($_SESSION['admin_user'])) {
         header('Location: ' . $baseUrl . '/login.php');

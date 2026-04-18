@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= h(($page_title ?? '管理画面') . ' | ' . ($config['app']['site_title'] ?? 'CORO PROJECT 管理画面')) ?></title>
+  <title><?= h(((isset($page_title) ? $page_title : '管理画面')) . ' | ' . ($config['app']['site_title'] ?? 'CORO PROJECT 管理画面')) ?></title>
   <link rel="stylesheet" href="<?= h($baseUrl) ?>/assets/css/admin.css">
   <script defer src="<?= h($baseUrl) ?>/assets/js/admin.js"></script>
 </head>
@@ -24,7 +24,7 @@
   <div class="main-area">
     <header class="topbar">
       <div>
-        <div class="topbar-title"><?= h($page_title ?? '管理画面') ?></div>
+        <div class="topbar-title"><?= h((isset($page_title) ? $page_title : '管理画面')) ?></div>
         <?php if (!empty($page_description)): ?><div class="topbar-sub"><?= h($page_description) ?></div><?php endif; ?>
       </div>
       <div class="topbar-right">

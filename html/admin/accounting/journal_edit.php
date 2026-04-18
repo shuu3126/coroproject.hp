@@ -4,7 +4,7 @@ require_once dirname(__DIR__) . '/_auth.php';
 require_once __DIR__ . '/_helpers.php';
 require_admin_login();
 $user = current_admin_user();
-$id = (int)($_GET['id'] ?? 0); $isEdit = $id > 0;
+$id = (int)((isset($_GET['id']) ? $_GET['id'] : 0)); $isEdit = $id > 0;
 $talents = $pdo->query('SELECT id, display_name FROM accounting_talents ORDER BY display_name ASC')->fetchAll();
 $categories = $pdo->query('SELECT kind, name FROM accounting_journal_categories WHERE is_active = 1 ORDER BY kind ASC, sort_order ASC, id ASC')->fetchAll();
 $row = ['date'=>date('Y-m-d'),'kind'=>'expense','category'=>'','amount'=>'0','description'=>'','talent_id'=>'','evidence_path'=>'','source'=>'manual'];
@@ -12,7 +12,7 @@ if ($isEdit) {
     $stmt = $pdo->prepare('SELECT * FROM accounting_journal_entries WHERE id=?'); $stmt->execute([$id]); $found = $stmt->fetch(); if ($found) $row = array_merge($row, $found);
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $date = trim($_POST['date'] ?? date('Y-m-d')); $kind = trim($_POST['kind'] ?? 'expense'); $category = trim($_POST['category'] ?? ''); $amount = (float)($_POST['amount'] ?? 0); $description = trim($_POST['description'] ?? ''); $talentId = ($_POST['talent_id'] ?? '') !== '' ? (int)$_POST['talent_id'] : null; $evidence = trim($_POST['evidence_path'] ?? '');
+    $date = trim((isset($_POST['date']) ? $_POST['date'] : date('Y-m-d'))); $kind = trim((isset($_POST['kind']) ? $_POST['kind'] : 'expense')); $category = trim((isset($_POST['category']) ? $_POST['category'] : '')); $amount = (float)((isset($_POST['amount']) ? $_POST['amount'] : 0)); $description = trim((isset($_POST['description']) ? $_POST['description'] : '')); $talentId = ((isset($_POST['talent_id']) ? $_POST['talent_id'] : '')) !== '' ? (int)$_POST['talent_id'] : null; $evidence = trim((isset($_POST['evidence_path']) ? $_POST['evidence_path'] : ''));
     try {
         $upload = save_uploaded_file_any($_FILES['evidence_file'] ?? [], $config['uploads']['accounting_root'] . '/journal', $config['uploads']['accounting_prefix'] . '/journal', 'journal-' . $date);
         if ($upload) $evidence = $upload['path'];
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         set_flash('success', '記帳を保存しました。');
         redirect_to($baseUrl . '/accounting/journals.php');
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
         set_flash('error', '保存に失敗しました: ' . $e->getMessage());
         redirect_to($baseUrl . '/accounting/journal_edit.php' . ($isEdit ? '?id=' . urlencode((string)$id) : ''));
     }

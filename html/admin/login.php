@@ -6,8 +6,8 @@ if (current_admin_user()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $loginId = trim($_POST['login_id'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $loginId = trim((isset($_POST['login_id']) ? $_POST['login_id'] : ''));
+    $password = (isset($_POST['password']) ? $_POST['password'] : '');
 
     $stmt = $pdo->prepare('SELECT * FROM admin_users WHERE login_id = ? AND is_active = 1 LIMIT 1');
     $stmt->execute([$loginId]);

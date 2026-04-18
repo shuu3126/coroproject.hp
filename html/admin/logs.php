@@ -2,7 +2,7 @@
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/_auth.php';
 require_admin_login();
-$q = trim($_GET['q'] ?? '');
+$q = trim((isset($_GET['q']) ? $_GET['q'] : ''));
 $sql = 'SELECT l.*, COALESCE(u.display_name, "system") AS user_name FROM admin_logs l LEFT JOIN admin_users u ON u.id = l.user_id';
 $params = [];
 if ($q !== '') {

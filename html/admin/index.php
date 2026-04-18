@@ -1,7 +1,4 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/_auth.php';
 require_admin_login();
@@ -16,7 +13,7 @@ try {
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounting_talents t WHERE t.status = 'active' AND NOT EXISTS (SELECT 1 FROM accounting_revenues r WHERE r.talent_id = t.id AND r.year = ? AND r.month = ?)");
     $stmt->execute([$nowYear, $nowMonth]);
     $unsubmitted = (int)$stmt->fetchColumn();
-} catch (Throwable $e) {
+} catch (Exception $e) {
     $unsubmitted = 0;
 }
 $invoiceReady = 0;
@@ -28,12 +25,12 @@ try {
         $rows = $st->fetchAll();
         $totalJpy = 0.0;
         foreach ($rows as $r) {
-            $sum = (float)($r['total'] ?? 0);
+            $sum = (float)((isset($r['total']) ? $r['total'] : 0));
             $totalJpy += strtoupper((string)$r['currency']) === 'USD' ? $sum * 150 : $sum;
         }
         if ($totalJpy * 0.3 >= 5000) $invoiceReady++;
     }
-} catch (Throwable $e) {
+} catch (Exception $e) {
     $invoiceReady = 0;
 }
 $unpaid = 0;
@@ -41,14 +38,14 @@ $receiptPending = 0;
 try {
     $unpaid = (int)$pdo->query("SELECT COUNT(*) FROM accounting_invoices WHERE status = 'issued'")->fetchColumn();
     $receiptPending = (int)$pdo->query("SELECT COUNT(*) FROM accounting_invoices WHERE status = 'paid'")->fetchColumn();
-} catch (Throwable $e) {
+} catch (Exception $e) {
     $unpaid = 0;
     $receiptPending = 0;
 }
 $recentLogs = [];
 try {
     $recentLogs = $pdo->query("SELECT l.created_at, l.summary, l.target_type, COALESCE(u.display_name, 'system') AS user_name FROM admin_logs l LEFT JOIN admin_users u ON u.id = l.user_id ORDER BY l.created_at DESC LIMIT 10")->fetchAll();
-} catch (Throwable $e) {
+} catch (Exception $e) {
     $recentLogs = [];
 }
 start_page($page_title, $page_description);

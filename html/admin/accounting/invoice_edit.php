@@ -4,18 +4,18 @@ require_once dirname(__DIR__) . '/_auth.php';
 require_once __DIR__ . '/_helpers.php';
 require_admin_login();
 $user = current_admin_user();
-$mode = $_GET['mode'] ?? 'revenue';
+$mode = (isset($_GET['mode']) ? $_GET['mode'] : 'revenue');
 $talents = $pdo->query("SELECT id, display_name, name FROM accounting_talents WHERE status = 'active' ORDER BY display_name ASC")->fetchAll();
 $settings = accounting_settings($pdo);
-$defaultFx = (float)($settings['fx_default_rate'] ?? 150);
+$defaultFx = (float)((isset($settings['fx_default_rate']) ? $settings['fx_default_rate'] : 150));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $mode = $_POST['mode'] ?? 'revenue';
-    $talentId = (int)($_POST['talent_id'] ?? 0);
-    $year = (int)($_POST['year'] ?? date('Y'));
-    $month = (int)($_POST['month'] ?? date('n'));
+    $mode = (isset($_POST['mode']) ? $_POST['mode'] : 'revenue');
+    $talentId = (int)((isset($_POST['talent_id']) ? $_POST['talent_id'] : 0));
+    $year = (int)((isset($_POST['year']) ? $_POST['year'] : date('Y')));
+    $month = (int)((isset($_POST['month']) ? $_POST['month'] : date('n')));
     $fxRate = (float)($_POST['fx_rate'] ?? $defaultFx);
-    $note = trim($_POST['note'] ?? '');
+    $note = trim((isset($_POST['note']) ? $_POST['note'] : ''));
     $details = [];
     $amountJpy = 0.0;
     $months = [];
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     try {
         if ($mode === 'manual') {
-            $detailText = trim($_POST['details_text'] ?? '');
+            $detailText = trim((isset($_POST['details_text']) ? $_POST['details_text'] : ''));
             $details = parse_detail_lines($detailText);
             foreach ($details as $detail) $amountJpy += $detail['amount'];
             if ($amountJpy <= 0) throw new RuntimeException('手入力請求の明細を入力してください。');
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $periodLabel = $months ? accounting_period_label($months) : sprintf('%d年%02d月', $year, $month);
         $doc = accounting_generate_document_html([
             'invoice_no' => $invoiceNo,
-            'talent_name' => $talent['name'] ?? ($talent['display_name'] ?? ''),
+            'talent_name' => $talent['name'] ?? ((isset($talent['display_name']) ? $talent['display_name'] : '')),
             'year' => $year,
             'month' => $month,
             'period_label' => $periodLabel,
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->commit();
         set_flash('success', '請求書を作成しました。');
         redirect_to($baseUrl . '/accounting/invoice_detail.php?id=' . $invoiceId);
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         set_flash('error', '請求書作成に失敗しました: ' . $e->getMessage());
         redirect_to($baseUrl . '/accounting/invoice_edit.php?mode=' . urlencode($mode));
@@ -84,7 +84,7 @@ start_page($mode === 'manual' ? '手入力で請求書を作る' : '収益から
 <?php else: ?>
 <div class="card"><strong>自動計算ルール</strong><p class="muted">指定した締め年月までの未請求月をまとめて計算し、30%換算で5,000円以上なら請求書を作成します。</p></div>
 <?php endif; ?>
-<label><span>備考</span><textarea name="note" rows="4"><?= h($settings['office_invoice_note'] ?? '') ?></textarea></label>
+<label><span>備考</span><textarea name="note" rows="4"><?= h((isset($settings['office_invoice_note']) ? $settings['office_invoice_note'] : '')) ?></textarea></label>
 <div class="actions-inline"><button class="primary-btn" type="submit">請求書を作成する</button><a class="ghost-btn" href="<?= h($baseUrl) ?>/accounting/invoices.php">一覧へ戻る</a></div>
 </form></main>
 <?php end_page(); ?>

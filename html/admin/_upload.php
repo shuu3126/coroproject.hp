@@ -1,6 +1,5 @@
 <?php
-function ensure_dir_path(string $dir): void
-{
+function ensure_dir_path( $dir) {
     if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
         throw new RuntimeException('保存フォルダを作成できませんでした: ' . $dir);
     }
@@ -9,8 +8,7 @@ function ensure_dir_path(string $dir): void
     }
 }
 
-function save_uploaded_image(array $file, string $absoluteDir, string $relativePrefix, string $baseName): ?string
-{
+function save_uploaded_image( $file, $absoluteDir, $relativePrefix, $baseName) {
     if (!isset($file['error']) || (int)$file['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
@@ -24,16 +22,26 @@ function save_uploaded_image(array $file, string $absoluteDir, string $relativeP
         throw new RuntimeException('画像サイズは5MB以下にしてください。');
     }
     $allowedExts = ['jpg','jpeg','png','gif','webp'];
-    $ext = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+    $ext = strtolower(pathinfo((string)((isset($file['name']) ? $file['name'] : '')), PATHINFO_EXTENSION));
     if ($ext === '' || !in_array($ext, $allowedExts, true)) {
         $mime = function_exists('mime_content_type') ? mime_content_type($file['tmp_name']) : '';
-        $ext = match ($mime) {
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/webp' => 'webp',
-            default => '',
-        };
+        switch ($mime) {
+            case 'image/jpeg':
+                $ext = 'jpg';
+                break;
+            case 'image/png':
+                $ext = 'png';
+                break;
+            case 'image/gif':
+                $ext = 'gif';
+                break;
+            case 'image/webp':
+                $ext = 'webp';
+                break;
+            default:
+                $ext = '';
+                break;
+        }
     }
     if ($ext === '' || !in_array($ext, $allowedExts, true)) {
         throw new RuntimeException('画像形式は jpg / jpeg / png / gif / webp のみです。');
@@ -47,8 +55,7 @@ function save_uploaded_image(array $file, string $absoluteDir, string $relativeP
     return trim($relativePrefix, '/\\') . '/' . $filename;
 }
 
-function save_uploaded_file_any(array $file, string $absoluteDir, string $relativePrefix, string $baseName, array $allowedExts = []): ?array
-{
+function save_uploaded_file_any( $file, $absoluteDir, $relativePrefix, $baseName, $allowedExts = []) {
     if (!isset($file['error']) || (int)$file['error'] === UPLOAD_ERR_NO_FILE) {
         return null;
     }
@@ -58,7 +65,7 @@ function save_uploaded_file_any(array $file, string $absoluteDir, string $relati
     if (!is_uploaded_file($file['tmp_name'])) {
         throw new RuntimeException('アップロードされたファイルを確認できませんでした。');
     }
-    $ext = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+    $ext = strtolower(pathinfo((string)((isset($file['name']) ? $file['name'] : '')), PATHINFO_EXTENSION));
     if ($allowedExts && ($ext === '' || !in_array($ext, $allowedExts, true))) {
         throw new RuntimeException('許可されていないファイル形式です。');
     }
@@ -71,6 +78,6 @@ function save_uploaded_file_any(array $file, string $absoluteDir, string $relati
     }
     return [
         'path' => trim($relativePrefix, '/\\') . '/' . $filename,
-        'original_name' => (string)($file['name'] ?? ''),
+        'original_name' => (string)((isset($file['name']) ? $file['name'] : '')),
     ];
 }

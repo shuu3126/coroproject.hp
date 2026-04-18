@@ -4,8 +4,8 @@ require_once __DIR__ . '/_auth.php';
 require_admin_login();
 $user = current_admin_user();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $id = trim($_POST['id'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ((isset($_POST['action']) ? $_POST['action'] : '')) === 'delete') {
+    $id = trim((isset($_POST['id']) ? $_POST['id'] : ''));
     if ($id !== '') {
         $stmt = $pdo->prepare('DELETE FROM news WHERE id = ?');
         $stmt->execute([$id]);
@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     redirect_to($baseUrl . '/news.php');
 }
 
-$q = trim($_GET['q'] ?? '');
+$q = trim((isset($_GET['q']) ? $_GET['q'] : ''));
 $sql = 'SELECT id, title, date, tag, is_published, sort_order, updated_at FROM news';
 $params = [];
 if ($q !== '') {
@@ -55,7 +55,7 @@ start_page('お知らせ管理', 'ニュースの追加・編集・削除を行�
             <td><?= h($row['title']) ?></td>
             <td><span class="status-badge <?= status_badge_class($row['is_published'] ? 'published' : 'draft') ?>"><?= $row['is_published'] ? '公開' : '非公開' ?></span></td>
             <td><?= h((string)$row['sort_order']) ?></td>
-            <td><?= h(format_datetime($row['updated_at'] ?? '')) ?></td>
+            <td><?= h(format_datetime((isset($row['updated_at']) ? $row['updated_at'] : ''))) ?></td>
             <td class="actions-inline">
               <a class="ghost-btn" href="<?= h($baseUrl) ?>/news_edit.php?id=<?= urlencode($row['id']) ?>">編集</a>
               <form method="post" data-confirm="このニュースを削除しますか？">

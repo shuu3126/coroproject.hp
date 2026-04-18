@@ -4,7 +4,7 @@ require_once __DIR__ . '/_auth.php';
 require_admin_login();
 $user = current_admin_user();
 
-function talent_id_exists(PDO $pdo, string $id, string $excludeId = ''): bool {
+function talent_id_exists( $pdo, $id, $excludeId = '') {
     if ($excludeId !== '') {
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM talents WHERE id = ? AND id <> ?');
         $stmt->execute([$id, $excludeId]);
@@ -14,23 +14,23 @@ function talent_id_exists(PDO $pdo, string $id, string $excludeId = ''): bool {
     }
     return (int)$stmt->fetchColumn() > 0;
 }
-function generate_talent_id(PDO $pdo, string $name, string $excludeId = ''): string {
+function generate_talent_id( $pdo, $name, $excludeId = '') {
     $base = normalize_file_stem($name, 'talent');
     $candidate = $base; $i = 2;
     while (talent_id_exists($pdo, $candidate, $excludeId)) { $candidate = $base . '-' . $i; $i++; }
     return $candidate;
 }
-function fetch_platform_rows(PDO $pdo, string $talentId): array {
+function fetch_platform_rows( $pdo, $talentId) {
     $stmt = $pdo->prepare('SELECT name, url FROM talent_platforms WHERE talent_id = ? ORDER BY id ASC');
     $stmt->execute([$talentId]);
     return $stmt->fetchAll() ?: [];
 }
-function fetch_link_rows(PDO $pdo, string $talentId): array {
+function fetch_link_rows( $pdo, $talentId) {
     $stmt = $pdo->prepare('SELECT label, url FROM talent_links WHERE talent_id = ? ORDER BY id ASC');
     $stmt->execute([$talentId]);
     return $stmt->fetchAll() ?: [];
 }
-function sync_talent_relations(PDO $pdo, string $oldId, string $newId, array $platforms, array $links): void {
+function sync_talent_relations( $pdo, $oldId, $newId, $platforms, $links) {
     $targets = array_values(array_unique(array_filter([$oldId, $newId])));
     if ($targets) {
         $ph = implode(',', array_fill(0, count($targets), '?'));
@@ -51,7 +51,7 @@ function sync_talent_relations(PDO $pdo, string $oldId, string $newId, array $pl
     }
 }
 
-$id = $_GET['id'] ?? '';
+$id = (isset($_GET['id']) ? $_GET['id'] : '');
 $isEdit = $id !== '';
 $row = [
     'id' => '', 'name' => '', 'kana' => '', 'talent_group' => '', 'status' => 'active',
@@ -64,8 +64,8 @@ if ($isEdit) {
     $found = $stmt->fetch();
     if ($found) {
         $row = array_merge($row, $found);
-        $row['long_bio_text'] = lines_from_json($found['long_bio_json'] ?? '[]');
-        $tags = json_decode((string)($found['tags_json'] ?? '[]'), true);
+        $row['long_bio_text'] = lines_from_json((isset($found['long_bio_json']) ? $found['long_bio_json'] : '[]'));
+        $tags = json_decode((string)((isset($found['tags_json']) ? $found['tags_json'] : '[]')), true);
         $row['tags_text'] = is_array($tags) ? implode(', ', array_filter(array_map('strval', $tags))) : '';
         $row['platforms_text'] = pipe_lines_from_rows(fetch_platform_rows($pdo, $id), 'name', 'url');
         $row['links_text'] = pipe_lines_from_rows(fetch_link_rows($pdo, $id), 'label', 'url');
@@ -73,20 +73,20 @@ if ($isEdit) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $talentId = trim($_POST['id'] ?? '');
-    $name = trim($_POST['name'] ?? '');
-    $kana = trim($_POST['kana'] ?? '');
-    $talentGroup = trim($_POST['talent_group'] ?? '');
-    $status = trim($_POST['status'] ?? 'active');
-    $debut = trim($_POST['debut'] ?? '');
-    $lastActive = trim($_POST['last_active'] ?? '');
-    $avatar = trim($_POST['avatar'] ?? '');
-    $bio = trim($_POST['bio'] ?? '');
-    $longBioText = trim($_POST['long_bio_text'] ?? '');
-    $platformsText = trim($_POST['platforms_text'] ?? '');
-    $linksText = trim($_POST['links_text'] ?? '');
-    $tagsText = trim($_POST['tags_text'] ?? '');
-    $sortOrder = (int)($_POST['sort_order'] ?? 0);
+    $talentId = trim((isset($_POST['id']) ? $_POST['id'] : ''));
+    $name = trim((isset($_POST['name']) ? $_POST['name'] : ''));
+    $kana = trim((isset($_POST['kana']) ? $_POST['kana'] : ''));
+    $talentGroup = trim((isset($_POST['talent_group']) ? $_POST['talent_group'] : ''));
+    $status = trim((isset($_POST['status']) ? $_POST['status'] : 'active'));
+    $debut = trim((isset($_POST['debut']) ? $_POST['debut'] : ''));
+    $lastActive = trim((isset($_POST['last_active']) ? $_POST['last_active'] : ''));
+    $avatar = trim((isset($_POST['avatar']) ? $_POST['avatar'] : ''));
+    $bio = trim((isset($_POST['bio']) ? $_POST['bio'] : ''));
+    $longBioText = trim((isset($_POST['long_bio_text']) ? $_POST['long_bio_text'] : ''));
+    $platformsText = trim((isset($_POST['platforms_text']) ? $_POST['platforms_text'] : ''));
+    $linksText = trim((isset($_POST['links_text']) ? $_POST['links_text'] : ''));
+    $tagsText = trim((isset($_POST['tags_text']) ? $_POST['tags_text'] : ''));
+    $sortOrder = (int)((isset($_POST['sort_order']) ? $_POST['sort_order'] : 0));
     $isPublished = isset($_POST['is_published']) ? 1 : 0;
     if ($name === '') {
         set_flash('error', '名前は必須です。');
@@ -127,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->commit();
         set_flash('success', 'タレント情報を保存しました。');
         redirect_to($baseUrl . '/talents.php');
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         set_flash('error', '保存中にエラーが発生しました: ' . $e->getMessage());
         redirect_to($baseUrl . '/talent_edit.php' . ($isEdit ? '?id=' . urlencode($id) : ''));

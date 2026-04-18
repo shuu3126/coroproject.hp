@@ -14,7 +14,7 @@ $defaultSettings = [
 ];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($defaultSettings as $key => $default) {
-        $value = trim($_POST[$key] ?? '');
+        $value = trim((isset($_POST[$key]) ? $_POST[$key] : ''));
         $stmt = $pdo->prepare('INSERT INTO settings (setting_key, setting_value, updated_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_by = VALUES(updated_by), updated_at = CURRENT_TIMESTAMP');
         $stmt->execute([$key, $value, $user['id']]);
     }

@@ -4,10 +4,10 @@ require_once dirname(__DIR__) . '/_auth.php';
 require_once __DIR__ . '/_helpers.php';
 require_admin_login();
 $user = current_admin_user();
-$id = (int)($_GET['id'] ?? 0);
+$id = (int)((isset($_GET['id']) ? $_GET['id'] : 0));
 if ($id <= 0) redirect_to($baseUrl . '/accounting/invoices.php');
 
-function load_invoice_detail(PDO $pdo, int $id): ?array {
+function load_invoice_detail( $pdo, $id) {
     $stmt = $pdo->prepare('SELECT i.*, t.display_name AS talent_display_name, t.name AS talent_real_name FROM accounting_invoices i JOIN accounting_talents t ON t.id = i.talent_id WHERE i.id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch();
@@ -22,7 +22,7 @@ function load_invoice_detail(PDO $pdo, int $id): ?array {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    $action = (isset($_POST['action']) ? $_POST['action'] : '');
     $invoice = load_invoice_detail($pdo, $id);
     if (!$invoice) redirect_to($baseUrl . '/accounting/invoices.php');
     try {
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_flash('success', '請求を削除しました。');
             redirect_to($baseUrl . '/accounting/invoices.php');
         }
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         set_flash('error', '処理に失敗しました: ' . $e->getMessage());
     }

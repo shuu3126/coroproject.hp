@@ -3,7 +3,7 @@ require_once dirname(__DIR__) . '/_bootstrap.php';
 require_once dirname(__DIR__) . '/_auth.php';
 require_once __DIR__ . '/_helpers.php';
 require_admin_login();
-$q = trim($_GET['q'] ?? '');
+$q = trim((isset($_GET['q']) ? $_GET['q'] : ''));
 $sql = 'SELECT i.*, t.display_name AS talent_name, SUM(CASE WHEN f.file_type = "receipt" THEN 1 ELSE 0 END) AS receipt_count FROM accounting_invoices i JOIN accounting_talents t ON t.id = i.talent_id LEFT JOIN accounting_invoice_files f ON f.invoice_id = i.id GROUP BY i.id ORDER BY i.created_at DESC';
 $rows = $pdo->query($sql)->fetchAll();
 start_page('請求管理', '請求書の作成、入金確認、領収書発行を管理します。');

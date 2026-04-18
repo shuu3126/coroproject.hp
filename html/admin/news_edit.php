@@ -4,7 +4,7 @@ require_once __DIR__ . '/_auth.php';
 require_admin_login();
 $user = current_admin_user();
 
-function news_id_exists(PDO $pdo, string $id, ?string $excludeId = null): bool {
+function news_id_exists( $pdo, $id, $excludeId = null) {
     if ($excludeId) {
         $stmt = $pdo->prepare('SELECT COUNT(*) FROM news WHERE id = ? AND id <> ?');
         $stmt->execute([$id, $excludeId]);
@@ -14,7 +14,7 @@ function news_id_exists(PDO $pdo, string $id, ?string $excludeId = null): bool {
     }
     return (int)$stmt->fetchColumn() > 0;
 }
-function generate_news_id(PDO $pdo, string $title, string $date = ''): string {
+function generate_news_id( $pdo, $title, $date = '') {
     $datePart = $date !== '' ? str_replace('-', '', $date) : date('Ymd');
     $base = normalize_file_stem($datePart . '-' . $title, 'news');
     $candidate = $base; $i = 2;
@@ -22,7 +22,7 @@ function generate_news_id(PDO $pdo, string $title, string $date = ''): string {
     return $candidate;
 }
 
-$id = $_GET['id'] ?? '';
+$id = (isset($_GET['id']) ? $_GET['id'] : '');
 $isEdit = $id !== '';
 $row = [
     'id' => '', 'title' => '', 'date' => date('Y-m-d'), 'tag' => '', 'thumb' => '',
@@ -34,20 +34,20 @@ if ($isEdit) {
     $found = $stmt->fetch();
     if ($found) {
         $row = array_merge($row, $found);
-        $row['content_text'] = lines_from_json($found['content'] ?? '[]');
+        $row['content_text'] = lines_from_json((isset($found['content']) ? $found['content'] : '[]'));
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $newsId = trim($_POST['id'] ?? '');
-    $title = trim($_POST['title'] ?? '');
-    $date = trim($_POST['date'] ?? '');
-    $tag = trim($_POST['tag'] ?? '');
-    $thumb = trim($_POST['thumb'] ?? '');
-    $excerpt = trim($_POST['excerpt'] ?? '');
-    $contentText = trim($_POST['content_text'] ?? '');
-    $url = trim($_POST['url'] ?? '');
-    $sortOrder = (int)($_POST['sort_order'] ?? 0);
+    $newsId = trim((isset($_POST['id']) ? $_POST['id'] : ''));
+    $title = trim((isset($_POST['title']) ? $_POST['title'] : ''));
+    $date = trim((isset($_POST['date']) ? $_POST['date'] : ''));
+    $tag = trim((isset($_POST['tag']) ? $_POST['tag'] : ''));
+    $thumb = trim((isset($_POST['thumb']) ? $_POST['thumb'] : ''));
+    $excerpt = trim((isset($_POST['excerpt']) ? $_POST['excerpt'] : ''));
+    $contentText = trim((isset($_POST['content_text']) ? $_POST['content_text'] : ''));
+    $url = trim((isset($_POST['url']) ? $_POST['url'] : ''));
+    $sortOrder = (int)((isset($_POST['sort_order']) ? $_POST['sort_order'] : 0));
     $isPublished = isset($_POST['is_published']) ? 1 : 0;
     if ($title === '') {
         set_flash('error', 'タイトルは必須です。');
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_flash('success', 'ニュースを作成しました。');
         }
         redirect_to($baseUrl . '/news.php');
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
         set_flash('error', '保存中にエラーが発生しました: ' . $e->getMessage());
         redirect_to($baseUrl . '/news_edit.php' . ($isEdit ? '?id=' . urlencode($id) : ''));
     }

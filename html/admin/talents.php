@@ -4,8 +4,8 @@ require_once __DIR__ . '/_auth.php';
 require_admin_login();
 $user = current_admin_user();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $id = trim($_POST['id'] ?? '');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ((isset($_POST['action']) ? $_POST['action'] : '')) === 'delete') {
+    $id = trim((isset($_POST['id']) ? $_POST['id'] : ''));
     if ($id !== '') {
         $pdo->beginTransaction();
         try {
@@ -15,14 +15,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
             $pdo->commit();
             write_admin_log($pdo, (int)$user['id'], 'delete', 'talent', null, 'タレントを削除しました', ['talent_id' => $id]);
             set_flash('success', 'タレントを削除しました。');
-        } catch (Throwable $e) {
+        } catch (Exception $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
             set_flash('error', '削除に失敗しました: ' . $e->getMessage());
         }
     }
     redirect_to($baseUrl . '/talents.php');
 }
-$q = trim($_GET['q'] ?? '');
+$q = trim((isset($_GET['q']) ? $_GET['q'] : ''));
 $sql = 'SELECT id, name, kana, talent_group, status, debut, sort_order, is_published, updated_at FROM talents';
 $params=[];
 if ($q !== '') {
@@ -57,7 +57,7 @@ start_page('タレント管理', '公開サイトのタレント情報を管理�
             <td><?= h($row['status']) ?></td>
             <td><?= h($row['debut']) ?></td>
             <td><span class="status-badge <?= status_badge_class($row['is_published'] ? 'published' : 'draft') ?>"><?= $row['is_published'] ? '公開' : '非公開' ?></span></td>
-            <td><?= h(format_datetime($row['updated_at'] ?? '')) ?></td>
+            <td><?= h(format_datetime((isset($row['updated_at']) ? $row['updated_at'] : ''))) ?></td>
             <td class="actions-inline">
               <a class="ghost-btn" href="<?= h($baseUrl) ?>/talent_edit.php?id=<?= urlencode($row['id']) ?>">編集</a>
               <form method="post" data-confirm="このタレントを削除しますか？">

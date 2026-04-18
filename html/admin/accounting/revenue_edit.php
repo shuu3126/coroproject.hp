@@ -5,7 +5,7 @@ require_once __DIR__ . '/_helpers.php';
 require_admin_login();
 $user = current_admin_user();
 
-$id = (int)($_GET['id'] ?? 0);
+$id = (int)((isset($_GET['id']) ? $_GET['id'] : 0));
 $isEdit = $id > 0;
 $talents = $pdo->query('SELECT id, display_name FROM accounting_talents ORDER BY display_name ASC')->fetchAll();
 $row = ['talent_id'=>'','year'=>date('Y'),'month'=>date('n'),'currency'=>'JPY','amount_streaming'=>'0','amount_goods'=>'0','amount_sponsor'=>'0','evidence_path'=>'','memo'=>''];
@@ -16,8 +16,8 @@ if ($isEdit) {
     if ($found) $row = array_merge($row, $found);
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $talentId=(int)($_POST['talent_id']??0); $year=(int)($_POST['year']??date('Y')); $month=(int)($_POST['month']??date('n')); $currency=trim($_POST['currency']??'JPY');
-    $aStreaming=(float)($_POST['amount_streaming']??0); $aGoods=(float)($_POST['amount_goods']??0); $aSponsor=(float)($_POST['amount_sponsor']??0); $memo=trim($_POST['memo']??''); $evidence=trim($_POST['evidence_path']??'');
+    $talentId=(int)((isset($_POST['talent_id']) ? $_POST['talent_id'] : 0)); $year=(int)((isset($_POST['year']) ? $_POST['year'] : date('Y'))); $month=(int)((isset($_POST['month']) ? $_POST['month'] : date('n'))); $currency=trim((isset($_POST['currency']) ? $_POST['currency'] : 'JPY'));
+    $aStreaming=(float)((isset($_POST['amount_streaming']) ? $_POST['amount_streaming'] : 0)); $aGoods=(float)((isset($_POST['amount_goods']) ? $_POST['amount_goods'] : 0)); $aSponsor=(float)((isset($_POST['amount_sponsor']) ? $_POST['amount_sponsor'] : 0)); $memo=trim((isset($_POST['memo']) ? $_POST['memo'] : '')); $evidence=trim((isset($_POST['evidence_path']) ? $_POST['evidence_path'] : ''));
     if ($talentId<=0) { set_flash('error','タレントを選択してください。'); redirect_to($baseUrl . '/accounting/revenue_edit.php' . ($isEdit ? '?id=' . urlencode((string)$id) : '')); }
     try {
         $upload = save_uploaded_file_any($_FILES['evidence_file'] ?? [], $config['uploads']['accounting_root'] . '/revenues', $config['uploads']['accounting_prefix'] . '/revenues', 'revenue-' . $talentId . '-' . $year . sprintf('%02d',$month));
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_flash('success','収益データを作成しました。');
         }
         redirect_to($baseUrl . '/accounting/revenues.php');
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
         set_flash('error','保存中にエラーが発生しました: ' . $e->getMessage());
         redirect_to($baseUrl . '/accounting/revenue_edit.php' . ($isEdit ? '?id=' . urlencode((string)$id) : ''));
     }

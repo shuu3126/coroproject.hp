@@ -5,8 +5,8 @@ require_once __DIR__ . '/_helpers.php';
 require_admin_login();
 $user = current_admin_user();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    $id = (int)($_POST['id'] ?? 0);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ((isset($_POST['action']) ? $_POST['action'] : '')) === 'delete') {
+    $id = (int)((isset($_POST['id']) ? $_POST['id'] : 0));
     if ($id > 0) {
         $pdo->prepare('DELETE FROM accounting_revenues WHERE id = ?')->execute([$id]);
         write_admin_log($pdo, (int)$user['id'], 'delete', 'accounting_revenue', $id, '収益データを削除しました');
@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     }
     redirect_to($baseUrl . '/accounting/revenues.php');
 }
-$q = trim($_GET['q'] ?? '');
+$q = trim((isset($_GET['q']) ? $_GET['q'] : ''));
 $sql = 'SELECT r.*, t.display_name AS talent_name FROM accounting_revenues r JOIN accounting_talents t ON t.id = r.talent_id';
 $params=[];
 if ($q !== '') { $sql .= ' WHERE t.display_name LIKE ?'; $params=["%$q%"];} 
