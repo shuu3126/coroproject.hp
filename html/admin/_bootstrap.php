@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 $configPath = __DIR__ . '/config.php';
 if (!file_exists($configPath)) {
     die('config.php がありません。config.sample.php をコピーして設定してください。');
