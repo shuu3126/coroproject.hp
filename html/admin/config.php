@@ -8,6 +8,7 @@ return [
         'charset' => 'utf8mb4',
     ],
     'app' => [
+        // 本番ドメインで確認するならこっち
         'base_url' => '/html/admin',
         'timezone' => 'Asia/Tokyo',
         'site_title' => 'CORO PROJECT 管理画面',
