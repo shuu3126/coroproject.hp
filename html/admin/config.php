@@ -18,7 +18,6 @@ return [
         'news_public_prefix' => 'images/news',
         'talent_public_dir' => dirname(dirname(__DIR__)) . '/images/talents',
         'talent_public_prefix' => 'images/talents',
-
         'accounting_root' => dirname(dirname(__DIR__)) . '/uploads/accounting',
         'accounting_prefix' => 'uploads/accounting',
     ],
