@@ -1,47 +1,80 @@
 <?php
-// html/admin/index.php
+require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/_auth.php';
+require_admin_login();
+$page_title = '今日やること';
+$page_description = '今日対応が必要な作業や、よく使う管理画面への入口です。';
+
+$nowYear = (int)date('Y');
+$nowMonth = (int)date('n');
+$cntTalents = (int)$pdo->query('SELECT COUNT(*) FROM talents WHERE is_published = 1')->fetchColumn();
+$unsubmitted = 0;
+try {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounting_talents t WHERE t.status = 'active' AND NOT EXISTS (SELECT 1 FROM accounting_revenues r WHERE r.talent_id = t.id AND r.year = ? AND r.month = ?)");
+    $stmt->execute([$nowYear, $nowMonth]);
+    $unsubmitted = (int)$stmt->fetchColumn();
+} catch (Throwable $e) {
+    $unsubmitted = 0;
+}
+$invoiceReady = 0;
+try {
+    $talents = $pdo->query("SELECT id FROM accounting_talents WHERE status = 'active' ORDER BY display_name ASC")->fetchAll();
+    foreach ($talents as $t) {
+        $st = $pdo->prepare("SELECT currency, SUM(amount_streaming + amount_goods + amount_sponsor) total FROM accounting_revenues r LEFT JOIN accounting_invoiced_months im ON im.talent_id = r.talent_id AND im.year = r.year AND im.month = r.month WHERE r.talent_id = ? AND im.id IS NULL GROUP BY currency");
+        $st->execute([$t['id']]);
+        $rows = $st->fetchAll();
+        $totalJpy = 0.0;
+        foreach ($rows as $r) {
+            $sum = (float)($r['total'] ?? 0);
+            $totalJpy += strtoupper((string)$r['currency']) === 'USD' ? $sum * 150 : $sum;
+        }
+        if ($totalJpy * 0.3 >= 5000) $invoiceReady++;
+    }
+} catch (Throwable $e) {
+    $invoiceReady = 0;
+}
+$unpaid = 0;
+$receiptPending = 0;
+try {
+    $unpaid = (int)$pdo->query("SELECT COUNT(*) FROM accounting_invoices WHERE status = 'issued'")->fetchColumn();
+    $receiptPending = (int)$pdo->query("SELECT COUNT(*) FROM accounting_invoices WHERE status = 'paid'")->fetchColumn();
+} catch (Throwable $e) {
+    $unpaid = 0;
+    $receiptPending = 0;
+}
+$recentLogs = [];
+try {
+    $recentLogs = $pdo->query("SELECT l.created_at, l.summary, l.target_type, COALESCE(u.display_name, 'system') AS user_name FROM admin_logs l LEFT JOIN admin_users u ON u.id = l.user_id ORDER BY l.created_at DESC LIMIT 10")->fetchAll();
+} catch (Throwable $e) {
+    $recentLogs = [];
+}
+start_page($page_title, $page_description);
 ?>
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <title>管理トップ | CORO PROJECT</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;margin:16px;background:#111827;color:#e5e7eb;}
-    a{color:#60a5fa;text-decoration:none;}
-    a:hover{text-decoration:underline;}
-    h1{font-size:22px;margin-bottom:8px;}
-    .nav{margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid #1f2937;}
-    .nav a{margin-right:12px;font-size:13px;}
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:12px;}
-    .card{background:#020617;border-radius:12px;padding:16px;border:1px solid #1f2937;box-shadow:0 8px 20px rgba(0,0,0,.5);}
-    .card h2{margin:0 0 6px;font-size:16px;}
-    .card p{margin:0 0 8px;font-size:13px;color:#9ca3af;}
-    .btn{display:inline-block;padding:6px 10px;border-radius:6px;background:#6366f1;color:#fff;font-size:13px;}
-  </style>
-</head>
-<body>
-  <h1>CORO PROJECT 管理画面</h1>
+<main class="page-container">
+  <section class="card-grid two">
+    <a class="card stat-card" href="<?= h($baseUrl) ?>/accounting/revenues.php"><div class="muted">未提出収益</div><div class="stat-number"><?= h((string)$unsubmitted) ?></div><p>今月まだ収益が登録されていない会計タレント</p></a>
+    <a class="card stat-card" href="<?= h($baseUrl) ?>/accounting/invoices.php"><div class="muted">請求可能</div><div class="stat-number"><?= h((string)$invoiceReady) ?></div><p>30%換算で5,000円以上の対象</p></a>
+    <a class="card stat-card" href="<?= h($baseUrl) ?>/accounting/invoices.php"><div class="muted">未入金</div><div class="stat-number"><?= h((string)$unpaid) ?></div><p>請求済みで入金待ちの請求</p></a>
+    <a class="card stat-card" href="<?= h($baseUrl) ?>/accounting/invoices.php"><div class="muted">領収書未発行</div><div class="stat-number"><?= h((string)$receiptPending) ?></div><p>入金済みで領収書が未発行の請求</p></a>
+  </section>
 
-  <div class="nav">
-    <a href="index.php">🏠 トップ</a>
-    <a href="news.php">📰 News管理</a>
-    <a href="talents.php">👤 Talents管理</a>
-    <a href="https://coroproject.jp/index.php" target="_blank">🌐 サイトTOPを開く</a>
-  </div>
+  <section class="card-grid three mt-24">
+    <a class="card menu-card" href="<?= h($baseUrl) ?>/news.php"><h3>お知らせ管理</h3><p>ニュースの追加・編集・削除を行います。</p></a>
+    <a class="card menu-card" href="<?= h($baseUrl) ?>/talents.php"><h3>タレント管理</h3><p>公開サイトのタレント情報を管理します。</p></a>
+    <a class="card menu-card" href="<?= h($baseUrl) ?>/accounting/index.php"><h3>会計システム</h3><p>収益入力・請求管理・会計一覧へ進みます。</p></a>
+  </section>
 
-  <div class="cards">
-    <div class="card">
-      <h2>News管理</h2>
-      <p>お知らせ / リリース / イベント情報の新規追加・編集・削除。</p>
-      <a href="news.php" class="btn">News管理へ</a>
-    </div>
-    <div class="card">
-      <h2>Talents管理</h2>
-      <p>所属タレントのプロフィール・リンク・ステータスを編集。</p>
-      <a href="talents.php" class="btn">Talents管理へ</a>
-    </div>
-  </div>
-</body>
-</html>
+  <section class="card mt-24">
+    <h3>最近更新したデータ</h3>
+    <?php if (!$recentLogs): ?>
+      <div class="empty-state">まだ操作ログがありません。</div>
+    <?php else: ?>
+      <div class="summary-list">
+        <?php foreach ($recentLogs as $log): ?>
+          <div class="summary-row"><span><?= h(format_datetime($log['created_at'])) ?> / <?= h($log['user_name']) ?></span><strong><?= h($log['summary']) ?></strong></div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+  </section>
+</main>
+<?php end_page(); ?>
