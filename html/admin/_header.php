@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="admin-header-test" content="20260419-1">
   <title><?= h(((isset($page_title) ? $page_title : '管理画面')) . ' | ' . ($config['app']['site_title'] ?? 'CORO PROJECT 管理画面')) ?></title>
   <link rel="stylesheet" href="<?= h($baseUrl) ?>/assets/css/admin.css">
   <script defer src="<?= h($baseUrl) ?>/assets/js/admin.js"></script>
