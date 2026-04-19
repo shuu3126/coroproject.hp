@@ -14,20 +14,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch();
 
     if ($user && password_verify($password, $user['password_hash'])) {
+        session_regenerate_id(true);
+
         $_SESSION['admin_user'] = [
             'id' => (int)$user['id'],
             'login_id' => $user['login_id'],
             'display_name' => $user['display_name'],
         ];
+        $_SESSION['login_at'] = time();
+
         $pdo->prepare('UPDATE admin_users SET last_login_at = NOW() WHERE id = ?')->execute([$user['id']]);
         write_admin_log($pdo, (int)$user['id'], 'login', 'admin_user', (int)$user['id'], 'ログインしました');
+
         redirect_to($baseUrl . '/index.php');
     }
 
     set_flash('error', 'ログイン情報が正しくありません。');
     redirect_to($baseUrl . '/login.php');
 }
+
 $page_title = 'ログイン';
+$adminRoot = 'https://coroproject.minim.ne.jp/coroproject_jp/html/admin';
 ?>
 <!doctype html>
 <html lang="ja">
@@ -35,19 +42,29 @@ $page_title = 'ログイン';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ログイン | <?= h($config['app']['site_title']) ?></title>
-  <link rel="stylesheet" href="<?= h($baseUrl) ?>/assets/css/admin.css">
+  <link rel="stylesheet" href="<?= h($adminRoot) ?>/assets/css/admin.css?v=20260419-login">
 </head>
 <body class="login-body">
 <div class="login-card">
   <div class="login-brand">CORO PROJECT</div>
   <h1>管理システム</h1>
   <p>ニュース管理・タレント管理・会計システムをまとめて操作できます。</p>
+
   <?php $flash = get_flash(); if ($flash): ?>
     <div class="alert-box alert-<?= h($flash['type']) ?>"><?= h($flash['message']) ?></div>
   <?php endif; ?>
+
   <form method="post" class="form-stack">
-    <label><span>ログインID</span><input type="text" name="login_id" required></label>
-    <label><span>パスワード</span><input type="password" name="password" required></label>
+    <label>
+      <span>ログインID</span>
+      <input type="text" name="login_id" required>
+    </label>
+
+    <label>
+      <span>パスワード</span>
+      <input type="password" name="password" required>
+    </label>
+
     <button class="primary-btn" type="submit">ログインする</button>
   </form>
 </div>
