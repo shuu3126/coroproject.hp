@@ -4,7 +4,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 $config = require __DIR__ . '/config.php';
-$dbPath = dirname(__DIR__) . '/db.php';
+$dbPath = dirname(__DIR__, 2) . '/db.php';
 if (!file_exists($dbPath)) {
     http_response_code(500);
     exit('db.php が見つかりません。html/db.php を配置してください。');
