@@ -48,7 +48,7 @@ try {
 } catch (Exception $e) {
     $recentLogs = [];
 }
-start_page($page_title, $page_description);
+require_once __DIR__ . '/_header.php';
 ?>
 <main class="page-container">
   <section class="card-grid two">
@@ -77,4 +77,4 @@ start_page($page_title, $page_description);
     <?php endif; ?>
   </section>
 </main>
-<?php end_page(); ?>
+<?php require_once __DIR__ . '/_footer.php'; ?>
