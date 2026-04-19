@@ -6,6 +6,7 @@ function app_settings_defaults($config) {
         'office_bank_info' => '',
         'office_invoice_note' => '',
         'fx_default_rate' => '150',
+        'fx_api_key' => '',
         'pdf_font_path' => $config['pdf']['font_path'],
         'pdf_stamp_path' => $config['pdf']['stamp_path'],
     ];
@@ -28,6 +29,84 @@ function save_app_settings_map($pdo, $userId, $map) {
         $stmt = $pdo->prepare('INSERT INTO settings (setting_key, setting_value, updated_by, updated_at) VALUES (?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_by = VALUES(updated_by), updated_at = NOW()');
         $stmt->execute([$key, $value, $userId ?: null]);
     }
+}
+
+
+function accounting_http_get_json($url) {
+    $response = false;
+    $error = '';
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_USERAGENT => 'CORO-PROJECT-ADMIN/1.0',
+        ]);
+        $response = curl_exec($ch);
+        if ($response === false) {
+            $error = curl_error($ch);
+        }
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($response === false || $httpCode !== 200) {
+            throw new RuntimeException(
+                '為替APIへの接続に失敗しました。' .
+                ($error !== '' ? ' ' . $error : '') .
+                ($httpCode > 0 ? ' HTTP:' . $httpCode : '')
+            );
+        }
+    } else {
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'timeout' => 10,
+                'header' => "User-Agent: CORO-PROJECT-ADMIN/1.0\r\n",
+            ],
+        ]);
+        $response = @file_get_contents($url, false, $context);
+        if ($response === false) {
+            throw new RuntimeException('為替APIへの接続に失敗しました。');
+        }
+    }
+
+    $json = json_decode($response, true);
+    if (!is_array($json)) {
+        throw new RuntimeException('為替APIの応答を解析できませんでした。');
+    }
+
+    return $json;
+}
+
+function accounting_fetch_latest_usd_jpy_rate($apiKey) {
+    $apiKey = trim((string)$apiKey);
+    if ($apiKey === '') {
+        throw new RuntimeException('為替APIキーが未設定です。設定画面で入力してください。');
+    }
+
+    $url = 'https://v6.exchangerate-api.com/v6/' . rawurlencode($apiKey) . '/latest/USD';
+    $json = accounting_http_get_json($url);
+
+    if (($json['result'] ?? '') !== 'success') {
+        $errorType = (string)($json['error-type'] ?? 'unknown-error');
+        throw new RuntimeException('為替APIエラー: ' . $errorType);
+    }
+
+    $rate = $json['conversion_rates']['JPY'] ?? null;
+    if (!is_numeric($rate)) {
+        throw new RuntimeException('JPYレートを取得できませんでした。');
+    }
+
+    return [
+        'rate' => (float)$rate,
+        'base_code' => (string)($json['base_code'] ?? 'USD'),
+        'time_last_update_utc' => (string)($json['time_last_update_utc'] ?? ''),
+        'time_next_update_utc' => (string)($json['time_next_update_utc'] ?? ''),
+    ];
 }
 
 function accounting_share_percent_default() {

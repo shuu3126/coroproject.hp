@@ -27,6 +27,10 @@ start_page('設定', '管理画面と会計システムの基本設定です。'
     <label><span>請求書備考テンプレ</span><textarea name="office_invoice_note" rows="4"><?= h($settings['office_invoice_note']) ?></textarea></label>
     <div class="form-grid two">
       <label><span>デフォルト為替レート</span><input type="text" name="fx_default_rate" value="<?= h($settings['fx_default_rate']) ?>"></label>
+      <label><span>為替APIキー</span><input type="text" name="fx_api_key" value="<?= h(isset($settings['fx_api_key']) ? $settings['fx_api_key'] : '') ?>"></label>
+    </div>
+    <div class="help-text">請求書作成画面で最新レートを取得する場合に使います。</div>
+    <div class="form-grid two">
       <div class="card" style="padding:12px 16px;">
         <strong>回収ライン</strong>
         <div class="muted" style="margin-top:6px;">5,000円固定</div>
