@@ -8,11 +8,11 @@ return [
     ],
     'uploads' => [
         'news_public_dir' => dirname(dirname(__DIR__)) . '/images/news',
-        'news_public_prefix' => 'images/news',
+        'news_public_prefix' => 'coroproject_jp/images/news',
         'talent_public_dir' => dirname(dirname(__DIR__)) . '/images/talents',
-        'talent_public_prefix' => 'images/talents',
+        'talent_public_prefix' => 'coroproject_jp/images/talents',
         'accounting_root' => dirname(dirname(__DIR__)) . '/uploads/accounting',
-        'accounting_prefix' => 'uploads/accounting',
+        'accounting_prefix' => 'coroproject_jp/uploads/accounting',
     ],
     'pdf' => [
         'font_path' => __DIR__ . '/resources/fonts/ipaexg.ttf',
