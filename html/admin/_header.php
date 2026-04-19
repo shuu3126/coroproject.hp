@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="admin-header-test" content="20260419-1">
   <title><?= h(((isset($page_title) ? $page_title : '管理画面')) . ' | ' . ($config['app']['site_title'] ?? 'CORO PROJECT 管理画面')) ?></title>
-  <link rel="stylesheet" href="<?= h($baseUrl) ?>/assets/css/admin.css">
-  <script defer src="<?= h($baseUrl) ?>/assets/js/admin.js"></script>
+  <link rel="stylesheet" href="https://coroproject.minim.ne.jp/coroproject_jp/html/admin/assets/css/admin.css?v=20260419-2">
+  <script defer src="https://coroproject.minim.ne.jp/coroproject_jp/html/admin/assets/js/admin.js?v=20260419-2"></script>
 </head>
 <body>
 <div class="app-shell">
