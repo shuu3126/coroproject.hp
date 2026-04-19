@@ -6,8 +6,8 @@ if (current_admin_user()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $loginId = trim((isset($_POST['login_id']) ? $_POST['login_id'] : ''));
-    $password = (isset($_POST['password']) ? $_POST['password'] : '');
+    $loginId = trim(isset($_POST['login_id']) ? $_POST['login_id'] : '');
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
 
     $stmt = $pdo->prepare('SELECT * FROM admin_users WHERE login_id = ? AND is_active = 1 LIMIT 1');
     $stmt->execute([$loginId]);
@@ -41,7 +41,7 @@ $page_title = 'ログイン';
 <div class="login-card">
   <div class="login-brand">CORO PROJECT</div>
   <h1>管理システム</h1>
-  <p>お知らせ管理・タレント管理・会計システムをまとめて操作できます。</p>
+  <p>ニュース管理・タレント管理・会計システムをまとめて操作できます。</p>
   <?php $flash = get_flash(); if ($flash): ?>
     <div class="alert-box alert-<?= h($flash['type']) ?>"><?= h($flash['message']) ?></div>
   <?php endif; ?>

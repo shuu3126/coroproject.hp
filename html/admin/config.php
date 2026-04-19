@@ -1,12 +1,5 @@
 <?php
 return [
-    'db' => [
-        'host' => 'localhost',
-        'dbname' => 'db_coroproject_1',
-        'user' => 'db_coroproject',
-        'pass' => 'FwMMCTUO',
-        'charset' => 'utf8mb4',
-    ],
     'app' => [
         'base_url' => '/coroproject_jp/html/admin',
         'timezone' => 'Asia/Tokyo',
@@ -20,5 +13,11 @@ return [
         'talent_public_prefix' => 'images/talents',
         'accounting_root' => dirname(dirname(__DIR__)) . '/uploads/accounting',
         'accounting_prefix' => 'uploads/accounting',
+    ],
+    'pdf' => [
+        'font_path' => __DIR__ . '/resources/fonts/ipaexg.ttf',
+        'stamp_path' => __DIR__ . '/resources/stamps/hanko.png',
+        'render_width' => 1654,
+        'render_height' => 2339,
     ],
 ];
