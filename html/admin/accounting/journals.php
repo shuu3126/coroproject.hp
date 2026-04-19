@@ -1,7 +1,5 @@
 <?php
 require_once dirname(__DIR__) . '/_bootstrap.php';
-require_once dirname(__DIR__) . '/_auth.php';
-require_once __DIR__ . '/_helpers.php';
 
 require_admin_login();
 $user = current_admin_user();
@@ -21,9 +19,9 @@ function journal_source_label($source) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ((isset($_POST['action']) ? $_POST['action'] : '')) === 'delete') {
     $id = (int)(isset($_POST['id']) ? $_POST['id'] : 0);
 
-    $row = $pdo->prepare('SELECT source FROM accounting_journal_entries WHERE id = ?');
-    $row->execute([$id]);
-    $info = $row->fetch();
+    $stmt = $pdo->prepare('SELECT source FROM accounting_journal_entries WHERE id = ?');
+    $stmt->execute([$id]);
+    $info = $stmt->fetch();
 
     if ($id > 0 && $info && ((isset($info['source']) ? $info['source'] : '')) !== 'invoice_auto') {
         $pdo->prepare('DELETE FROM accounting_journal_entries WHERE id = ?')->execute([$id]);
@@ -41,13 +39,20 @@ $kind = trim(isset($_GET['kind']) ? $_GET['kind'] : '');
 $source = trim(isset($_GET['source']) ? $_GET['source'] : '');
 $talentId = trim(isset($_GET['talent_id']) ? $_GET['talent_id'] : '');
 
-$talents = $pdo->query('SELECT id, display_name FROM accounting_talents ORDER BY display_name ASC')->fetchAll();
+$talents = $pdo->query("
+    SELECT id, name
+    FROM talents
+    ORDER BY sort_order ASC, name ASC, id ASC
+")->fetchAll();
 
-$sql = '
-    SELECT j.*, t.display_name AS talent_name
+$sql = "
+    SELECT
+        j.*,
+        t.name AS talent_name
     FROM accounting_journal_entries j
-    LEFT JOIN accounting_talents t ON t.id = j.talent_id
-';
+    LEFT JOIN talents t ON t.id = j.talent_id
+";
+
 $where = [];
 $params = [];
 
@@ -82,8 +87,8 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
 
-$income = $pdo->query("SELECT COALESCE(SUM(amount),0) FROM accounting_journal_entries WHERE kind='income'")->fetchColumn();
-$expense = $pdo->query("SELECT COALESCE(SUM(amount),0) FROM accounting_journal_entries WHERE kind='expense'")->fetchColumn();
+$income = $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM accounting_journal_entries WHERE kind = 'income'")->fetchColumn();
+$expense = $pdo->query("SELECT COALESCE(SUM(amount), 0) FROM accounting_journal_entries WHERE kind = 'expense'")->fetchColumn();
 
 start_page('会計一覧', '収入・支出・差引を確認し、手入力の記帳を追加できます。');
 ?>
@@ -145,7 +150,7 @@ start_page('会計一覧', '収入・支出・差引を確認し、手入力の�
         <option value="">すべて</option>
         <?php foreach ($talents as $t): ?>
           <option value="<?= h((string)$t['id']) ?>" <?= selected($talentId, (string)$t['id']) ?>>
-            <?= h($t['display_name']) ?>
+            <?= h($t['name']) ?>
           </option>
         <?php endforeach; ?>
       </select>

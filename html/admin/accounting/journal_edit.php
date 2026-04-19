@@ -1,7 +1,5 @@
 <?php
 require_once dirname(__DIR__) . '/_bootstrap.php';
-require_once dirname(__DIR__) . '/_auth.php';
-require_once __DIR__ . '/_helpers.php';
 
 require_admin_login();
 $user = current_admin_user();
@@ -9,8 +7,18 @@ $user = current_admin_user();
 $id = (int)(isset($_GET['id']) ? $_GET['id'] : 0);
 $isEdit = $id > 0;
 
-$talents = $pdo->query('SELECT id, display_name FROM accounting_talents ORDER BY display_name ASC')->fetchAll();
-$categories = $pdo->query('SELECT kind, name FROM accounting_journal_categories WHERE is_active = 1 ORDER BY kind ASC, sort_order ASC, id ASC')->fetchAll();
+$talents = $pdo->query("
+    SELECT id, name
+    FROM talents
+    ORDER BY sort_order ASC, name ASC, id ASC
+")->fetchAll();
+
+$categories = $pdo->query("
+    SELECT kind, name
+    FROM accounting_journal_categories
+    WHERE is_active = 1
+    ORDER BY kind ASC, sort_order ASC, id ASC
+")->fetchAll();
 
 $row = [
     'date' => date('Y-m-d'),
@@ -129,7 +137,7 @@ start_page($isEdit ? '記帳を編集' : '記帳を追加', '手入力で収入�
         <option value="">選択しない</option>
         <?php foreach ($talents as $t): ?>
           <option value="<?= h((string)$t['id']) ?>" <?= selected($row['talent_id'], $t['id']) ?>>
-            <?= h($t['display_name']) ?>
+            <?= h($t['name']) ?>
           </option>
         <?php endforeach; ?>
       </select>
