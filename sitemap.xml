@@ -4,15 +4,24 @@
     <loc>https://coroproject.jp/</loc>
   </url>
   <url>
-    <loc>https://coroproject.jp/html/audition.html</loc>
+    <loc>https://coroproject.jp/about.php</loc>
   </url>
   <url>
-    <loc>https://coroproject.jp/html/contact.html</loc>
+    <loc>https://coroproject.jp/service.php</loc>
   </url>
   <url>
-    <loc>https://coroproject.jp/html/privacy.html</loc>
+    <loc>https://coroproject.jp/contact.php</loc>
   </url>
   <url>
-    <loc>https://coroproject.jp/html/thanks.html</loc>
+    <loc>https://coroproject.jp/news.php</loc>
+  </url>
+  <url>
+    <loc>https://coroproject.jp/production/</loc>
+  </url>
+  <url>
+    <loc>https://coroproject.jp/creative-support/</loc>
+  </url>
+  <url>
+    <loc>https://coroproject.jp/business-matching/</loc>
   </url>
 </urlset>
