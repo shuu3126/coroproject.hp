@@ -1,7 +1,7 @@
 <?php
 return [
     'app' => [
-        'base_url' => '/production/html/admin',
+        'base_url' => '',
         'timezone' => 'Asia/Tokyo',
         'site_title' => 'CORO PROJECT 管理画面',
         'session_name' => 'coro_admin_session',

@@ -94,11 +94,6 @@ function admin_join_url_path($base, $path) {
 }
 
 function admin_detect_base_url($configuredBaseUrl) {
-    $configuredBaseUrl = trim((string)$configuredBaseUrl);
-    if ($configuredBaseUrl !== '') {
-        return admin_trim_url_path($configuredBaseUrl);
-    }
-
     $requestUri = (string)($_SERVER['REQUEST_URI'] ?? '');
     $requestPath = (string)(parse_url($requestUri, PHP_URL_PATH) ?: '');
     if ($requestPath !== '') {
@@ -109,6 +104,11 @@ function admin_detect_base_url($configuredBaseUrl) {
                 return admin_trim_url_path(substr($requestPath, 0, $adminPos + 6));
             }
         }
+    }
+
+    $configuredBaseUrl = trim((string)$configuredBaseUrl);
+    if ($configuredBaseUrl !== '') {
+        return admin_trim_url_path($configuredBaseUrl);
     }
 
     $scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
