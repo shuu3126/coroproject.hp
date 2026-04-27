@@ -161,6 +161,8 @@ function parse_detail_lines($text) {
 function status_badge_class($status) {
     $status = strtolower((string)$status);
     switch ($status) {
+        case 'replied':
+        case 'closed':
         case 'published':
         case 'active':
         case 'paid':
@@ -170,6 +172,8 @@ function status_badge_class($status) {
         case '領収書発行済':
         case '公開':
             return 'success';
+        case 'new':
+        case 'in_progress':
         case 'warning':
         case 'draft':
         case 'issued':

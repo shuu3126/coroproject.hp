@@ -6,8 +6,8 @@ if (current_admin_user()) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $loginId = trim(isset($_POST['login_id']) ? $_POST['login_id'] : '');
-    $password = isset($_POST['password']) ? $_POST['password'] : '';
+    $loginId = trim((string)($_POST['login_id'] ?? ''));
+    $password = (string)($_POST['password'] ?? '');
 
     $stmt = $pdo->prepare('SELECT * FROM admin_users WHERE login_id = ? AND is_active = 1 LIMIT 1');
     $stmt->execute([$loginId]);
@@ -24,16 +24,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['login_at'] = time();
 
         $pdo->prepare('UPDATE admin_users SET last_login_at = NOW() WHERE id = ?')->execute([$user['id']]);
-        write_admin_log($pdo, (int)$user['id'], 'login', 'admin_user', (int)$user['id'], 'ログインしました');
+        write_admin_log($pdo, (int)$user['id'], 'login', 'admin_user', (int)$user['id'], 'Admin login');
 
         redirect_to($baseUrl . '/index.php');
     }
 
-    set_flash('error', 'ログイン情報が正しくありません。');
+    set_flash('error', 'Invalid login ID or password.');
     redirect_to($baseUrl . '/login.php');
 }
 
+<<<<<<< Updated upstream
 $page_title = 'ログイン';
+=======
+>>>>>>> Stashed changes
 $adminRoot = $baseUrl;
 ?>
 <!doctype html>
@@ -41,14 +44,14 @@ $adminRoot = $baseUrl;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ログイン | <?= h($config['app']['site_title']) ?></title>
-  <link rel="stylesheet" href="<?= h($adminRoot) ?>/assets/css/admin.css?v=20260419-login">
+  <title>Login | CORO PROJECT Admin</title>
+  <link rel="stylesheet" href="<?= h($adminRoot) ?>/assets/css/admin.css?v=20260427-2">
 </head>
 <body class="login-body">
 <div class="login-card">
   <div class="login-brand">CORO PROJECT</div>
-  <h1>管理システム</h1>
-  <p>ニュース管理・タレント管理・会計システムをまとめて操作できます。</p>
+  <h1>Admin Login</h1>
+  <p>Access news, talents, inquiries, and accounting.</p>
 
   <?php $flash = get_flash(); if ($flash): ?>
     <div class="alert-box alert-<?= h($flash['type']) ?>"><?= h($flash['message']) ?></div>
@@ -56,16 +59,16 @@ $adminRoot = $baseUrl;
 
   <form method="post" class="form-stack">
     <label>
-      <span>ログインID</span>
+      <span>Login ID</span>
       <input type="text" name="login_id" required>
     </label>
 
     <label>
-      <span>パスワード</span>
+      <span>Password</span>
       <input type="password" name="password" required>
     </label>
 
-    <button class="primary-btn" type="submit">ログインする</button>
+    <button class="primary-btn" type="submit">Login</button>
   </form>
 </div>
 </body>

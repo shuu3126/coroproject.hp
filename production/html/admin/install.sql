@@ -33,6 +33,29 @@ CREATE TABLE IF NOT EXISTS settings (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS inquiries (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  source VARCHAR(100) NOT NULL DEFAULT 'general',
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  topic VARCHAR(255) NOT NULL,
+  url VARCHAR(500) NULL,
+  message TEXT NOT NULL,
+  ip VARCHAR(64) NULL,
+  user_agent VARCHAR(255) NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'new',
+  admin_memo TEXT NULL,
+  reply_subject VARCHAR(255) NULL,
+  reply_body LONGTEXT NULL,
+  replied_at DATETIME NULL,
+  replied_by BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_inquiries_created_at (created_at),
+  INDEX idx_inquiries_status (status),
+  INDEX idx_inquiries_source (source)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS accounting_talent_settings (
   talent_id VARCHAR(191) PRIMARY KEY,
   office_share_percent DECIMAL(5,2) NOT NULL DEFAULT 40.00,
