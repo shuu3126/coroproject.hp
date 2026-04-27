@@ -33,11 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect_to($baseUrl . '/login.php');
 }
 
-<<<<<<< Updated upstream
 $page_title = 'ログイン';
-=======
->>>>>>> Stashed changes
-$adminRoot = $baseUrl;
+$adminRoot = isset($baseUrl) ? rtrim((string)$baseUrl, '/') : '';
+if ($adminRoot === '') {
+    $adminRoot = '/production/html/admin';
+}
 ?>
 <!doctype html>
 <html lang="ja">

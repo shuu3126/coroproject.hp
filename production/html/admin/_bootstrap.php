@@ -79,7 +79,6 @@ if (!empty($_SESSION['admin_user'])) {
     }
 }
 
-<<<<<<< Updated upstream
 function admin_trim_url_path($path) {
     $path = '/' . trim((string)$path, '/');
     return $path === '/' ? '' : $path;
@@ -138,17 +137,6 @@ function admin_detect_public_url_root($baseUrl) {
 
 $baseUrl = admin_detect_base_url($config['app']['base_url'] ?? '');
 $publicUrlRoot = admin_detect_public_url_root($baseUrl);
-=======
-$configuredBaseUrl = trim((string)($config['app']['base_url'] ?? ''));
-if ($configuredBaseUrl !== '') {
-    $baseUrl = rtrim($configuredBaseUrl, '/');
-} else {
-    $scriptName = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
-    $detectedBaseUrl = str_replace('\\', '/', dirname($scriptName));
-    $detectedBaseUrl = rtrim($detectedBaseUrl, '/.');
-    $baseUrl = $detectedBaseUrl !== '' ? $detectedBaseUrl : '/admin';
-}
->>>>>>> Stashed changes
 $publicRoot = dirname(__DIR__);
 
 if (empty($config['uploads']['news_public_prefix'])) {
@@ -167,8 +155,5 @@ require_once __DIR__ . '/_log.php';
 require_once __DIR__ . '/_upload.php';
 require_once __DIR__ . '/_pdf.php';
 require_once __DIR__ . '/_accounting.php';
-<<<<<<< Updated upstream
-=======
 require_once dirname(__DIR__, 3) . '/includes/inquiries.php';
 require_once dirname(__DIR__, 3) . '/includes/inquiry_mailer.php';
->>>>>>> Stashed changes

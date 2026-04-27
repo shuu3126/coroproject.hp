@@ -2,7 +2,6 @@
 global $baseUrl, $config;
 $flash = get_flash();
 $currentUser = current_admin_user();
-<<<<<<< Updated upstream
 if (!isset($baseUrl) || trim((string)$baseUrl) === '') {
     if (function_exists('admin_detect_base_url')) {
         $baseUrl = admin_detect_base_url($config['app']['base_url'] ?? '');
@@ -15,11 +14,11 @@ if (!isset($baseUrl) || trim((string)$baseUrl) === '') {
     }
 }
 $adminRoot = rtrim((string)$baseUrl, '/');
-=======
-$adminRoot = $baseUrl;
+if ($adminRoot === '') {
+    $adminRoot = '/production/html/admin';
+}
 $titleText = isset($page_title) ? $page_title : 'Admin';
 $siteTitleText = 'CORO PROJECT Admin';
->>>>>>> Stashed changes
 ?>
 <!doctype html>
 <html lang="ja">
