@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^html/(.*)$ /production/html/$1 [R=302,L]
+RewriteRule ^(.*)$ /production/$1 [R=302,L]

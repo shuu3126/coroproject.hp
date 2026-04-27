@@ -99,6 +99,18 @@ function admin_detect_base_url($configuredBaseUrl) {
         return admin_trim_url_path($configuredBaseUrl);
     }
 
+    $requestUri = (string)($_SERVER['REQUEST_URI'] ?? '');
+    $requestPath = (string)(parse_url($requestUri, PHP_URL_PATH) ?: '');
+    if ($requestPath !== '') {
+        $adminPos = strpos($requestPath, '/admin');
+        if ($adminPos !== false) {
+            $afterAdmin = substr($requestPath, $adminPos + 6, 1);
+            if ($afterAdmin === '' || $afterAdmin === '/') {
+                return admin_trim_url_path(substr($requestPath, 0, $adminPos + 6));
+            }
+        }
+    }
+
     $scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
     $scriptPath = (string)(parse_url($scriptName, PHP_URL_PATH) ?: '');
     if ($scriptPath === '' || $scriptPath === '.' || $scriptPath === '/') {
