@@ -2,18 +2,20 @@
 global $baseUrl, $config;
 $flash = get_flash();
 $currentUser = current_admin_user();
-if (!isset($baseUrl) || trim((string)$baseUrl) === '') {
+$headerBaseUrl = isset($baseUrl) ? trim((string)$baseUrl) : '';
+if ($headerBaseUrl === '') {
     if (function_exists('admin_detect_base_url')) {
-        $baseUrl = admin_detect_base_url($config['app']['base_url'] ?? '');
+        $headerBaseUrl = admin_detect_base_url($config['app']['base_url'] ?? '');
     } else {
         $requestPath = (string)(parse_url((string)($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '');
         $adminPos = strpos($requestPath, '/admin');
-        $baseUrl = $adminPos !== false
+        $headerBaseUrl = $adminPos !== false
             ? '/' . trim(substr($requestPath, 0, $adminPos + 6), '/')
             : '/production/html/admin';
     }
+    $baseUrl = $headerBaseUrl;
 }
-$adminRoot = rtrim((string)$baseUrl, '/');
+$adminRoot = rtrim($headerBaseUrl, '/');
 ?>
 <!doctype html>
 <html lang="ja">
