@@ -217,7 +217,7 @@ function talent_status_is_active($status) {
 }
 
 function start_page($title, $description = '') {
-    global $page_title, $page_description, $baseUrl, $config, $publicUrlRoot;
+    global $page_title, $page_description;
     $page_title = $title;
     $page_description = $description;
     require __DIR__ . '/_header.php';

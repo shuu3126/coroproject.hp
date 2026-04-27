@@ -1177,6 +1177,29 @@ img { display: block; max-width: 100%; }
   min-height: 160px;
 }
 
+.contact-form .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contact-form .checkbox-row input {
+  width: auto;
+}
+
+.contact-form .checkbox-row span {
+  font-family: inherit;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #fff;
+}
+
+.field-note {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 .service-overview {
   background: rgba(255,255,255,.02);
   border-top: 1px solid var(--line);

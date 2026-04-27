@@ -1,7 +1,13 @@
 <?php
 require_once __DIR__ . '/includes/layout.php';
-$submitted = $_SERVER['REQUEST_METHOD'] === 'POST';
-render_head('CONTACT', '企業案件、制作相談、所属相談などの問い合わせ窓口です。');
+require_once __DIR__ . '/includes/inquiries.php';
+
+$contactSource = inquiry_normalize_source((string)($_GET['source'] ?? 'general'));
+$submitted = isset($_GET['sent']) && $_GET['sent'] === '1';
+$selectedTopic = trim((string)($_GET['topic'] ?? ''));
+$returnTo = '../contact.php?sent=1&source=' . rawurlencode($contactSource);
+
+render_head('CONTACT', 'CORO PROJECTへのお問い合わせ窓口です。事業相談、制作依頼、出演・PR相談などをまとめて受け付けています。');
 render_header('contact');
 ?>
 <main class="subpage-main">
@@ -12,10 +18,11 @@ render_header('contact');
           <span class="marker-bar"></span>
           <span class="marker-text">CONTACT NODE</span>
         </div>
-        <h1 class="sub-title">相談内容を整理し、<br><span>必要な窓口へ接続します。</span></h1>
-        <p class="sub-lead">企業案件、PR・タイアップ、イベント出演、制作依頼、所属相談、活動相談、クリエイター提携、取材、業務提携など、内容に応じて適切な窓口へご案内します。まずは総合フォームからご相談ください。</p>
+        <h1 class="sub-title">相談したい内容を整理して<br><span>そのまま送れる窓口です。</span></h1>
+        <p class="sub-lead">総合ページ、Business Matching、Production など、各ページからの相談をまとめて受け付ける共通窓口です。内容に応じて担当へ振り分け、管理画面から確認・返信できる形で記録します。</p>
       </div>
       <div class="sub-badges reveal is-visible">
+        <span class="mini-tag">SOURCE: <?= h(inquiry_source_label($contactSource)) ?></span>
         <span class="mini-tag">REPLY: 3 BUSINESS DAYS</span>
       </div>
     </div>
@@ -30,56 +37,77 @@ render_header('contact');
         </div>
         <h2 class="content-title small">お問い合わせ前のご案内</h2>
         <div class="stack-md contact-copy">
-          <p>ご相談内容が固まっていない段階でも問題ありません。目的や困りごとが曖昧でも、整理の段階からサポートします。</p>
+          <p>事業相談、タイアップ、制作依頼、出演やPRのご相談など、用途が固まっていなくても問題ありません。わかる範囲で記入いただければ、内容を整理したうえで担当から折り返します。</p>
           <ul class="info-list">
-            <li>返信目安は通常3営業日以内です。</li>
-            <li>企業案件、制作相談、所属相談、活動相談、取材、業務提携なども含め、すべて総合フォームから受付します。</li>
-            <li>具体的な予算や納期が未定でもご相談可能です。</li>
+            <li>通常は3営業日以内を目安に返信します。</li>
+            <li>各事業部ページから来た問い合わせも、この窓口でまとめて管理されます。</li>
+            <li>急ぎの場合は本文冒頭に希望時期や締切を書いてください。</li>
           </ul>
         </div>
         <div class="contact-aside-block">
-          <h3>対応可能な内容</h3>
-          <p>案件相談、キャスティング、PR施策、イベント出演、制作依頼、動画・MV関連、所属相談、活動相談、クリエイター提携、取材、業務提携、その他CORO PROJECTに関するお問い合わせ。</p>
+          <h3>対応できる内容</h3>
+          <p>企業案件、キャスティング、制作依頼、イベント出演、Productionに関する相談、その他のお問い合わせまで受け付けています。</p>
         </div>
         <div class="contact-aside-block">
-          <h3>注意事項</h3>
-          <p>内容によっては確認にお時間をいただく場合があります。営業・売り込みのみを目的としたご連絡には返信できない場合があります。</p>
+          <h3>補足いただけると助かる項目</h3>
+          <p>参考URL、希望時期、予算感、想定している施策やアウトプットがあれば、初回返信までがよりスムーズになります。</p>
         </div>
       </div>
 
       <div class="contact-form-wrap cyber-clip-lg">
         <?php if ($submitted): ?>
           <div class="success-box cyber-clip">
-            <strong>送信を受け付けました。</strong>
-            <p>このデモ版では実送信は行っていませんが、フォームUIと導線の確認ができます。</p>
+            <strong>お問い合わせを受け付けました。</strong>
+            <p>内容は管理画面にも保存され、担当者が確認できる状態になっています。順番に返信しますので、少しだけお待ちください。</p>
           </div>
         <?php endif; ?>
-        <form method="post" class="contact-form">
+
+        <form method="post" action="api/contact.php" class="contact-form">
+          <input type="hidden" name="source" value="<?= h($contactSource) ?>">
+          <input type="hidden" name="return_to" value="<?= h($returnTo) ?>">
+
           <label>
             <span>お問い合わせ種別</span>
             <select name="topic" required>
               <?php foreach ($contactTopics as $topic): ?>
-                <option value="<?= h($topic) ?>"><?= h($topic) ?></option>
+                <option value="<?= h($topic) ?>" <?= (string)$topic === $selectedTopic ? 'selected' : '' ?>><?= h($topic) ?></option>
               <?php endforeach; ?>
             </select>
-            <small class="field-note">該当する項目が近いものを選んでください。迷う場合は「その他」で問題ありません。</small>
+            <small class="field-note">近い内容を選んでいただければ十分です。迷う場合は「その他」で問題ありません。</small>
           </label>
-          <label>
-            <span>会社名 / 団体名</span>
-            <input type="text" name="company" placeholder="任意">
-          </label>
+
+          <div style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;">
+            <label>
+              <span>Company</span>
+              <input type="text" name="company" autocomplete="off" tabindex="-1">
+            </label>
+          </div>
+
           <label>
             <span>お名前</span>
             <input type="text" name="name" required>
           </label>
+
           <label>
             <span>メールアドレス</span>
             <input type="email" name="email" required>
           </label>
+
+          <label>
+            <span>参考URL</span>
+            <input type="url" name="url" placeholder="https://example.com">
+          </label>
+
           <label>
             <span>お問い合わせ内容</span>
             <textarea name="message" rows="6" required></textarea>
           </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" name="agree" required>
+            <span>プライバシーポリシーに同意して送信します。</span>
+          </label>
+
           <button type="submit" class="primary-button cyber-clip">SEND SIGNAL</button>
         </form>
       </div>

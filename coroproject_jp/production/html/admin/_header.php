@@ -5,7 +5,6 @@ if (!function_exists('h')) {
     function h($value) {
         return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
     }
-    $baseUrl = $headerBaseUrl;
 }
 
 if (!function_exists('admin_header_trim_url_path')) {
