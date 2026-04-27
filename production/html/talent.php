@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/_asset.php';
 
 function esc($s) {
     return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
@@ -55,6 +56,7 @@ if ($avatar !== '') {
     } elseif (strpos($avatar, 'images/') === 0) {
         $avatar = '../' . $avatar;
     }
+    $avatar = public_html_asset_url($talent['avatar'] ?? '');
 }
 
 // ---------- タグ（tags_json） ----------

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/_asset.php';
 
 // ------ フィルタ処理 ------
 $filterTag = $_GET['tag'] ?? '';
@@ -125,7 +126,7 @@ function safeId($id) {
             ?>
             <article class="card">
               <a class="card-body" href="<?= $anchor ?>">
-                <div class="card-thumb" style="background-image:url('<?= esc($n['thumb']) ?>')" aria-hidden="true"></div>
+                <div class="card-thumb" style="background-image:url('<?= esc(public_html_asset_url($n['thumb'])) ?>')" aria-hidden="true"></div>
                 <div class="card-meta">
                   <time datetime="<?= esc($n['date']) ?>"><?= fmtDate($n['date']) ?></time>
                   <span class="tag"><?= esc($n['tag']) ?></span>
@@ -165,7 +166,7 @@ function safeId($id) {
 
                 <?php if ($n['thumb']): ?>
                   <div class="card-thumb"
-                       style="margin-bottom:12px; background-image:url('<?= esc($n['thumb']) ?>')">
+                       style="margin-bottom:12px; background-image:url('<?= esc(public_html_asset_url($n['thumb'])) ?>')">
                   </div>
                 <?php endif; ?>
 

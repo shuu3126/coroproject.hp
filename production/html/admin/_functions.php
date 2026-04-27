@@ -18,6 +18,35 @@ function redirect_to($path) {
     exit;
 }
 
+function public_asset_url($path) {
+    global $publicUrlRoot;
+
+    $path = trim((string)$path);
+    if ($path === '') {
+        return '';
+    }
+
+    if (preg_match('#^(https?:)?//#i', $path) || strpos($path, 'data:') === 0) {
+        return $path;
+    }
+
+    $path = str_replace('\\', '/', ltrim($path, '/'));
+
+    foreach (['coroproject_jp/'] as $oldPrefix) {
+        if (strpos($path, $oldPrefix) === 0) {
+            $path = substr($path, strlen($oldPrefix));
+            break;
+        }
+    }
+
+    $publicPrefix = trim((string)$publicUrlRoot, '/');
+    if ($publicPrefix !== '' && strpos($path, $publicPrefix . '/') !== 0) {
+        $path = $publicPrefix . '/' . $path;
+    }
+
+    return '/' . ltrim($path, '/');
+}
+
 function checked($condition) {
     return $condition ? 'checked' : '';
 }

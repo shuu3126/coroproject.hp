@@ -79,8 +79,63 @@ if (!empty($_SESSION['admin_user'])) {
     }
 }
 
-$baseUrl = rtrim($config['app']['base_url'] ?? '/admin', '/');
+function admin_trim_url_path($path) {
+    $path = '/' . trim((string)$path, '/');
+    return $path === '/' ? '' : $path;
+}
+
+function admin_join_url_path($base, $path) {
+    $base = admin_trim_url_path($base);
+    $path = trim((string)$path, '/');
+    if ($path === '') {
+        return ltrim($base, '/');
+    }
+    return ltrim($base . '/' . $path, '/');
+}
+
+function admin_detect_base_url($configuredBaseUrl) {
+    $configuredBaseUrl = trim((string)$configuredBaseUrl);
+    if ($configuredBaseUrl !== '') {
+        return admin_trim_url_path($configuredBaseUrl);
+    }
+
+    $scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+    $scriptPath = (string)(parse_url($scriptName, PHP_URL_PATH) ?: '');
+    if ($scriptPath === '' || $scriptPath === '.' || $scriptPath === '/') {
+        return '/production/html/admin';
+    }
+    $scriptDir = admin_trim_url_path(dirname($scriptPath));
+
+    if (basename($scriptDir) === 'accounting') {
+        $scriptDir = admin_trim_url_path(dirname($scriptDir));
+    }
+
+    return $scriptDir !== '' ? $scriptDir : '/production/html/admin';
+}
+
+function admin_detect_public_url_root($baseUrl) {
+    $baseUrl = admin_trim_url_path($baseUrl);
+    foreach (['/html/admin', '/admin'] as $suffix) {
+        if (substr($baseUrl, -strlen($suffix)) === $suffix) {
+            return admin_trim_url_path(substr($baseUrl, 0, -strlen($suffix)));
+        }
+    }
+    return admin_trim_url_path(dirname(dirname($baseUrl)));
+}
+
+$baseUrl = admin_detect_base_url($config['app']['base_url'] ?? '');
+$publicUrlRoot = admin_detect_public_url_root($baseUrl);
 $publicRoot = dirname(__DIR__);
+
+if (empty($config['uploads']['news_public_prefix'])) {
+    $config['uploads']['news_public_prefix'] = admin_join_url_path($publicUrlRoot, 'images/news');
+}
+if (empty($config['uploads']['talent_public_prefix'])) {
+    $config['uploads']['talent_public_prefix'] = admin_join_url_path($publicUrlRoot, 'images/talents');
+}
+if (empty($config['uploads']['accounting_prefix'])) {
+    $config['uploads']['accounting_prefix'] = admin_join_url_path($publicUrlRoot, 'uploads/accounting');
+}
 
 require_once __DIR__ . '/_functions.php';
 require_once __DIR__ . '/_auth.php';

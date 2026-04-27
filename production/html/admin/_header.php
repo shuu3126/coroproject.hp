@@ -1,7 +1,7 @@
 <?php
 $flash = get_flash();
 $currentUser = current_admin_user();
-$adminRoot = 'https://coroproject.minim.ne.jp/coroproject_jp/html/admin';
+$adminRoot = $baseUrl;
 ?>
 <!doctype html>
 <html lang="ja">

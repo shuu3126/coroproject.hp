@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'ログイン';
-$adminRoot = 'https://coroproject.minim.ne.jp/coroproject_jp/html/admin';
+$adminRoot = $baseUrl;
 ?>
 <!doctype html>
 <html lang="ja">
