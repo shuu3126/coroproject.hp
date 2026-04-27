@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORO PROJECT | お問ぁE��わせ</title>
+  <meta name="description" content="CORO PROJECTへのお問ぁE��わせ窓口です。案件のご相諁E��取材�Eご依頼、その他ご連絡はこちらから、E>
+  <link rel="canonical" href="https://coroproject.jp/production/html/contact.html">
+  <meta property="og:site_name" content="CORO PROJECT">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="お問ぁE��わせ | CORO PROJECT">
+  <meta property="og:description" content="案件のご相諁E��取材�Eご依頼、その他ご連絡はこちらから、E>
+  <meta property="og:url" content="https://coroproject.jp/production/html/contact.html">
+  <meta property="og:image" content="https://coroproject.jp/production/images/ogp.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" type="image/png" href="../images/logo.png">
+  <link rel="apple-touch-icon" href="../images/logo.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+  <div id="app" class="app">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="../index.php">
+          <img src="../images/toukalogo.png" alt="CORO PROJECT ロゴ" class="brand-logo">
+          <span class="brand-text">CORO PROJECT</span>
+        </a>
+
+        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="メニューを開ぁE>
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav class="nav" id="siteNav" aria-label="メインナビゲーション">
+          <a href="../index.php#about">About</a>
+          <a href="./news.php">News</a>
+          <a href="./talents.php">Talents</a>
+          <a href="./audition.html">Audition</a>
+          <a href="./contact.html">Contact</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="sub-hero">
+        <div class="container sub-hero-inner">
+          <div class="sub-hero-copy">
+            <p class="eyebrow">Contact</p>
+            <h1>お問ぁE��わせ</h1>
+            <p class="lead">案件のご相諁E��取材�Eご依頼、提携・スポンサード�Eご連絡などは、こちら�Eフォームからお送りください、E/p>
+            <div class="sub-hero-actions">
+              <a class="btn btn-primary btn-lg" href="#form">フォームへ</a>
+              <a class="btn btn-ghost btn-lg" href="mailto:info@coroproject.jp">メールで連絡</a>
+            </div>
+          </div>
+          <div class="sub-hero-art" aria-hidden="true">
+            <div class="audition-visual"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="form" class="section">
+        <div class="container">
+          <div class="section-head">
+            <h2 class="section-title">お問ぁE��わせフォーム</h2>
+          </div>
+
+          <!-- Normal form post -->
+          <form class="contact-form" action="./api/contact.php" method="post">
+            <input type="hidden" name="source" value="production">
+            <input type="hidden" name="return_to" value="../thanks.html">
+            <div class="form-grid">
+              <label class="field">
+                <span>お名剁E/span>
+                <input type="text" name="name" placeholder="山田 太郁E required>
+              </label>
+
+              <label class="field">
+                <span>メールアドレス</span>
+                <input type="email" name="email" placeholder="you@example.com" required>
+              </label>
+
+              <label class="field">
+                <span>ご用件</span>
+                <select name="topic" required>
+                  <option value="" hidden>選択してください</option>
+                  <option>オーチE��ション応募</option>
+                  <option>案件のご相諁E/option>
+                  <option>取材・メチE��アのご連絡</option>
+                  <option>コラボ�E提携のご相諁E/option>
+                  <option>そ�E他�Eお問ぁE��わせ</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>関連URL�E�任意！E/span>
+                <input type="url" name="url" placeholder="https://...">
+              </label>
+            </div>
+
+            <label class="field">
+              <span>冁E��</span>
+              <textarea
+                name="message"
+                placeholder="ご相諁E�E容の概要、スケジュールめE��予算�E目安などをご記載ください、E
+                required
+              ></textarea>
+            </label>
+
+            <label class="checkbox">
+              <input type="checkbox" name="agree" required>
+              <span>
+                <a href="./privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a>
+                に同意する
+              </span>
+            </label>
+
+            <!-- ✁Eスパム対策（ハニ�Eポット！E-->
+            <div style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;">
+              <label>Company <input type="text" name="company" autocomplete="off"></label>
+            </div>
+
+            <button class="btn btn-primary btn-lg" id="submitBtn" type="submit">送信する</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="section cta">
+        <div class="container cta-inner">
+          <div class="cta-copy">
+            <h2>Audition</h2>
+            <p>“�E刁E��けでは届かなかった場所へ E/p>
+          </div>
+          <div class="cta-actions">
+            <a class="btn btn-primary btn-lg" href="./audition.html">応募する</a>
+            <a class="btn btn-ghost btn-lg" href="./audition.html#requirements">要E��E��読む</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-col">
+          <div class="brand brand--footer">
+            <img src="../images/logo.png" alt="CORO PROJECT" class="footer-logo">
+            <span class="brand-text">CORO PROJECT</span>
+          </div>
+          <p class="footer-desc">CORO PROJECTはVTuberのプロチE��ース・配信支援・クリエイチE��ブ制作を行うプロダクションです、E/p>
+          <div class="footer-actions">
+            <a class="btn btn-primary" href="./contact.html">問い合わぁE/a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Links</h4>
+          <ul class="footer-links">
+            <li><a href="./news.php">News</a></li>
+            <li><a href="./talents.php">Talents</a></li>
+            <li><a href="./audition.html">Audition</a></li>
+            <li><a href="./privacy.html">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Social</h4>
+          <ul class="footer-links">
+            <li><a href="https://youtube.com/@YourChannel" target="_blank" rel="noopener">YouTube</a></li>
+            <li><a href="https://x.com/CoroProjectJP" target="_blank" rel="noopener">X</a></li>
+            <li><a href="mailto:info@coroproject.jp">Mail</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="container footer-copy">
+        <small>© <span id="year"></span> CORO PROJECT</small>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // モバイルナビ
+    (function(){
+      const btn = document.getElementById('navToggle');
+      const nav = document.getElementById('siteNav');
+      if(!btn || !nav) return;
+
+      btn.addEventListener('click', ()=>{
+        const opened = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!opened));
+        document.body.classList.toggle('nav-open', !opened);
+      });
+
+      window.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape' && document.body.classList.contains('nav-open')){
+          btn.setAttribute('aria-expanded','false');
+          document.body.classList.remove('nav-open');
+        }
+      });
+
+      window.addEventListener('DOMContentLoaded', ()=>{
+        const app = document.getElementById('app');
+        if (app) app.classList.add('visible');
+      });
+    })();
+  </script>
+</body>
+</html>
