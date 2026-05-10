@@ -38,9 +38,9 @@ error_reporting(E_ALL);
 header('X-Content-Type-Options: nosniff');
 
 // ====== PHPMailer 読み込み（あなたの構成：/lib/PHPMailer.php など） ======
-require_once __DIR__ . '/../../lib/Exception.php';
-require_once __DIR__ . '/../../lib/PHPMailer.php';
-require_once __DIR__ . '/../../lib/SMTP.php';
+require_once __DIR__ . '/../../lib/PHPMailer/Exception.php';
+require_once __DIR__ . '/../../lib/PHPMailer/PHPMailer.php';
+require_once __DIR__ . '/../../lib/PHPMailer/SMTP.php';
 
 // 名前空間を使わずフルパスで呼ぶ（use問題を完全回避）
 $PHPMailerClass = '\PHPMailer\PHPMailer\PHPMailer';
