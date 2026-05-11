@@ -88,9 +88,10 @@ if ($submitted) {
             throw new Exception('データベースへの保存に失敗しました。');
         }
 
-        // 自動返信メール送信（SMTP設定が完全な場合のみ）
+        // 自動返信メール送信
         $sendMail = false;
-        if ($smtpConfig['user'] && $smtpConfig['pass'] && $smtpConfig['from_email']) {
+        $usePhpMail = in_array($smtpConfig['host'], ['', 'localhost', '127.0.0.1'], true);
+        if ($smtpConfig['from_email'] && ($usePhpMail || ($smtpConfig['user'] && $smtpConfig['pass']))) {
             try {
                 // テンプレートを読み込む
                 $replySubject = $smtpConfig['contact_reply_subject'] ?? 'お問い合わせありがとうございます | CORO PROJECT';
@@ -109,28 +110,33 @@ if ($submitted) {
                 $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
                 $mail->CharSet = 'UTF-8';
                 $mail->Encoding = 'base64';
-                $mail->isSMTP();
-                $mail->Host = $smtpConfig['host'];
-                $mail->SMTPAuth = true;
-                $mail->Username = $smtpConfig['user'];
-                $mail->Password = $smtpConfig['pass'];
-                $mail->Port = (int)$smtpConfig['port'];
 
-                if ($smtpConfig['secure'] === 'ssl') {
-                    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-                } elseif ($smtpConfig['secure'] === 'tls') {
-                    $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                if ($usePhpMail) {
+                    $mail->isMail();
                 } else {
-                    $mail->SMTPSecure = '';
-                    $mail->SMTPAutoTLS = false;
+                    $mail->isSMTP();
+                    $mail->Host = $smtpConfig['host'];
+                    $mail->SMTPAuth = true;
+                    $mail->Username = $smtpConfig['user'];
+                    $mail->Password = $smtpConfig['pass'];
+                    $mail->Port = (int)$smtpConfig['port'];
+
+                    if ($smtpConfig['secure'] === 'ssl') {
+                        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                    } elseif ($smtpConfig['secure'] === 'tls') {
+                        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    } else {
+                        $mail->SMTPSecure = '';
+                        $mail->SMTPAutoTLS = false;
+                    }
+                    $mail->SMTPOptions = [
+                        'ssl' => [
+                            'verify_peer'       => false,
+                            'verify_peer_name'  => false,
+                            'allow_self_signed' => true,
+                        ],
+                    ];
                 }
-                $mail->SMTPOptions = [
-                    'ssl' => [
-                        'verify_peer'       => false,
-                        'verify_peer_name'  => false,
-                        'allow_self_signed' => true,
-                    ],
-                ];
 
                 $mail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
                 $mail->addAddress($email, $name);
