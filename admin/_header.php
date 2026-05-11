@@ -221,7 +221,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
     </header>
 
     <?php if ($flash): ?>
-      <div class="alert-box alert-<?= h($flash['type']) ?>">
+      <div class="alert-box alert-<?= h($flash['type']) ?>" id="flash-banner">
+        <span class="alert-icon"><?= $flash['type'] === 'success' ? '✓' : ($flash['type'] === 'error' ? '✕' : 'ℹ') ?></span>
         <?= h($flash['message']) ?>
       </div>
     <?php endif; ?>
@@ -238,6 +239,17 @@ if (isset($pdo) && $pdo instanceof PDO) {
   overlay.addEventListener('click', function () {
     sidebar.classList.remove('mobile-open');
     overlay.classList.remove('open');
+  });
+})();
+(function () {
+  var banner = document.getElementById('flash-banner');
+  if (!banner) return;
+  requestAnimationFrame(function () {
+    banner.classList.add('is-visible');
+    setTimeout(function () {
+      banner.classList.add('is-hiding');
+      banner.addEventListener('transitionend', function () { banner.remove(); }, { once: true });
+    }, 3500);
   });
 })();
 </script>
