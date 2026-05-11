@@ -2,7 +2,7 @@
 # CORO PROJECT - 管理画面 Basic 認証
 # ========================================
 
-# AuthType Basic
-# AuthName "CORO PROJECT Admin"
-# AuthUserFile /絶対パス/admin/.htpasswd
-# Require valid-user
+AuthType Basic
+AuthName "CORO PROJECT Admin"
+AuthUserFile /home/sites/coroproject/web/coroproject_jp/admin/.htpasswd
+Require valid-user
