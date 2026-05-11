@@ -477,10 +477,10 @@ function mailRowAction(id, action, confirmMsg) {
                   <button class="mail-action-btn" type="button" title="アーカイブ"
                     onclick="mailRowAction(<?= $msgId ?>, 'archive')">🗂</button>
                   <button class="mail-action-btn danger" type="button" title="ゴミ箱に移動"
-                    onclick="mailRowAction(<?= $msgId ?>, 'trash', 'ゴミ箱に移動しますか？')">🗑</button>
+                    onclick="mailRowAction(<?= $msgId ?>, 'trash')">🗑</button>
                 <?php else: ?>
                   <button class="mail-action-btn danger" type="button" title="完全削除"
-                    onclick="mailRowAction(<?= $msgId ?>, 'delete_permanent', '完全に削除しますか？')">🗑</button>
+                    onclick="mailRowAction(<?= $msgId ?>, 'delete_permanent')">🗑</button>
                 <?php endif; ?>
               <?php endif; ?>
             </div>
