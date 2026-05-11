@@ -5,6 +5,8 @@ require_once __DIR__ . '/production/lib/PHPMailer/Exception.php';
 require_once __DIR__ . '/production/lib/PHPMailer/PHPMailer.php';
 require_once __DIR__ . '/production/lib/PHPMailer/SMTP.php';
 
+$pdo = coro_public_settings_db();
+
 $submitted = $_SERVER['REQUEST_METHOD'] === 'POST';
 $error = '';
 
