@@ -383,9 +383,9 @@ function admin_mail_pop3_connect($settings) {
     $target = ($encryption === 'ssl' ? 'ssl://' : '') . $host . ':' . $port;
     $context = stream_context_create([
         'ssl' => [
-            'verify_peer' => true,
-            'verify_peer_name' => true,
-            'allow_self_signed' => false,
+            'verify_peer' => false,
+            'verify_peer_name' => false,
+            'allow_self_signed' => true,
         ],
     ]);
     $errno = 0;
@@ -545,43 +545,49 @@ function admin_mail_send_message($pdo, $settings, $userId, $toText, $subject, $b
 
     $fromEmail = admin_mail_setting($settings, 'smtp_from_email', admin_mail_setting($settings, 'office_email', 'info@coroproject.jp'));
     $fromName = admin_mail_setting($settings, 'smtp_from_name', admin_mail_setting($settings, 'office_name', 'CORO PROJECT'));
-    $smtpHost = admin_mail_setting($settings, 'smtp_host', 's221.myssl.jp');
+    $smtpHost = admin_mail_setting($settings, 'smtp_host', '');
     $smtpUser = admin_mail_setting($settings, 'smtp_user', '');
     $smtpPass = admin_mail_setting($settings, 'smtp_pass', '');
     $smtpPort = (int)admin_mail_setting($settings, 'smtp_port', '465');
     $smtpSecure = admin_mail_setting($settings, 'smtp_secure', 'ssl');
+    $usePhpMail = ($smtpHost === '' || $smtpHost === 'localhost' || $smtpHost === '127.0.0.1');
 
     if ($fromEmail === '' || !filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
         throw new RuntimeException('送信元メールアドレスを正しく設定してください。');
     }
-    if ($smtpHost === '' || $smtpUser === '' || $smtpPass === '') {
+    if (!$usePhpMail && ($smtpHost === '' || $smtpUser === '' || $smtpPass === '')) {
         throw new RuntimeException('SMTPホスト、ユーザー名、パスワードを設定してください。');
     }
 
     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
     $mail->CharSet = 'UTF-8';
     $mail->Encoding = 'base64';
-    $mail->isSMTP();
-    $mail->Host = $smtpHost;
-    $mail->SMTPAuth = true;
-    $mail->Username = $smtpUser;
-    $mail->Password = $smtpPass;
-    $mail->Port = $smtpPort;
-    if ($smtpSecure === 'ssl') {
-        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-    } elseif ($smtpSecure === 'tls') {
-        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+
+    if ($usePhpMail) {
+        $mail->isMail();
     } else {
-        $mail->SMTPSecure = '';
-        $mail->SMTPAutoTLS = false;
+        $mail->isSMTP();
+        $mail->Host = $smtpHost;
+        $mail->SMTPAuth = true;
+        $mail->Username = $smtpUser;
+        $mail->Password = $smtpPass;
+        $mail->Port = $smtpPort;
+        if ($smtpSecure === 'ssl') {
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        } elseif ($smtpSecure === 'tls') {
+            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        } else {
+            $mail->SMTPSecure = '';
+            $mail->SMTPAutoTLS = false;
+        }
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer'       => false,
+                'verify_peer_name'  => false,
+                'allow_self_signed' => true,
+            ],
+        ];
     }
-    $mail->SMTPOptions = [
-        'ssl' => [
-            'verify_peer'       => false,
-            'verify_peer_name'  => false,
-            'allow_self_signed' => true,
-        ],
-    ];
 
     $mail->setFrom($fromEmail, $fromName);
     foreach ($to as $recipient) {
