@@ -145,8 +145,49 @@ if ($submitted) {
                 $mail->send();
                 $sendMail = true;
             } catch (Exception $mailError) {
-                // ログに記録するが、フォーム送信は続ける
                 error_log('Contact form auto-reply failed: ' . $mailError->getMessage());
+            }
+
+            // 管理者通知メール
+            try {
+                $adminEmail = $smtpConfig['from_email'];
+                $companyDisp = $company ? "\n会社名: {$company}" : '';
+                $notifyBody = "お問い合わせが届きました。\n\n"
+                    . "お名前: {$name}\n"
+                    . "メール: {$email}{$companyDisp}\n"
+                    . "種別: {$topic}\n\n"
+                    . "---\n{$message}\n---\n\n"
+                    . "管理画面: https://coroproject.jp/admin/mail/index.php?mailbox=inquiries";
+
+                $adminMail = new \PHPMailer\PHPMailer\PHPMailer(true);
+                $adminMail->CharSet  = 'UTF-8';
+                $adminMail->Encoding = 'base64';
+                if ($usePhpMail) {
+                    $adminMail->isMail();
+                } else {
+                    $adminMail->isSMTP();
+                    $adminMail->Host     = $smtpConfig['host'];
+                    $adminMail->SMTPAuth = true;
+                    $adminMail->Username = $smtpConfig['user'];
+                    $adminMail->Password = $smtpConfig['pass'];
+                    $adminMail->Port     = (int)$smtpConfig['port'];
+                    if ($smtpConfig['secure'] === 'ssl') {
+                        $adminMail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                    } elseif ($smtpConfig['secure'] === 'tls') {
+                        $adminMail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    } else {
+                        $adminMail->SMTPSecure = '';
+                        $adminMail->SMTPAutoTLS = false;
+                    }
+                    $adminMail->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]];
+                }
+                $adminMail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
+                $adminMail->addAddress($adminEmail);
+                $adminMail->Subject = '【お問い合わせ】' . $topic . ' — ' . $name;
+                $adminMail->Body    = $notifyBody;
+                $adminMail->send();
+            } catch (Exception $adminMailError) {
+                error_log('Contact form admin notify failed: ' . $adminMailError->getMessage());
             }
         }
 
