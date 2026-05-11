@@ -111,6 +111,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         redirect_to($baseUrl . '/mail/index.php?mailbox=inquiries&id=' . $inquiryId);
     }
 
+    // ── お問い合わせ: 削除 ──
+    if ($action === 'delete_inquiry') {
+        $inquiryId = (int)($_POST['id'] ?? 0);
+        if ($inquiryId > 0) {
+            $pdo->prepare('DELETE FROM inquiry_replies WHERE inquiry_id = ?')->execute([$inquiryId]);
+            $pdo->prepare('DELETE FROM inquiries WHERE id = ?')->execute([$inquiryId]);
+            write_admin_log($pdo, (int)$user['id'], 'delete', 'inquiry', (string)$inquiryId, 'お問い合わせを削除しました');
+            set_flash('success', 'お問い合わせを削除しました。');
+        }
+        redirect_to($baseUrl . '/mail/index.php?mailbox=inquiries');
+    }
+
     // ── お問い合わせ: ステータス変更 ──
     if ($action === 'inquiry_status') {
         $inquiryId = (int)($_POST['inquiry_id'] ?? 0);
@@ -135,6 +147,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     $pdo->prepare("UPDATE inquiries SET status='unread' WHERE id IN ($ph)")->execute($ids);
                 } elseif ($bulkType === 'archive') {
                     $pdo->prepare("UPDATE inquiries SET status='archived' WHERE id IN ($ph)")->execute($ids);
+                } elseif ($bulkType === 'delete_permanent') {
+                    $pdo->prepare("DELETE FROM inquiry_replies WHERE inquiry_id IN ($ph)")->execute($ids);
+                    $pdo->prepare("DELETE FROM inquiries WHERE id IN ($ph)")->execute($ids);
                 }
             } else {
                 if ($bulkType === 'archive') {
@@ -573,6 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <button class="ghost-btn" type="button" onclick="mailBulkAction('mark_read')">既読</button>
               <button class="ghost-btn" type="button" onclick="mailBulkAction('mark_unread')">未読</button>
               <button class="ghost-btn" type="button" onclick="mailBulkAction('archive')">アーカイブ</button>
+              <button class="ghost-btn danger" type="button" onclick="mailBulkAction('delete_permanent')">削除</button>
             <?php elseif ($mailbox === 'trash'): ?>
               <button class="ghost-btn" type="button" onclick="mailBulkAction('restore')">元に戻す</button>
               <button class="ghost-btn danger" type="button" onclick="mailBulkAction('delete_permanent')">完全削除</button>
@@ -646,16 +662,17 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <!-- ホバー時クイックアクション -->
             <div class="mail-row-actions" onclick="event.stopPropagation()">
-              <?php if (!$isInquiryMode): ?>
-                <?php if ($mailbox !== 'trash'): ?>
-                  <button class="mail-action-btn" type="button" title="アーカイブ"
-                    onclick="mailRowAction(<?= $msgId ?>, 'archive')">🗂</button>
-                  <button class="mail-action-btn danger" type="button" title="ゴミ箱に移動"
-                    onclick="mailRowAction(<?= $msgId ?>, 'trash')">🗑</button>
-                <?php else: ?>
-                  <button class="mail-action-btn danger" type="button" title="完全削除"
-                    onclick="mailRowAction(<?= $msgId ?>, 'delete_permanent')">🗑</button>
-                <?php endif; ?>
+              <?php if ($isInquiryMode): ?>
+                <button class="mail-action-btn danger" type="button" title="削除"
+                  onclick="mailRowAction(<?= $msgId ?>, 'delete_inquiry')">🗑</button>
+              <?php elseif ($mailbox !== 'trash'): ?>
+                <button class="mail-action-btn" type="button" title="アーカイブ"
+                  onclick="mailRowAction(<?= $msgId ?>, 'archive')">🗂</button>
+                <button class="mail-action-btn danger" type="button" title="ゴミ箱に移動"
+                  onclick="mailRowAction(<?= $msgId ?>, 'trash')">🗑</button>
+              <?php else: ?>
+                <button class="mail-action-btn danger" type="button" title="完全削除"
+                  onclick="mailRowAction(<?= $msgId ?>, 'delete_permanent')">🗑</button>
               <?php endif; ?>
             </div>
           </div>
@@ -702,6 +719,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="hidden" name="inquiry_id" value="<?= (int)$selectedId ?>">
                 <input type="hidden" name="status" value="archived">
                 <button class="ghost-btn" type="submit">アーカイブ</button>
+              </form>
+              <form method="post" data-confirm="このお問い合わせを削除しますか？この操作は元に戻せません。">
+                <input type="hidden" name="action" value="delete_inquiry">
+                <input type="hidden" name="id" value="<?= (int)$selectedId ?>">
+                <button class="ghost-btn" type="submit" style="color:var(--danger);border-color:var(--danger);">削除</button>
               </form>
             <?php else: ?>
               <form method="post">
