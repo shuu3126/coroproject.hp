@@ -1,5 +1,16 @@
 <?php
 require __DIR__ . '/includes/layout.php';
+require_once dirname(__DIR__) . '/includes/public-settings.php';
+
+$_biz_news = [];
+$_biz_pdo = coro_public_settings_db();
+if ($_biz_pdo) {
+    try {
+        $s = $_biz_pdo->query("SELECT id, title, date, tag, url FROM news WHERE is_published = 1 AND (targets IS NULL OR targets = '' OR FIND_IN_SET('business', targets)) ORDER BY date DESC, id DESC LIMIT 3");
+        $_biz_news = $s->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {}
+}
+
 $siteTitle = 'Business Matching | VTuber案件仲介・企業コラボ相談 | CORO PROJECT';
 render_header('', $siteTitle, [
   'page_name' => 'Business Matching | VTuber案件仲介・企業コラボ相談 | CORO PROJECT',
@@ -152,6 +163,36 @@ global $bmSite, $contactUrl;
     </div>
   </div>
 </section>
+
+<?php if ($_biz_news): ?>
+<section class="content-section news-preview">
+  <div class="container">
+    <div class="section-head-row">
+      <div>
+        <div class="eyebrow"><span></span>NEWS</div>
+        <h2 class="section-title">お知らせ・最新情報</h2>
+      </div>
+      <a class="btn btn-secondary" href="news.php">すべて見る</a>
+    </div>
+    <div class="news-list">
+      <?php foreach ($_biz_news as $item): ?>
+        <?php
+          $dateStr = !empty($item['date']) ? date('Y.m.d', strtotime($item['date'])) : '';
+          $link    = !empty($item['url']) ? $item['url'] : 'news.php';
+          $target  = !empty($item['url']) ? ' target="_blank" rel="noopener"' : '';
+        ?>
+        <article class="news-item">
+          <div class="news-item-meta">
+            <?php if ($dateStr): ?><time class="news-date"><?= h($dateStr) ?></time><?php endif; ?>
+            <?php if (!empty($item['tag'])): ?><span class="news-tag"><?= h($item['tag']) ?></span><?php endif; ?>
+          </div>
+          <a class="news-item-title" href="<?= h($link) ?>"<?= $target ?>><?= h($item['title']) ?></a>
+        </article>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 
 <section class="content-section contact-band">
   <div class="container contact-band__inner">

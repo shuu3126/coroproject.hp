@@ -5,7 +5,11 @@ $user = current_admin_user();
 
 $id     = trim($_GET['id'] ?? '');
 $isEdit = $id !== '';
-$row    = ['id' => '', 'client_id' => '', 'title' => '', 'category' => 'illustration', 'status' => '受付', 'creator_id' => '', 'deadline' => '', 'deliverable_url' => '', 'client_amount' => '', 'creator_amount' => '', 'memo' => '', 'source' => 'manual'];
+$row    = ['id' => '', 'client_id' => '', 'title' => '', 'category' => 'illustration', 'status' => '受付', 'creator_id' => '', 'deadline' => '', 'deliverable_url' => '', 'client_amount' => '', 'creator_amount' => '', 'memo' => '', 'source' => 'manual', 'inquiry_id' => null];
+$inquiryId      = 0;
+$inqClientName  = '';
+$inqClientEmail = '';
+try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN inquiry_id INT NULL DEFAULT NULL"); } catch (Exception $e) {}
 
 if ($isEdit) {
     $stmt = $pdo->prepare('SELECT * FROM cre_projects WHERE id = ? LIMIT 1');
@@ -13,6 +17,17 @@ if ($isEdit) {
     $found = $stmt->fetch();
     if (!$found) { set_flash('error', '案件が見つかりません。'); redirect_to($baseUrl . '/creative/projects.php'); }
     $row = array_merge($row, $found);
+    $inquiryId = (int)($row['inquiry_id'] ?? 0);
+}
+
+// Pre-fill new project from inquiry URL params
+if (!$isEdit && (int)($_GET['inquiry_id'] ?? 0) > 0) {
+    $inquiryId      = (int)$_GET['inquiry_id'];
+    $inqClientName  = trim($_GET['client_name']  ?? '');
+    $inqClientEmail = trim($_GET['client_email'] ?? '');
+    $row['title']   = trim($_GET['title']        ?? '');
+    $row['memo']    = trim($_GET['description']  ?? '');
+    $row['source']  = 'inquiry';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -26,18 +41,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $clientAmount   = $_POST['client_amount'] !== '' ? (float)$_POST['client_amount'] : null;
     $creatorAmount  = $_POST['creator_amount'] !== '' ? (float)$_POST['creator_amount'] : null;
     $memo           = trim($_POST['memo'] ?? '');
+    $inquiryIdPost  = ((int)($_POST['inquiry_id'] ?? 0)) ?: null;
+    $source         = $inquiryIdPost ? 'inquiry' : ($row['source'] ?? 'manual');
 
     if ($title === '') { set_flash('error', '案件名は必須です。'); redirect_to($baseUrl . '/creative/project_edit.php' . ($isEdit ? '?id=' . urlencode($id) : '')); }
 
     try {
         if ($isEdit) {
-            $pdo->prepare('UPDATE cre_projects SET client_id=?,title=?,category=?,status=?,creator_id=?,deadline=?,deliverable_url=?,client_amount=?,creator_amount=?,memo=?,updated_by=? WHERE id=?')
-                ->execute([$clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, (int)$user['id'], $id]);
+            $pdo->prepare('UPDATE cre_projects SET client_id=?,title=?,category=?,status=?,creator_id=?,deadline=?,deliverable_url=?,client_amount=?,creator_amount=?,memo=?,inquiry_id=?,updated_by=? WHERE id=?')
+                ->execute([$clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, $inquiryIdPost, (int)$user['id'], $id]);
             write_admin_log($pdo, (int)$user['id'], 'edit', 'cre_project', $id, '制作案件を更新しました');
         } else {
             $saveId = normalize_file_stem('cre-' . date('Ymd-His'), 'project');
-            $pdo->prepare('INSERT INTO cre_projects (id,client_id,title,category,status,creator_id,deadline,deliverable_url,client_amount,creator_amount,memo,source,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
-                ->execute([$saveId, $clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, 'manual', (int)$user['id']]);
+            $pdo->prepare('INSERT INTO cre_projects (id,client_id,title,category,status,creator_id,deadline,deliverable_url,client_amount,creator_amount,memo,source,inquiry_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+                ->execute([$saveId, $clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, $source, $inquiryIdPost, (int)$user['id']]);
             write_admin_log($pdo, (int)$user['id'], 'create', 'cre_project', $saveId, '制作案件を作成しました');
         }
         set_flash('success', '保存しました。');
@@ -65,7 +82,17 @@ start_page($isEdit ? '制作案件を編集' : '制作案件を追加', '');
     <a class="ghost-btn" href="<?= h($baseUrl) ?>/creative/projects.php">一覧へ戻る</a>
   </section>
 
+  <?php if ($inquiryId > 0): ?>
+    <div class="alert-box alert-info" style="margin-bottom:12px;">
+      <?php if ($inqClientName !== ''): ?>
+        問い合わせ者: <strong><?= h($inqClientName) ?></strong> &lt;<?= h($inqClientEmail) ?>&gt; —
+      <?php endif; ?>
+      <a href="<?= h($baseUrl) ?>/mail/index.php?mailbox=inquiries&id=<?= $inquiryId ?>">お問い合わせを確認 →</a>
+    </div>
+  <?php endif; ?>
+
   <form method="post" class="card form-card form-stack">
+    <input type="hidden" name="inquiry_id" value="<?= (int)$inquiryId ?>">
     <label><span>案件名</span><input type="text" name="title" value="<?= h($row['title']) ?>" required placeholder="例：キャラクターデザイン / ○○様 Live2D制作"></label>
 
     <div class="form-grid two">

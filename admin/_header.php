@@ -109,6 +109,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
           <a href="<?= h($adminRoot) ?>/business/deals.php" class="<?= _nav_is_active('business/deals.php', $adminRoot) ? 'active' : '' ?>">案件管理</a>
           <a href="<?= h($adminRoot) ?>/business/ext_talents.php" class="<?= _nav_is_active('business/ext_talents.php', $adminRoot) ? 'active' : '' ?>">所属外VTuberリスト</a>
           <a href="<?= h($adminRoot) ?>/clients.php" class="<?= _nav_is_active('clients.php', $adminRoot) ? 'active' : '' ?>">クライアント管理</a>
+          <a href="<?= h($adminRoot) ?>/news.php" class="<?= _nav_is_active('news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
         </div>
       </div>
 
@@ -124,6 +125,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
           <a href="<?= h($adminRoot) ?>/creative/projects.php" class="<?= _nav_is_active('creative/projects.php', $adminRoot) ? 'active' : '' ?>">制作案件管理</a>
           <a href="<?= h($adminRoot) ?>/creative/creators.php" class="<?= _nav_is_active('creative/creators.php', $adminRoot) ? 'active' : '' ?>">クリエイターリスト</a>
           <a href="<?= h($adminRoot) ?>/clients.php" class="<?= _nav_is_active('clients.php', $adminRoot) ? 'active' : '' ?>">クライアント管理</a>
+          <a href="<?= h($adminRoot) ?>/news.php" class="<?= _nav_is_active('news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
         </div>
       </div>
 
@@ -196,10 +198,14 @@ if (isset($pdo) && $pdo instanceof PDO) {
 
     </nav>
   </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <div class="main-area">
     <header class="topbar">
-      <div>
+      <button class="hamburger-btn" id="hamburger-btn" type="button" aria-label="メニュー">
+        <span></span><span></span><span></span>
+      </button>
+      <div style="flex:1;min-width:0;">
         <div class="topbar-title"><?= h(isset($page_title) ? $page_title : '管理画面') ?></div>
         <?php if (!empty($page_description)): ?>
           <div class="topbar-sub"><?= h($page_description) ?></div>
@@ -219,3 +225,19 @@ if (isset($pdo) && $pdo instanceof PDO) {
         <?= h($flash['message']) ?>
       </div>
     <?php endif; ?>
+<script>
+(function () {
+  var btn = document.getElementById('hamburger-btn');
+  var sidebar = document.querySelector('.sidebar');
+  var overlay = document.getElementById('sidebar-overlay');
+  if (!btn || !sidebar || !overlay) return;
+  btn.addEventListener('click', function () {
+    sidebar.classList.toggle('mobile-open');
+    overlay.classList.toggle('open');
+  });
+  overlay.addEventListener('click', function () {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('open');
+  });
+})();
+</script>

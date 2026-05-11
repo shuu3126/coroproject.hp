@@ -3,10 +3,11 @@ $siteRoot = 'index.php';
 $contactUrl = 'contact.php';
 
 $navItems = [
-  ['key' => 'about', 'label' => 'ABOUT', 'href' => 'about.php'],
+  ['key' => 'about',   'label' => 'ABOUT',   'href' => 'about.php'],
   ['key' => 'service', 'label' => 'SERVICE', 'href' => 'service.php'],
-  ['key' => 'flow', 'label' => 'FLOW', 'href' => 'flow.php'],
-  ['key' => 'case', 'label' => 'CASE', 'href' => 'case.php'],
+  ['key' => 'flow',    'label' => 'FLOW',    'href' => 'flow.php'],
+  ['key' => 'case',    'label' => 'CASE',    'href' => 'case.php'],
+  ['key' => 'news',    'label' => 'NEWS',    'href' => 'news.php'],
 ];
 
 $bmSite = [

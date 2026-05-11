@@ -167,12 +167,13 @@ function load_news_items_from_database(): ?array {
     }
 
     try {
-        $stmt = $pdo->query('
+        $stmt = $pdo->query("
             SELECT id, title, date, tag, thumb, excerpt, content, content_json, url
             FROM news
             WHERE is_published = 1
+              AND (targets IS NULL OR targets = '' OR FIND_IN_SET('main', targets))
             ORDER BY sort_order ASC, date DESC, id DESC
-        ');
+        ");
         $rows = $stmt->fetchAll();
     } catch (Throwable $e) {
         return null;

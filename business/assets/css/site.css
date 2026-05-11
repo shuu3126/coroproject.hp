@@ -539,3 +539,84 @@ body {
     justify-content: flex-start;
   }
 }
+
+/* ── Mobile hamburger menu ─────────────────────────────────── */
+.biz-menu-btn {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 8px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+.biz-menu-btn span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+  transition: .2s;
+}
+.biz-mob-nav {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  background: rgba(250,250,252,.97);
+  z-index: 50;
+  padding: 96px 40px 40px;
+  gap: 32px;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+}
+.biz-mob-nav.is-open { display: flex; }
+.biz-mob-nav a {
+  font-family: "Barlow", sans-serif;
+  font-style: italic;
+  font-weight: 900;
+  font-size: 2.4rem;
+  letter-spacing: .04em;
+  color: var(--ink);
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(18,16,29,.08);
+  padding-bottom: 20px;
+  text-decoration: none;
+}
+.biz-mob-nav a:last-child { border-bottom: none; }
+.biz-mob-close {
+  position: absolute;
+  top: 28px;
+  right: 28px;
+  background: none;
+  border: 1px solid rgba(18,16,29,.15);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+}
+@media (max-width:860px) {
+  .biz-menu-btn { display: flex !important; }
+  .header-right .site-nav { display: none; }
+  .header-right .nav-cta { display: none; }
+  .header-shell { justify-content: space-between; }
+}
+
+/* ── News preview (index + news page) ─────────────────────── */
+.news-list { display: flex; flex-direction: column; gap: 0; }
+.news-item { padding: 22px 0; border-bottom: 1px solid rgba(18,16,29,.08); }
+.news-item:last-child { border-bottom: none; }
+.news-item-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.news-date { font-family: "Barlow", sans-serif; font-size: .88rem; color: #888; letter-spacing: .04em; }
+.news-tag { font-size: .75rem; font-weight: 700; letter-spacing: .08em; padding: 3px 10px; border-radius: 20px; background: rgba(123,63,245,.08); color: #7b3ff5; }
+.news-item-title { font-weight: 700; font-size: 1.05rem; color: var(--ink); text-decoration: none; display: block; margin-bottom: 4px; line-height: 1.5; }
+.news-item-title:hover { color: #7b3ff5; }
+.news-item-excerpt { font-size: .9rem; color: #666; line-height: 1.7; margin: 0; }

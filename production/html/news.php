@@ -9,6 +9,7 @@ $sql = "
     SELECT *
     FROM news
     WHERE is_published = 1
+      AND (targets IS NULL OR targets = '' OR FIND_IN_SET('production', targets))
 ";
 $params = [];
 

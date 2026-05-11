@@ -5,6 +5,8 @@ require_admin_login();
 $user     = current_admin_user();
 $settings = load_app_settings($pdo, $config);
 admin_mail_ensure_schema($pdo);
+try { $pdo->exec("ALTER TABLE biz_deals ADD COLUMN inquiry_id INT NULL DEFAULT NULL"); } catch (Exception $e) {}
+try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN inquiry_id INT NULL DEFAULT NULL"); } catch (Exception $e) {}
 
 $mailbox = trim($_GET['mailbox'] ?? 'inbox');
 $allowedMailboxes = [
@@ -73,17 +75,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
                     $mail->CharSet  = 'UTF-8';
                     $mail->Encoding = 'base64';
-                    $mail->isSMTP();
-                    $mail->Host       = admin_mail_setting($settings, 'smtp_host');
-                    $mail->SMTPAuth   = true;
-                    $mail->Username   = admin_mail_setting($settings, 'smtp_user');
-                    $mail->Password   = admin_mail_setting($settings, 'smtp_pass');
-                    $mail->Port       = (int)admin_mail_setting($settings, 'smtp_port', '465');
-                    $smtpSecure = admin_mail_setting($settings, 'smtp_secure', 'ssl');
-                    if ($smtpSecure === 'ssl') {
-                        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
-                    } elseif ($smtpSecure === 'tls') {
-                        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                    $smtpHost = admin_mail_setting($settings, 'smtp_host');
+                    if (in_array($smtpHost, ['', 'localhost', '127.0.0.1'], true)) {
+                        $mail->isMail();
+                    } else {
+                        $mail->isSMTP();
+                        $mail->Host     = $smtpHost;
+                        $mail->SMTPAuth = true;
+                        $mail->Username = admin_mail_setting($settings, 'smtp_user');
+                        $mail->Password = admin_mail_setting($settings, 'smtp_pass');
+                        $mail->Port     = (int)admin_mail_setting($settings, 'smtp_port', '465');
+                        $smtpSecure     = admin_mail_setting($settings, 'smtp_secure', 'ssl');
+                        if ($smtpSecure === 'ssl') {
+                            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+                        } elseif ($smtpSecure === 'tls') {
+                            $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                        }
                     }
                     $mail->setFrom($fromEmail, $fromName);
                     $mail->addAddress($inq['email'], $inq['name']);
@@ -177,6 +184,8 @@ $q = trim($_GET['q'] ?? '');
 $selectedMessage  = null;
 $selectedInquiry  = null;
 $inquiryReplies   = [];
+$linkedDeal       = null;
+$linkedProject    = null;
 $replyTo = $replySubject = $replyBody = '';
 
 if ($selectedId > 0) {
@@ -192,6 +201,18 @@ if ($selectedId > 0) {
             $rSt = $pdo->prepare('SELECT r.*, a.display_name FROM inquiry_replies r LEFT JOIN admin_users a ON a.id = r.admin_user_id WHERE r.inquiry_id = ? ORDER BY r.created_at ASC');
             $rSt->execute([$selectedId]);
             $inquiryReplies = $rSt->fetchAll();
+
+            // 案件化リンク確認
+            try {
+                $ds = $pdo->prepare('SELECT id, title, status FROM biz_deals WHERE inquiry_id = ? LIMIT 1');
+                $ds->execute([$selectedId]);
+                $linkedDeal = $ds->fetch() ?: null;
+            } catch (Exception $e) {}
+            try {
+                $ps = $pdo->prepare('SELECT id, title, status FROM cre_projects WHERE inquiry_id = ? LIMIT 1');
+                $ps->execute([$selectedId]);
+                $linkedProject = $ps->fetch() ?: null;
+            } catch (Exception $e) {}
         } else {
             $selectedId = 0;
         }
@@ -336,8 +357,6 @@ window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE
           <?= h($label) ?>
           <?php if ($unread > 0): ?>
             <span class="mail-folder-badge"><?= h((string)$unread) ?></span>
-          <?php elseif ($count > 0): ?>
-            <span class="mail-folder-count"><?= h((string)$count) ?></span>
           <?php endif; ?>
         </a>
       <?php endforeach; ?>
@@ -353,8 +372,6 @@ window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE
         お問い合わせ
         <?php if ($unreadInquiries > 0): ?>
           <span class="mail-folder-badge"><?= h((string)$unreadInquiries) ?></span>
-        <?php elseif ($count > 0): ?>
-          <span class="mail-folder-count"><?= h((string)$count) ?></span>
         <?php endif; ?>
       </a>
 
@@ -555,6 +572,44 @@ window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE
             </div>
           </div>
         <?php endif; ?>
+
+        <!-- 案件化パネル -->
+        <div style="border-top:1px solid var(--line);padding:16px 20px;">
+          <div style="font-size:.78em;font-weight:700;color:var(--sub);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">案件化</div>
+          <?php if ($linkedDeal): ?>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="status-badge success" style="font-size:.78em;">案件化済 — 企業案件</span>
+              <a class="ghost-btn" href="<?= h($baseUrl) ?>/business/deal_edit.php?id=<?= urlencode($linkedDeal['id']) ?>" style="font-size:.85em;">
+                <?= h($linkedDeal['title']) ?> <span class="muted">(<?= h($linkedDeal['status']) ?>)</span>
+              </a>
+            </div>
+          <?php elseif ($linkedProject): ?>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span class="status-badge success" style="font-size:.78em;">案件化済 — 制作案件</span>
+              <a class="ghost-btn" href="<?= h($baseUrl) ?>/creative/project_edit.php?id=<?= urlencode($linkedProject['id']) ?>" style="font-size:.85em;">
+                <?= h($linkedProject['title']) ?> <span class="muted">(<?= h($linkedProject['status']) ?>)</span>
+              </a>
+            </div>
+          <?php else: ?>
+            <p style="font-size:.85em;color:var(--sub);margin:0 0 10px;">この問い合わせを案件として登録します。</p>
+            <div class="actions-inline">
+              <?php
+                $dealUrl = $baseUrl . '/business/deal_edit.php?inquiry_id=' . $selectedId
+                    . '&title=' . urlencode($inq['topic'])
+                    . '&description=' . urlencode($inq['message'])
+                    . '&client_name=' . urlencode($inq['name'])
+                    . '&client_email=' . urlencode($inq['email']);
+                $projUrl = $baseUrl . '/creative/project_edit.php?inquiry_id=' . $selectedId
+                    . '&title=' . urlencode($inq['topic'])
+                    . '&description=' . urlencode($inq['message'])
+                    . '&client_name=' . urlencode($inq['name'])
+                    . '&client_email=' . urlencode($inq['email']);
+              ?>
+              <a class="primary-btn" href="<?= h($dealUrl) ?>">企業案件として案件化</a>
+              <a class="ghost-btn" href="<?= h($projUrl) ?>">制作案件として案件化</a>
+            </div>
+          <?php endif; ?>
+        </div>
       </div>
 
     <?php elseif (!$isInquiryMode && $selectedMessage): ?>

@@ -5,8 +5,12 @@ $user = current_admin_user();
 
 $id     = trim($_GET['id'] ?? '');
 $isEdit = $id !== '';
-$row    = ['id' => '', 'client_id' => '', 'title' => '', 'status' => '相談中', 'description' => '', 'budget' => '', 'start_date' => '', 'end_date' => '', 'source' => 'manual', 'memo' => ''];
+$row    = ['id' => '', 'client_id' => '', 'title' => '', 'status' => '相談中', 'description' => '', 'budget' => '', 'start_date' => '', 'end_date' => '', 'source' => 'manual', 'memo' => '', 'inquiry_id' => null];
 $candidates = [];
+$inquiryId      = 0;
+$inqClientName  = '';
+$inqClientEmail = '';
+try { $pdo->exec("ALTER TABLE biz_deals ADD COLUMN inquiry_id INT NULL DEFAULT NULL"); } catch (Exception $e) {}
 
 if ($isEdit) {
     $stmt = $pdo->prepare('SELECT * FROM biz_deals WHERE id = ? LIMIT 1');
@@ -14,10 +18,21 @@ if ($isEdit) {
     $found = $stmt->fetch();
     if (!$found) { set_flash('error', '案件が見つかりません。'); redirect_to($baseUrl . '/business/deals.php'); }
     $row = array_merge($row, $found);
+    $inquiryId = (int)($row['inquiry_id'] ?? 0);
 
     $stmt = $pdo->prepare('SELECT bc.*, COALESCE(t.name, et.name) AS talent_name FROM biz_deal_candidates bc LEFT JOIN talents t ON t.id = bc.talent_id LEFT JOIN biz_ext_talents et ON et.id = bc.ext_talent_id WHERE bc.deal_id = ? ORDER BY bc.id ASC');
     $stmt->execute([$id]);
     $candidates = $stmt->fetchAll();
+}
+
+// Pre-fill new deal from inquiry URL params
+if (!$isEdit && (int)($_GET['inquiry_id'] ?? 0) > 0) {
+    $inquiryId      = (int)$_GET['inquiry_id'];
+    $inqClientName  = trim($_GET['client_name']  ?? '');
+    $inqClientEmail = trim($_GET['client_email'] ?? '');
+    $row['title']       = trim($_GET['title']       ?? '');
+    $row['description'] = trim($_GET['description'] ?? '');
+    $row['source']      = 'inquiry';
 }
 
 // 候補追加
@@ -65,20 +80,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save'
     $budget      = $_POST['budget'] !== '' ? (float)$_POST['budget'] : null;
     $startDate   = trim($_POST['start_date'] ?? '') ?: null;
     $endDate     = trim($_POST['end_date'] ?? '') ?: null;
-    $source      = trim($_POST['source'] ?? 'manual');
-    $memo        = trim($_POST['memo'] ?? '');
+    $source        = trim($_POST['source'] ?? 'manual');
+    $memo          = trim($_POST['memo'] ?? '');
+    $inquiryIdPost = ((int)($_POST['inquiry_id'] ?? 0)) ?: null;
 
     if ($title === '') { set_flash('error', '案件名は必須です。'); redirect_to($baseUrl . '/business/deal_edit.php' . ($isEdit ? '?id=' . urlencode($id) : '')); }
 
     try {
         if ($isEdit) {
-            $pdo->prepare('UPDATE biz_deals SET client_id=?,title=?,status=?,description=?,budget=?,start_date=?,end_date=?,source=?,memo=?,updated_by=? WHERE id=?')
-                ->execute([$clientId, $title, $status, $description, $budget, $startDate, $endDate, $source, $memo, (int)$user['id'], $id]);
+            $pdo->prepare('UPDATE biz_deals SET client_id=?,title=?,status=?,description=?,budget=?,start_date=?,end_date=?,source=?,memo=?,inquiry_id=?,updated_by=? WHERE id=?')
+                ->execute([$clientId, $title, $status, $description, $budget, $startDate, $endDate, $source, $memo, $inquiryIdPost, (int)$user['id'], $id]);
             write_admin_log($pdo, (int)$user['id'], 'edit', 'biz_deal', $id, '案件を更新しました');
         } else {
             $saveId = normalize_file_stem('deal-' . date('Ymd-His'), 'deal');
-            $pdo->prepare('INSERT INTO biz_deals (id,client_id,title,status,description,budget,start_date,end_date,source,memo,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-                ->execute([$saveId, $clientId, $title, $status, $description, $budget, $startDate, $endDate, $source, $memo, (int)$user['id']]);
+            $pdo->prepare('INSERT INTO biz_deals (id,client_id,title,status,description,budget,start_date,end_date,source,memo,inquiry_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+                ->execute([$saveId, $clientId, $title, $status, $description, $budget, $startDate, $endDate, $source, $memo, $inquiryIdPost, (int)$user['id']]);
             write_admin_log($pdo, (int)$user['id'], 'create', 'biz_deal', $saveId, '案件を作成しました');
             $id = $saveId;
         }
@@ -101,8 +117,18 @@ start_page($isEdit ? '案件を編集' : '案件を追加', '');
 <main class="page-container narrow">
   <section class="page-header-block"><h1><?= h($isEdit ? '案件を編集' : '案件を追加') ?></h1></section>
 
+  <?php if ($inquiryId > 0): ?>
+    <div class="alert-box alert-info" style="margin-bottom:12px;">
+      <?php if ($inqClientName !== ''): ?>
+        問い合わせ者: <strong><?= h($inqClientName) ?></strong> &lt;<?= h($inqClientEmail) ?>&gt; —
+      <?php endif; ?>
+      <a href="<?= h($baseUrl) ?>/mail/index.php?mailbox=inquiries&id=<?= $inquiryId ?>">お問い合わせを確認 →</a>
+    </div>
+  <?php endif; ?>
+
   <form method="post" class="card form-card form-stack">
     <input type="hidden" name="action" value="save">
+    <input type="hidden" name="inquiry_id" value="<?= (int)$inquiryId ?>">
     <label><span>案件名</span><input type="text" name="title" value="<?= h($row['title']) ?>" required></label>
     <div class="form-grid two">
       <label><span>クライアント</span>

@@ -92,8 +92,18 @@ function render_header(string $currentPage, string $siteTitle, array $seo = []):
         </nav>
         <a class="nav-cta" href="<?= h($contactUrl) ?>">CONTACT</a>
       </div>
+      <button class="biz-menu-btn" id="biz-menu-btn" type="button" aria-label="メニューを開く">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
+  <div class="biz-mob-nav" id="biz-mob-nav">
+    <button class="biz-mob-close" id="biz-mob-close" type="button" aria-label="閉じる">✕</button>
+    <?php foreach ($navItems as $item): ?>
+      <a href="<?= h($item['href']) ?>"><?= h($item['label']) ?></a>
+    <?php endforeach; ?>
+    <a href="<?= h($contactUrl) ?>">CONTACT</a>
+  </div>
   <main>
   <?php
 }
@@ -121,6 +131,19 @@ function render_footer(): void {
   </footer>
 </div>
 <script src="assets/js/site.js"></script>
+<script>
+(function () {
+  var btn = document.getElementById('biz-menu-btn');
+  var nav = document.getElementById('biz-mob-nav');
+  var close = document.getElementById('biz-mob-close');
+  if (!btn || !nav) return;
+  btn.addEventListener('click', function () { nav.classList.toggle('is-open'); });
+  if (close) close.addEventListener('click', function () { nav.classList.remove('is-open'); });
+  nav.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', function () { nav.classList.remove('is-open'); });
+  });
+})();
+</script>
 </body>
 </html>
 <?php
