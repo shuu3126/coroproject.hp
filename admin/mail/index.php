@@ -506,6 +506,9 @@ function mailRowAction(id, action, confirmMsg) {
               <?= h($inq['name']) ?>
               &lt;<a href="mailto:<?= h($inq['email']) ?>" style="color:var(--primary);"><?= h($inq['email']) ?></a>&gt;
             </div>
+            <?php if (!empty($inq['company'])): ?>
+              <div><strong>会社名:</strong> <?= h($inq['company']) ?></div>
+            <?php endif; ?>
             <div><strong>日時:</strong> <?= h(format_datetime($inq['created_at'])) ?></div>
             <?php if (!empty($inq['url'])): ?>
               <div><strong>URL:</strong> <a href="<?= h($inq['url']) ?>" target="_blank" rel="noopener" style="color:var(--primary);"><?= h($inq['url']) ?></a></div>

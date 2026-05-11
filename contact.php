@@ -65,25 +65,24 @@ if ($submitted) {
             throw new Exception('正しいメールアドレスを入力してください。');
         }
 
-        // DBにデータを保存
+        // DBにデータを保存（inquiriesテーブル）
         try {
-            $pdo->exec("
-                CREATE TABLE IF NOT EXISTS contacts (
-                  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                  topic VARCHAR(255) NOT NULL,
-                  company VARCHAR(255) NULL,
-                  name VARCHAR(255) NOT NULL,
-                  email VARCHAR(255) NOT NULL,
-                  message LONGTEXT NOT NULL,
-                  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-            ");
+            // inquiries.company カラムが無ければ追加
+            try { $pdo->exec("ALTER TABLE inquiries ADD COLUMN company VARCHAR(255) NULL DEFAULT NULL AFTER email"); } catch (Exception $_e) {}
 
             $stmt = $pdo->prepare("
-                INSERT INTO contacts (topic, company, name, email, message, created_at)
-                VALUES (?, ?, ?, ?, ?, NOW())
+                INSERT INTO inquiries (name, email, company, topic, message, status, ip, user_agent, created_at)
+                VALUES (?, ?, ?, ?, ?, 'unread', ?, ?, NOW())
             ");
-            $stmt->execute([$topic, $company ?: null, $name, $email, $message]);
+            $stmt->execute([
+                $name,
+                $email,
+                $company ?: null,
+                $topic,
+                $message,
+                $_SERVER['REMOTE_ADDR'] ?? null,
+                mb_strimwidth($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
+            ]);
         } catch (Exception $e) {
             throw new Exception('データベースへの保存に失敗しました。');
         }
