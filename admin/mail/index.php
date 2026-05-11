@@ -151,6 +151,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
+// 受信トレイを開いたとき自動受信
+if ($mailbox === 'inbox' && $popReady && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    try {
+        $autoResult = admin_mail_sync_pop3($pdo, $settings, (int)$user['id']);
+        if ((int)($autoResult['inserted'] ?? 0) > 0) {
+            set_flash('success', '新着メール ' . (int)$autoResult['inserted'] . ' 件を受信しました。');
+        }
+    } catch (Exception $e) {
+        // silent
+    }
+}
+
 // ──────────────────────────────────────────────
 // データ取得
 // ──────────────────────────────────────────────
@@ -691,6 +703,51 @@ window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE
 
 <script src="<?= h(rtrim($baseUrl, '/')) ?>/assets/js/recipient.js?v=20260508-1"></script>
 <script>
+(function () {
+  var POLL_INTERVAL = 90 * 1000;
+  var pollUrl = <?= json_encode(rtrim($baseUrl, '/') . '/mail/poll.php') ?>;
+
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  function updateInboxBadge(unread) {
+    var badge = document.querySelector('.mail-folder-item[href*="mailbox=inbox"] .mail-folder-badge');
+    var countEl = document.querySelector('.mail-folder-item[href*="mailbox=inbox"] .mail-folder-count');
+    if (unread > 0) {
+      if (badge) { badge.textContent = unread; }
+      else if (countEl) { countEl.className = 'mail-folder-badge'; countEl.textContent = unread; }
+    }
+  }
+
+  function showDesktopNotification(count) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      new Notification('CORO PROJECT — 新着メール', {
+        body: '新しいメールが ' + count + ' 件届きました。',
+        tag: 'coro-mail-new',
+      });
+    } catch (e) {}
+  }
+
+  function poll() {
+    fetch(pollUrl, { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.new > 0) {
+          showDesktopNotification(data.new);
+          updateInboxBadge(data.unread);
+        }
+      })
+      .catch(function () {});
+  }
+
+  setTimeout(function () {
+    poll();
+    setInterval(poll, POLL_INTERVAL);
+  }, POLL_INTERVAL);
+})();
+
 function openCompose(opts) {
   var modal = document.getElementById('compose-modal');
   modal.classList.add('open');
