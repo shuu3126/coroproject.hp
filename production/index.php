@@ -122,11 +122,12 @@ try {
 </head>
 
 <body class="home is-loading">
-  <!-- Simple Loader -->
+  <!-- Loader -->
   <div id="coro-loader" class="coro-loader" aria-label="Loading">
     <div class="coro-loader__simple-inner">
       <img src="images/logo.png" alt="CORO PROJECT" class="coro-loader__simple-logo">
       <div class="coro-loader__simple-title">ころぷろじぇくと！</div>
+      <p class="coro-loader__msg" id="loaderMsg">配信準備中...</p>
     </div>
   </div>
 
@@ -158,6 +159,7 @@ try {
       <!-- ===== Hero ===== -->
       <section class="hero">
         <div class="hero-bg" aria-hidden="true"></div>
+        <div class="hero-bg-word" aria-hidden="true">CORO</div>
 
         <div class="container hero-inner">
           <div class="hero-copy">
@@ -219,8 +221,11 @@ try {
         <div class="decor-line-right"></div>
         <div class="container about-inner">
           <div class="section-head">
-            <h2 class="section-title">About</h2>
-            <p class="section-kicker">CORO PROJECTとは？</p>
+            <div>
+              <p class="section-eyebrow">Who We Are</p>
+              <h2 class="section-title">About</h2>
+              <p class="section-kicker">CORO PROJECTとは？</p>
+            </div>
           </div>
 
           <div class="about-grid">
@@ -258,7 +263,10 @@ try {
       <section id="news" class="section section-news reveal">
         <div class="container">
           <div class="section-head">
-            <h2 class="section-title">News</h2>
+            <div>
+              <p class="section-eyebrow">Latest</p>
+              <h2 class="section-title">News</h2>
+            </div>
             <a class="section-link" href="html/news.php">すべて見る</a>
           </div>
 
@@ -292,9 +300,13 @@ try {
 
       <!-- ===== Talents ===== -->
       <section id="talents" class="section section-talents reveal">
+        <div class="talents-bg-word" aria-hidden="true">TALENT</div>
         <div class="container">
           <div class="section-head">
-            <h2 class="section-title">Talents</h2>
+            <div>
+              <p class="section-eyebrow">Members</p>
+              <h2 class="section-title">Talents</h2>
+            </div>
             <a class="section-link" href="html/talents.php">一覧を見る</a>
           </div>
 
@@ -325,6 +337,7 @@ try {
       <section class="section section-cta section-cta--audition reveal">
         <div class="container cta-audition">
           <div class="cta-audition-copy">
+            <p class="section-eyebrow">Join Us</p>
             <p class="cta-label">Audition</p>
             <h2 class="cta-title">「一度ちゃんと、本気でやってみたい」人へ。</h2>
             <p class="cta-lead">
@@ -475,6 +488,27 @@ try {
       const FAILSAFE_MS = 6000;
 
       const start = performance.now();
+
+      // fun cycling messages
+      const msgEl = document.getElementById('loaderMsg');
+      if (msgEl) {
+        const msgs = [
+          '配信準備中...',
+          'タレント情報を確認中...',
+          '夢を詰め込んでいます...',
+          'もうすぐ起動します！',
+        ];
+        let mi = 0;
+        const msgTimer = setInterval(() => {
+          mi = (mi + 1) % msgs.length;
+          msgEl.style.opacity = '0';
+          setTimeout(() => {
+            msgEl.textContent = msgs[mi];
+            msgEl.style.opacity = '0.72';
+          }, 150);
+        }, 650);
+        window.addEventListener('load', () => clearInterval(msgTimer));
+      }
 
       function finish() {
         const loader = document.getElementById("coro-loader");

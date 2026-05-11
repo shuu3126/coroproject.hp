@@ -688,6 +688,29 @@ button { font: inherit; cursor: pointer; }
 
 /* News */
 .news-section { background: transparent; }
+.section-heading-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.section-heading-row .section-heading {
+  margin: 0;
+  text-align: left;
+}
+.news-all-link {
+  white-space: nowrap;
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: .04em;
+  opacity: .85;
+  transition: opacity .15s ease;
+}
+.news-all-link:hover { opacity: 1; }
 .news-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

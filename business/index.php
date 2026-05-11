@@ -164,7 +164,6 @@ global $bmSite, $contactUrl;
   </div>
 </section>
 
-<?php if ($_biz_news): ?>
 <section class="content-section news-preview">
   <div class="container">
     <div class="section-head-row">
@@ -175,24 +174,27 @@ global $bmSite, $contactUrl;
       <a class="btn btn-secondary" href="news.php">すべて見る</a>
     </div>
     <div class="news-list">
-      <?php foreach ($_biz_news as $item): ?>
-        <?php
-          $dateStr = !empty($item['date']) ? date('Y.m.d', strtotime($item['date'])) : '';
-          $link    = !empty($item['url']) ? $item['url'] : 'news.php';
-          $target  = !empty($item['url']) ? ' target="_blank" rel="noopener"' : '';
-        ?>
-        <article class="news-item">
-          <div class="news-item-meta">
-            <?php if ($dateStr): ?><time class="news-date"><?= h($dateStr) ?></time><?php endif; ?>
-            <?php if (!empty($item['tag'])): ?><span class="news-tag"><?= h($item['tag']) ?></span><?php endif; ?>
-          </div>
-          <a class="news-item-title" href="<?= h($link) ?>"<?= $target ?>><?= h($item['title']) ?></a>
-        </article>
-      <?php endforeach; ?>
+      <?php if ($_biz_news): ?>
+        <?php foreach ($_biz_news as $item): ?>
+          <?php
+            $dateStr = !empty($item['date']) ? date('Y.m.d', strtotime($item['date'])) : '';
+            $link    = !empty($item['url']) ? $item['url'] : 'news.php';
+            $target  = !empty($item['url']) ? ' target="_blank" rel="noopener"' : '';
+          ?>
+          <article class="news-item">
+            <div class="news-item-meta">
+              <?php if ($dateStr): ?><time class="news-date"><?= h($dateStr) ?></time><?php endif; ?>
+              <?php if (!empty($item['tag'])): ?><span class="news-tag"><?= h($item['tag']) ?></span><?php endif; ?>
+            </div>
+            <a class="news-item-title" href="<?= h($link) ?>"<?= $target ?>><?= h($item['title']) ?></a>
+          </article>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p class="news-empty">現在お知らせはありません。<a href="news.php">ニュース一覧へ</a></p>
+      <?php endif; ?>
     </div>
   </div>
 </section>
-<?php endif; ?>
 
 <section class="content-section contact-band">
   <div class="container contact-band__inner">

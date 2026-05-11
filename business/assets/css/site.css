@@ -620,3 +620,5 @@ body {
 .news-item-title { font-weight: 700; font-size: 1.05rem; color: var(--ink); text-decoration: none; display: block; margin-bottom: 4px; line-height: 1.5; }
 .news-item-title:hover { color: #7b3ff5; }
 .news-item-excerpt { font-size: .9rem; color: #666; line-height: 1.7; margin: 0; }
+.news-empty { padding: 24px 0; font-size: .95rem; color: #888; }
+.news-empty a { color: #7b3ff5; text-decoration: underline; }
