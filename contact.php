@@ -94,8 +94,8 @@ if ($submitted) {
         if ($smtpConfig['from_email'] && ($usePhpMail || ($smtpConfig['user'] && $smtpConfig['pass']))) {
             try {
                 // テンプレートを読み込む
-                $replySubject = $smtpConfig['contact_reply_subject'] ?? 'お問い合わせありがとうございます | CORO PROJECT';
-                $replyBodyTemplate = $smtpConfig['contact_reply_body'] ?? "お疲れ様です。\n\n{name}様\n\nこの度は、CORO PROJECTへのお問い合わせをいただき、ありがとうございます。\n\nお送りいただいたお問い合わせを受け付けいたしました。\n内容を確認のうえ、このメールアドレス宛にご返信差し上げます。\n\n【お問い合わせ内容】\nお問い合わせ種別: {topic}\n{company_line}\n\n---\n{message}\n---\n\nご不明な点がございましたら、お気軽にお問い合わせください。\n\nよろしくお願いいたします。\n\nCORO PROJECT\nhttps://coroproject.jp/";
+                $replySubject = $smtpConfig['contact_reply_subject'] ?: 'お問い合わせありがとうございます | CORO PROJECT';
+                $replyBodyTemplate = $smtpConfig['contact_reply_body'] ?: "お疲れ様です。\n\n{name}様\n\nこの度は、CORO PROJECTへのお問い合わせをいただき、ありがとうございます。\n\nお送りいただいたお問い合わせを受け付けいたしました。\n内容を確認のうえ、このメールアドレス宛にご返信差し上げます。\n\n【お問い合わせ内容】\nお問い合わせ種別: {topic}\n{company_line}\n\n---\n{message}\n---\n\nご不明な点がございましたら、お気軽にお問い合わせください。\n\nよろしくお願いいたします。\n\nCORO PROJECT\nhttps://coroproject.jp/";
 
                 // テンプレート変数を置換
                 $companyLine = $company ? "会社名: " . $company : "";
