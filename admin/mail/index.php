@@ -122,6 +122,51 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         redirect_to($baseUrl . '/mail/index.php?mailbox=inquiries' . ($newStatus !== 'archived' ? '&id=' . $inquiryId : ''));
     }
 
+    // ── 一括操作 ──
+    if ($action === 'bulk_action') {
+        $ids     = array_values(array_filter(array_map('intval', (array)($_POST['ids'] ?? []))));
+        $bulkType = trim($_POST['bulk_action_type'] ?? '');
+        if ($ids && $bulkType !== '') {
+            $ph = implode(',', array_fill(0, count($ids), '?'));
+            if ($isInquiryMode) {
+                if ($bulkType === 'mark_read') {
+                    $pdo->prepare("UPDATE inquiries SET status='read' WHERE id IN ($ph)")->execute($ids);
+                } elseif ($bulkType === 'mark_unread') {
+                    $pdo->prepare("UPDATE inquiries SET status='unread' WHERE id IN ($ph)")->execute($ids);
+                } elseif ($bulkType === 'archive') {
+                    $pdo->prepare("UPDATE inquiries SET status='archived' WHERE id IN ($ph)")->execute($ids);
+                }
+            } else {
+                if ($bulkType === 'archive') {
+                    $pdo->prepare("UPDATE mail_messages SET mailbox='archive', status='read', updated_at=NOW() WHERE id IN ($ph)")->execute($ids);
+                } elseif ($bulkType === 'trash') {
+                    $pdo->prepare("UPDATE mail_messages SET mailbox='trash', status='read', updated_at=NOW() WHERE id IN ($ph)")->execute($ids);
+                } elseif ($bulkType === 'mark_read') {
+                    $pdo->prepare("UPDATE mail_messages SET status='read', updated_at=NOW() WHERE id IN ($ph)")->execute($ids);
+                } elseif ($bulkType === 'mark_unread') {
+                    $pdo->prepare("UPDATE mail_messages SET status='unread', updated_at=NOW() WHERE id IN ($ph)")->execute($ids);
+                } elseif ($bulkType === 'restore') {
+                    $rows = $pdo->prepare("SELECT id, direction FROM mail_messages WHERE id IN ($ph)");
+                    $rows->execute($ids);
+                    foreach ($rows->fetchAll() as $r) {
+                        $tb = $r['direction'] === 'outbound' ? 'sent' : 'inbox';
+                        $pdo->prepare("UPDATE mail_messages SET mailbox=?, updated_at=NOW() WHERE id=?")->execute([$tb, $r['id']]);
+                    }
+                } elseif ($bulkType === 'delete_permanent') {
+                    $uStmt = $pdo->prepare("SELECT uidl FROM mail_messages WHERE id IN ($ph) AND uidl IS NOT NULL AND uidl != ''");
+                    $uStmt->execute($ids);
+                    foreach ($uStmt->fetchAll(PDO::FETCH_COLUMN) as $u) {
+                        $pdo->prepare('INSERT IGNORE INTO mail_deleted_uidls (uidl) VALUES (?)')->execute([$u]);
+                    }
+                    $pdo->prepare("DELETE FROM mail_messages WHERE id IN ($ph)")->execute($ids);
+                }
+            }
+            write_admin_log($pdo, (int)$user['id'], 'bulk_action', 'mail', null, count($ids) . '件を一括操作: ' . $bulkType);
+            set_flash('success', count($ids) . '件を操作しました。');
+        }
+        redirect_to($baseUrl . '/mail/index.php?mailbox=' . $mailbox);
+    }
+
     // ── 通常メール: メッセージ操作 ──
     $msgId = (int)($_POST['id'] ?? $selectedId);
     if (!$isInquiryMode && $msgId > 0) {
@@ -347,6 +392,70 @@ function mailRowAction(id, action, confirmMsg) {
   document.body.appendChild(f);
   f.submit();
 }
+
+// ── Bulk selection ────────────────────────────────────────────
+function mailBulkAction(action) {
+  var ids = Array.from(document.querySelectorAll('.mail-row-check:checked')).map(function(cb){ return cb.value; });
+  if (!ids.length) return;
+  var f = document.createElement('form');
+  f.method = 'post';
+  var ai = document.createElement('input'); ai.type='hidden'; ai.name='action'; ai.value='bulk_action'; f.appendChild(ai);
+  var bi = document.createElement('input'); bi.type='hidden'; bi.name='bulk_action_type'; bi.value=action; f.appendChild(bi);
+  ids.forEach(function(id){
+    var ii = document.createElement('input'); ii.type='hidden'; ii.name='ids[]'; ii.value=id; f.appendChild(ii);
+  });
+  document.body.appendChild(f);
+  f.submit();
+}
+
+function mailUpdateBulkBar() {
+  var checks  = document.querySelectorAll('.mail-row-check');
+  var checked = document.querySelectorAll('.mail-row-check:checked');
+  var scroll  = document.querySelector('.mail-list-scroll');
+  var sa      = document.getElementById('mail-select-all');
+  var normal  = document.getElementById('mail-toolbar-normal');
+  var bulk    = document.getElementById('mail-toolbar-bulk');
+  var label   = document.getElementById('bulk-selected-count');
+
+  if (checked.length > 0) {
+    scroll && scroll.classList.add('has-checked');
+    if (normal) normal.style.display = 'none';
+    if (bulk)   bulk.style.display   = 'flex';
+    if (label)  label.textContent    = checked.length + '件選択中';
+  } else {
+    scroll && scroll.classList.remove('has-checked');
+    if (normal) normal.style.display = '';
+    if (bulk)   bulk.style.display   = 'none';
+  }
+  if (sa) {
+    sa.indeterminate = checked.length > 0 && checked.length < checks.length;
+    sa.checked = checks.length > 0 && checked.length === checks.length;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Select-all checkbox
+  var sa = document.getElementById('mail-select-all');
+  if (sa) {
+    sa.addEventListener('change', function() {
+      document.querySelectorAll('.mail-row-check').forEach(function(cb){ cb.checked = sa.checked; });
+      mailUpdateBulkBar();
+    });
+  }
+
+  // Per-row checkboxes
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('mail-row-check')) mailUpdateBulkBar();
+  });
+
+  // Row click → navigate (skip checkbox/action areas)
+  document.addEventListener('click', function(e) {
+    var row = e.target.closest('.mail-row[data-href]');
+    if (!row) return;
+    if (e.target.closest('.mail-row-star-wrap, .mail-row-actions')) return;
+    window.location = row.dataset.href;
+  });
+});
 </script>
 <div class="mail-page-outer">
 
@@ -401,20 +510,50 @@ function mailRowAction(id, action, confirmMsg) {
     <!-- ── List pane ────────────────────── -->
     <div class="mail-list-pane">
       <div class="mail-list-toolbar">
-        <form method="get" style="display:contents;">
-          <input type="hidden" name="mailbox" value="<?= h($mailbox) ?>">
-          <input type="text" name="q" value="<?= h($q) ?>" placeholder="検索…">
-          <button class="ghost-btn" type="submit">検索</button>
-          <?php if ($q !== ''): ?>
-            <a class="ghost-btn" href="<?= h($baseUrl) ?>/mail.php?mailbox=<?= h($mailbox) ?>">✕</a>
-          <?php endif; ?>
-        </form>
-        <?php if ($mailbox === 'inbox'): ?>
-          <form method="post" style="margin:0;">
-            <input type="hidden" name="action" value="sync">
-            <button class="primary-btn" type="submit">受信</button>
+        <!-- 選択チェックボックス（常時表示） -->
+        <div class="mail-toolbar-select" onclick="event.stopPropagation()">
+          <input type="checkbox" id="mail-select-all" title="すべて選択">
+        </div>
+
+        <!-- 通常ツールバー -->
+        <div class="mail-toolbar-normal" id="mail-toolbar-normal" style="display:contents;">
+          <form method="get" style="display:contents;">
+            <input type="hidden" name="mailbox" value="<?= h($mailbox) ?>">
+            <input type="text" name="q" value="<?= h($q) ?>" placeholder="検索…">
+            <button class="ghost-btn" type="submit">検索</button>
+            <?php if ($q !== ''): ?>
+              <a class="ghost-btn" href="<?= h($baseUrl) ?>/mail.php?mailbox=<?= h($mailbox) ?>">✕</a>
+            <?php endif; ?>
           </form>
-        <?php endif; ?>
+          <?php if ($mailbox === 'inbox'): ?>
+            <form method="post" style="margin:0;">
+              <input type="hidden" name="action" value="sync">
+              <button class="primary-btn" type="submit">受信</button>
+            </form>
+          <?php endif; ?>
+        </div>
+
+        <!-- 一括操作ツールバー -->
+        <div class="mail-toolbar-bulk" id="mail-toolbar-bulk" style="display:none;">
+          <span class="bulk-selected-label" id="bulk-selected-count">0件選択中</span>
+          <div class="bulk-action-btns">
+            <?php if ($isInquiryMode): ?>
+              <button class="ghost-btn" type="button" onclick="mailBulkAction('mark_read')">既読</button>
+              <button class="ghost-btn" type="button" onclick="mailBulkAction('mark_unread')">未読</button>
+              <button class="ghost-btn" type="button" onclick="mailBulkAction('archive')">アーカイブ</button>
+            <?php elseif ($mailbox === 'trash'): ?>
+              <button class="ghost-btn" type="button" onclick="mailBulkAction('restore')">元に戻す</button>
+              <button class="ghost-btn danger" type="button" onclick="mailBulkAction('delete_permanent')">完全削除</button>
+            <?php else: ?>
+              <button class="ghost-btn" type="button" onclick="mailBulkAction('mark_read')">既読</button>
+              <button class="ghost-btn" type="button" onclick="mailBulkAction('mark_unread')">未読</button>
+              <?php if ($mailbox !== 'sent' && $mailbox !== 'archive'): ?>
+                <button class="ghost-btn" type="button" onclick="mailBulkAction('archive')">アーカイブ</button>
+              <?php endif; ?>
+              <button class="ghost-btn danger" type="button" onclick="mailBulkAction('trash')">ゴミ箱</button>
+            <?php endif; ?>
+          </div>
+        </div>
       </div>
 
       <div class="mail-list-scroll">
@@ -448,13 +587,16 @@ function mailRowAction(id, action, confirmMsg) {
           $when = $rawTime ? date('m/d', strtotime($rawTime)) : '';
           $msgId = (int)$msg['id'];
         ?>
-          <a class="mail-row<?= $isSelected ? ' is-selected' : '' ?><?= $isUnread ? ' is-unread' : '' ?>"
-             href="<?= h($baseUrl) ?>/mail.php?mailbox=<?= h($mailbox) ?>&id=<?= $msgId ?>">
-            <?php if (!$isInquiryMode): ?>
-              <span class="mail-row-star<?= !empty($msg['is_starred']) ? ' is-starred' : '' ?>">★</span>
-            <?php else: ?>
-              <span class="mail-row-star"></span>
-            <?php endif; ?>
+          <div class="mail-row<?= $isSelected ? ' is-selected' : '' ?><?= $isUnread ? ' is-unread' : '' ?>"
+               data-href="<?= h($baseUrl) ?>/mail.php?mailbox=<?= h($mailbox) ?>&id=<?= $msgId ?>">
+            <div class="mail-row-star-wrap" onclick="event.stopPropagation()">
+              <input type="checkbox" class="mail-row-check" value="<?= $msgId ?>">
+              <?php if (!$isInquiryMode): ?>
+                <span class="mail-row-star-icon<?= !empty($msg['is_starred']) ? ' is-starred' : '' ?>">★</span>
+              <?php else: ?>
+                <span class="mail-row-star-icon"></span>
+              <?php endif; ?>
+            </div>
             <div class="mail-row-content">
               <div class="mail-row-from">
                 <?= h(mb_strimwidth($party !== '' ? $party : '(不明)', 0, 18, '…')) ?>
@@ -484,7 +626,7 @@ function mailRowAction(id, action, confirmMsg) {
                 <?php endif; ?>
               <?php endif; ?>
             </div>
-          </a>
+          </div>
         <?php endforeach; ?>
       </div>
     </div>

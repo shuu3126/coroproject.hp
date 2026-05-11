@@ -730,6 +730,45 @@ tbody tr:hover { background: rgba(0,0,0,.02); }
   border-radius: 20px;
 }
 
+/* ── Toolbar: select-all checkbox ── */
+.mail-toolbar-select {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+.mail-toolbar-select input[type="checkbox"] {
+  width: 16px; height: 16px; cursor: pointer; margin: 0;
+}
+
+/* ── Toolbar: normal / bulk modes ── */
+.mail-toolbar-normal { display: contents; }
+.mail-toolbar-bulk {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.bulk-selected-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.bulk-action-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.bulk-action-btns .ghost-btn {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: unset;
+  height: 30px;
+}
+.bulk-action-btns .ghost-btn.danger { color: var(--danger); border-color: var(--danger); }
+
 .mail-list-scroll { flex: 1; overflow-y: auto; }
 
 /* ── Mail row (Gmail-like single line) ───────────────────────── */
@@ -752,16 +791,38 @@ tbody tr:hover { background: rgba(0,0,0,.02); }
 .mail-row.is-unread .mail-row-from { font-weight: 800; color: #202124; }
 .mail-row.is-unread .mail-row-subject { color: #202124; font-weight: 700; }
 
-.mail-row-star {
-  width: 32px;
-  text-align: center;
-  color: #bdc1c6;
-  font-size: 15px;
+/* ── Checkbox + star wrap ── */
+.mail-row-star-wrap {
+  width: 36px;
   flex-shrink: 0;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: default;
 }
-.mail-row-star.is-starred { color: #f6a623; }
-.mail-row:hover .mail-row-star { color: #bdc1c6; }
+.mail-row-star-wrap input[type="checkbox"] {
+  position: absolute;
+  width: 16px; height: 16px;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 2;
+  margin: 0;
+}
+.mail-row-star-icon {
+  font-size: 15px;
+  color: #bdc1c6;
+  line-height: 1;
+  transition: opacity .12s;
+  user-select: none;
+}
+.mail-row-star-icon.is-starred { color: #f6a623; }
+/* ホバー時: チェックボックスを表示、星を隠す */
+.mail-row:hover .mail-row-star-wrap input[type="checkbox"],
+.mail-list-scroll.has-checked .mail-row-star-wrap input[type="checkbox"],
+.mail-row-star-wrap input[type="checkbox"]:checked { opacity: 1; }
+.mail-row:hover .mail-row-star-icon,
+.mail-list-scroll.has-checked .mail-row-star-icon { opacity: 0; }
 
 .mail-row-content {
   flex: 1;
