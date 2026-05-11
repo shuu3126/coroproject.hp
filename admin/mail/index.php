@@ -151,6 +151,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
+// POP3設定が揃っているか確認（自動受信・表示両方で使用）
+$popReady  = admin_mail_setting($settings, 'mail_pop_host') !== ''
+    && admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user')) !== ''
+    && admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass')) !== '';
+
 // 受信トレイを開いたとき自動受信
 if ($mailbox === 'inbox' && $popReady && $_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
@@ -265,9 +270,6 @@ if (admin_table_has_column($pdo, 'inquiries', 'status')) {
 
 $unreadMail = admin_mail_unread_count($pdo);
 
-$popReady  = admin_mail_setting($settings, 'mail_pop_host') !== ''
-    && admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user')) !== ''
-    && admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass')) !== '';
 $smtpReady = admin_mail_setting($settings, 'smtp_host') !== ''
     && admin_mail_setting($settings, 'smtp_user') !== ''
     && admin_mail_setting($settings, 'smtp_pass') !== '';
@@ -403,7 +405,7 @@ window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE
               $isUnread   = $msg['mailbox'] === 'inbox' && $msg['status'] === 'unread';
               $isSelected = $selectedId === (int)$msg['id'];
               $party      = $msg['mailbox'] === 'sent'
-                  ? ('→ ' . mb_strimwidth((string)$msg['to_text'], 0, 24, '…'))
+                  ? ('→ ' . mb_strimwidth((string)$msg['to_text'], 0, 20, '…'))
                   : trim((string)($msg['from_name'] ?: $msg['from_email']));
               $subject    = (string)$msg['subject'];
               $excerpt    = trim((string)$msg['body_text']);
@@ -411,31 +413,52 @@ window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE
               $statusLabel = $statusClass = '';
           }
           $when = $rawTime ? date('m/d', strtotime($rawTime)) : '';
+          $msgId = (int)$msg['id'];
         ?>
           <a class="mail-row<?= $isSelected ? ' is-selected' : '' ?><?= $isUnread ? ' is-unread' : '' ?>"
-             href="<?= h($baseUrl) ?>/mail.php?mailbox=<?= h($mailbox) ?>&id=<?= (int)$msg['id'] ?>">
+             href="<?= h($baseUrl) ?>/mail.php?mailbox=<?= h($mailbox) ?>&id=<?= $msgId ?>">
             <?php if (!$isInquiryMode): ?>
               <span class="mail-row-star<?= !empty($msg['is_starred']) ? ' is-starred' : '' ?>">★</span>
             <?php else: ?>
-              <span class="mail-row-star" style="color:transparent;">★</span>
+              <span class="mail-row-star"></span>
             <?php endif; ?>
             <div class="mail-row-content">
               <div class="mail-row-from">
-                <?php if ($isUnread): ?><span class="mail-unread-dot"></span><?php endif; ?>
-                <?= h(mb_strimwidth($party !== '' ? $party : '(不明)', 0, 28, '…')) ?>
-                <?php if ($isInquiryMode && $statusLabel !== ''): ?>
-                  <span class="status-badge <?= h($statusClass) ?>" style="margin-left:6px;font-size:10px;"><?= h($statusLabel) ?></span>
-                <?php endif; ?>
+                <?= h(mb_strimwidth($party !== '' ? $party : '(不明)', 0, 18, '…')) ?>
               </div>
               <div class="mail-row-subject">
-                <?= h(mb_strimwidth($subject, 0, 44, '…')) ?>
-                <span class="mail-row-excerpt"> — <?= h(mb_strimwidth($excerpt, 0, 36, '…')) ?></span>
+                <?= h(mb_strimwidth($subject, 0, 36, '…')) ?><span class="mail-row-excerpt"> — <?= h(mb_strimwidth($excerpt, 0, 30, '…')) ?></span>
               </div>
             </div>
             <div class="mail-row-meta">
+              <?php if ($isInquiryMode && $statusLabel !== ''): ?>
+                <span class="status-badge <?= h($statusClass) ?>" style="font-size:10px;"><?= h($statusLabel) ?></span>
+              <?php endif; ?>
+              <?php if (!$isInquiryMode && !empty($msg['has_attachments'])): ?><span>📎</span><?php endif; ?>
               <div class="mail-row-time"><?= h($when) ?></div>
-              <?php if (!$isInquiryMode && !empty($msg['has_attachments'])): ?><div class="mail-row-time">📎</div><?php endif; ?>
-              <?php if (!$isInquiryMode && ($msg['status'] ?? '') === 'failed'): ?><div class="mail-row-time" style="color:var(--danger);">✕</div><?php endif; ?>
+            </div>
+            <!-- ホバー時クイックアクション -->
+            <div class="mail-row-actions" onclick="event.preventDefault()">
+              <?php if (!$isInquiryMode): ?>
+                <?php if ($mailbox !== 'trash'): ?>
+                  <form method="post" style="display:contents;">
+                    <input type="hidden" name="action" value="archive">
+                    <input type="hidden" name="id" value="<?= $msgId ?>">
+                    <button class="mail-action-btn" type="submit" title="アーカイブ">🗂</button>
+                  </form>
+                  <form method="post" style="display:contents;" data-confirm="ゴミ箱に移動しますか？">
+                    <input type="hidden" name="action" value="trash">
+                    <input type="hidden" name="id" value="<?= $msgId ?>">
+                    <button class="mail-action-btn danger" type="submit" title="削除">🗑</button>
+                  </form>
+                <?php else: ?>
+                  <form method="post" style="display:contents;" data-confirm="完全に削除しますか？">
+                    <input type="hidden" name="action" value="delete_permanent">
+                    <input type="hidden" name="id" value="<?= $msgId ?>">
+                    <button class="mail-action-btn danger" type="submit" title="完全削除">🗑</button>
+                  </form>
+                <?php endif; ?>
+              <?php endif; ?>
             </div>
           </a>
         <?php endforeach; ?>
