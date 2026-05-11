@@ -65,7 +65,7 @@ $unpaidInvoices = $pdo->query("
 
 // ---- 操作ログ ----
 $recentLogs = $pdo->query("
-    SELECT l.created_at, l.summary, l.target_type,
+    SELECT l.created_at, l.summary, l.target_type, l.action_type, l.target_id,
            COALESCE(u.display_name, 'system') AS user_name
     FROM admin_logs l
     LEFT JOIN admin_users u ON u.id = l.user_id
@@ -201,23 +201,38 @@ start_page('ダッシュボード', '全部門の状況をまとめて確認で�
   <?php endif; ?>
 
   <!-- ===== 操作ログ ===== -->
-  <section class="card mt-24">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <h3 style="margin:0;">最近の操作</h3>
+  <section class="card table-card mt-24">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);">
+      <h3 style="margin:0;font-size:.95em;">最近の操作</h3>
       <a class="ghost-btn" style="font-size:0.8em;padding:4px 10px;" href="<?= h($baseUrl) ?>/logs.php">すべて見る</a>
     </div>
-    <?php if (!$recentLogs): ?>
-      <div class="muted" style="padding:12px 0;">まだ操作ログがありません。</div>
-    <?php else: ?>
-      <div class="summary-list">
-        <?php foreach ($recentLogs as $log): ?>
-          <div class="summary-row">
-            <span class="muted"><?= h(format_datetime($log['created_at'])) ?> / <?= h($log['user_name']) ?></span>
-            <strong><?= h($log['summary']) ?></strong>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>ユーザー</th>
+            <th>操作</th>
+            <th>対象</th>
+            <th>概要</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (!$recentLogs): ?>
+            <tr><td colspan="5" class="empty-state">まだ操作ログがありません。</td></tr>
+          <?php endif; ?>
+          <?php foreach ($recentLogs as $log): ?>
+            <tr>
+              <td class="muted" style="white-space:nowrap;"><?= h(format_datetime($log['created_at'])) ?></td>
+              <td><?= h($log['user_name']) ?></td>
+              <td class="muted"><?= h($log['action_type'] ?? '') ?></td>
+              <td class="muted"><?= h($log['target_type'] ?? '') ?><?= !empty($log['target_id']) ? ' #' . h((string)$log['target_id']) : '' ?></td>
+              <td><?= h($log['summary']) ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
   </section>
 
 </main>

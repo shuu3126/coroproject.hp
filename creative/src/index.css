@@ -344,7 +344,7 @@ button { font: inherit; cursor: pointer; }
 .marquee-b span { animation-direction: reverse; animation-duration: 26s; }
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(520px, .98fr) minmax(520px, 1.02fr);
+  grid-template-columns: minmax(0, .98fr) minmax(0, 1.02fr);
   align-items: center;
   gap: 44px;
 }
