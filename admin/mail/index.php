@@ -150,6 +150,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             redirect_to($baseUrl . '/mail/index.php?mailbox=' . $tb);
         }
         if ($action === 'delete_permanent') {
+            // UIDLを保存してから削除（再受信防止）
+            $uidlRow = $pdo->prepare('SELECT uidl FROM mail_messages WHERE id = ? LIMIT 1');
+            $uidlRow->execute([$msgId]);
+            $uidlVal = $uidlRow->fetchColumn();
+            if ($uidlVal !== false && $uidlVal !== '') {
+                $pdo->prepare('INSERT IGNORE INTO mail_deleted_uidls (uidl) VALUES (?)')->execute([$uidlVal]);
+            }
             $pdo->prepare('DELETE FROM mail_messages WHERE id = ?')->execute([$msgId]);
             write_admin_log($pdo, (int)$user['id'], 'delete', 'mail', (string)$msgId, 'メールを完全削除しました');
             set_flash('success', '完全削除しました。');
@@ -331,6 +338,15 @@ start_page('メール', '');
 ?>
 <script>
 window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+function mailRowAction(id, action, confirmMsg) {
+  if (confirmMsg && !window.confirm(confirmMsg)) return;
+  var f = document.createElement('form');
+  f.method = 'post';
+  var ai = document.createElement('input'); ai.type = 'hidden'; ai.name = 'action'; ai.value = action; f.appendChild(ai);
+  var ii = document.createElement('input'); ii.type = 'hidden'; ii.name = 'id';     ii.value = id;     f.appendChild(ii);
+  document.body.appendChild(f);
+  f.submit();
+}
 </script>
 <div class="mail-page-outer">
 
@@ -455,25 +471,16 @@ window._MAIL_CONTACTS = <?= json_encode($_pickerContacts, JSON_UNESCAPED_UNICODE
               <div class="mail-row-time"><?= h($when) ?></div>
             </div>
             <!-- ホバー時クイックアクション -->
-            <div class="mail-row-actions" onclick="event.preventDefault()">
+            <div class="mail-row-actions" onclick="event.stopPropagation()">
               <?php if (!$isInquiryMode): ?>
                 <?php if ($mailbox !== 'trash'): ?>
-                  <form method="post" style="display:contents;">
-                    <input type="hidden" name="action" value="archive">
-                    <input type="hidden" name="id" value="<?= $msgId ?>">
-                    <button class="mail-action-btn" type="submit" title="アーカイブ">🗂</button>
-                  </form>
-                  <form method="post" style="display:contents;" data-confirm="ゴミ箱に移動しますか？">
-                    <input type="hidden" name="action" value="trash">
-                    <input type="hidden" name="id" value="<?= $msgId ?>">
-                    <button class="mail-action-btn danger" type="submit" title="削除">🗑</button>
-                  </form>
+                  <button class="mail-action-btn" type="button" title="アーカイブ"
+                    onclick="mailRowAction(<?= $msgId ?>, 'archive')">🗂</button>
+                  <button class="mail-action-btn danger" type="button" title="ゴミ箱に移動"
+                    onclick="mailRowAction(<?= $msgId ?>, 'trash', 'ゴミ箱に移動しますか？')">🗑</button>
                 <?php else: ?>
-                  <form method="post" style="display:contents;" data-confirm="完全に削除しますか？">
-                    <input type="hidden" name="action" value="delete_permanent">
-                    <input type="hidden" name="id" value="<?= $msgId ?>">
-                    <button class="mail-action-btn danger" type="submit" title="完全削除">🗑</button>
-                  </form>
+                  <button class="mail-action-btn danger" type="button" title="完全削除"
+                    onclick="mailRowAction(<?= $msgId ?>, 'delete_permanent', '完全に削除しますか？')">🗑</button>
                 <?php endif; ?>
               <?php endif; ?>
             </div>

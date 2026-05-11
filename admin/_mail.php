@@ -54,6 +54,15 @@ function admin_mail_ensure_schema($pdo) {
           INDEX idx_mail_messages_message_id (message_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
+
+    // 完全削除したメールのUIDLを記録して再受信を防ぐ
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS mail_deleted_uidls (
+          uidl VARCHAR(191) NOT NULL,
+          deleted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (uidl)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
 }
 
 function admin_mail_setting($settings, $key, $fallback = '') {
@@ -464,7 +473,11 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
         krsort($items, SORT_NUMERIC);
         $items = array_slice($items, 0, $limit, true);
 
-        $existsStmt = $pdo->prepare('SELECT id FROM mail_messages WHERE uidl = ? LIMIT 1');
+        $existsStmt = $pdo->prepare(
+            'SELECT 1 FROM mail_messages WHERE uidl = ? LIMIT 1
+             UNION ALL
+             SELECT 1 FROM mail_deleted_uidls WHERE uidl = ? LIMIT 1'
+        );
         $insertStmt = $pdo->prepare("
             INSERT INTO mail_messages
               (mailbox, direction, uidl, message_id, thread_key, from_name, from_email, to_text, cc_text,
@@ -474,7 +487,7 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
         ");
 
         foreach ($items as $num => $uidl) {
-            $existsStmt->execute([$uidl]);
+            $existsStmt->execute([$uidl, $uidl]);
             if ($existsStmt->fetch()) {
                 $skipped++;
                 continue;
