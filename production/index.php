@@ -128,7 +128,6 @@ try {
       <img src="images/logo.png" alt="CORO PROJECT" class="coro-loader__simple-logo">
       <div class="coro-loader__simple-title">ころぷろじぇくと！</div>
       <p class="coro-loader__msg" id="loaderMsg">配信準備中...</p>
-      <div class="coro-loader__bar"><div class="coro-loader__bar-fill"></div></div>
     </div>
   </div>
 
