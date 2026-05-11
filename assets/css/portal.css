@@ -56,12 +56,13 @@ img { display: block; max-width: 100%; }
   width: 42vw;
   height: 42vw;
   border-radius: 999px;
-  filter: blur(110px);
+  filter: blur(60px);
   pointer-events: none;
   z-index: 0;
+  will-change: transform;
 }
-.blob-a { top: -10vw; left: -12vw; background: rgba(168,85,247,.22); }
-.blob-b { right: -14vw; bottom: 8vh; background: rgba(34,211,238,.12); }
+.blob-a { top: -10vw; left: -12vw; background: rgba(168,85,247,.18); }
+.blob-b { right: -14vw; bottom: 8vh; background: rgba(34,211,238,.10); }
 
 .site-header {
   position: fixed;
@@ -223,6 +224,8 @@ img { display: block; max-width: 100%; }
   letter-spacing: -.05em;
   font-size: clamp(66px, 8vw, 132px);
   animation: marquee 24s linear infinite;
+  will-change: transform;
+  contain: layout style;
 }
 .marquee-track.reverse {
   color: var(--cyan);
@@ -278,8 +281,7 @@ img { display: block; max-width: 100%; }
   margin: 0 auto;
   padding: 18px 22px 18px 28px;
   border-left: 4px solid var(--cyan);
-  background: rgba(0,0,0,.44);
-  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,.58);
   color: rgba(255,255,255,.78);
   line-height: 1.8;
   font-size: 1.04rem;
@@ -301,8 +303,7 @@ img { display: block; max-width: 100%; }
   overflow: hidden;
   padding: 34px 34px 32px;
   min-height: 290px;
-  background: rgba(10,13,26,.82);
-  backdrop-filter: blur(12px);
+  background: rgba(10,13,26,.96);
   border: 2px solid rgba(255,255,255,.10);
   transition: transform .28s ease, border-color .28s ease, box-shadow .28s ease;
 }
@@ -494,7 +495,7 @@ img { display: block; max-width: 100%; }
   object-fit: cover;
   object-position: 50% 50%;
   transform: translate(-50%, -50%) scale(1.01);
-  filter: saturate(1.08) contrast(1.06);
+  will-change: transform;
 }
 .visual-frame::after {
   content: '';
@@ -729,8 +730,8 @@ img { display: block; max-width: 100%; }
   object-fit: cover;
   object-position: 50% 50%;
   transform: translate(-50%, -50%) scale(1.02);
-  filter: saturate(1.08) contrast(1.08);
-  opacity: .78;
+  opacity: .72;
+  will-change: transform;
 }
 .cta-beam {
   position: absolute;
@@ -990,9 +991,8 @@ img { display: block; max-width: 100%; }
   overflow: hidden;
   min-height: 320px;
   padding: 30px;
-  background: rgba(10,13,26,.84);
+  background: rgba(10,13,26,.97);
   border: 2px solid rgba(255,255,255,.08);
-  backdrop-filter: blur(12px);
 }
 
 .info-num {
@@ -1113,8 +1113,7 @@ img { display: block; max-width: 100%; }
 .news-card {
   padding: 28px;
   border: 1px solid rgba(255,255,255,.08);
-  background: rgba(10,13,26,.76);
-  backdrop-filter: blur(10px);
+  background: rgba(10,13,26,.96);
 }
 
 .news-card h2 {
@@ -1187,8 +1186,7 @@ img { display: block; max-width: 100%; }
 .contact-form-wrap {
   padding: 32px;
   border: 1px solid rgba(255,255,255,.08);
-  background: rgba(10,13,26,.76);
-  backdrop-filter: blur(12px);
+  background: rgba(10,13,26,.96);
 }
 
 .contact-aside-block + .contact-aside-block {
@@ -1307,10 +1305,7 @@ img { display: block; max-width: 100%; }
   min-height: 100%;
   padding: 28px;
   border: 1px solid rgba(255,255,255,.09);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015)),
-    rgba(10,13,26,.78);
-  backdrop-filter: blur(12px);
+  background: rgba(10,13,26,.96);
 }
 
 .insight-card {
