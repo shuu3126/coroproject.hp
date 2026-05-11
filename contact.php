@@ -25,23 +25,23 @@ $smtpConfig = [
 
 // 管理画面の設定テーブルから読み込みを試みる
 try {
-    if (isset($pdo)) {
-        $stmt = $pdo->query("SELECT `key`, `value` FROM app_settings WHERE `key` IN ('smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name', 'contact_reply_subject', 'contact_reply_body') LIMIT 100");
-        if ($stmt) {
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($rows as $row) {
-                $key = $row['key'] ?? '';
-                $value = $row['value'] ?? '';
-                if ($key === 'smtp_host') $smtpConfig['host'] = $value ?: $smtpConfig['host'];
-                if ($key === 'smtp_port') $smtpConfig['port'] = $value ? (int)$value : $smtpConfig['port'];
-                if ($key === 'smtp_secure') $smtpConfig['secure'] = $value ?: $smtpConfig['secure'];
-                if ($key === 'smtp_user') $smtpConfig['user'] = $value;
-                if ($key === 'smtp_pass') $smtpConfig['pass'] = $value;
-                if ($key === 'smtp_from_email') $smtpConfig['from_email'] = $value ?: $smtpConfig['from_email'];
-                if ($key === 'smtp_from_name') $smtpConfig['from_name'] = $value ?: $smtpConfig['from_name'];
-                if ($key === 'contact_reply_subject') $smtpConfig['contact_reply_subject'] = $value;
-                if ($key === 'contact_reply_body') $smtpConfig['contact_reply_body'] = $value;
-            }
+    if ($pdo) {
+        $keys = ['smtp_host', 'smtp_port', 'smtp_secure', 'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name', 'contact_reply_subject', 'contact_reply_body'];
+        $placeholders = implode(',', array_fill(0, count($keys), '?'));
+        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ($placeholders)");
+        $stmt->execute($keys);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $key   = $row['setting_key'] ?? '';
+            $value = $row['setting_value'] ?? '';
+            if ($key === 'smtp_host')             $smtpConfig['host']                  = $value ?: $smtpConfig['host'];
+            if ($key === 'smtp_port')             $smtpConfig['port']                  = $value ? (int)$value : $smtpConfig['port'];
+            if ($key === 'smtp_secure')           $smtpConfig['secure']                = $value ?: $smtpConfig['secure'];
+            if ($key === 'smtp_user')             $smtpConfig['user']                  = $value;
+            if ($key === 'smtp_pass')             $smtpConfig['pass']                  = $value;
+            if ($key === 'smtp_from_email')       $smtpConfig['from_email']            = $value ?: $smtpConfig['from_email'];
+            if ($key === 'smtp_from_name')        $smtpConfig['from_name']             = $value ?: $smtpConfig['from_name'];
+            if ($key === 'contact_reply_subject') $smtpConfig['contact_reply_subject'] = $value;
+            if ($key === 'contact_reply_body')    $smtpConfig['contact_reply_body']    = $value;
         }
     }
 } catch (Exception $e) {
