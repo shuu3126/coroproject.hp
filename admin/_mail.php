@@ -46,6 +46,7 @@ function admin_mail_ensure_schema($pdo) {
           error_message TEXT NULL,
           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          linked_inquiry_id BIGINT UNSIGNED NULL,
           UNIQUE KEY uq_mail_messages_uidl (uidl),
           INDEX idx_mail_messages_mailbox_created (mailbox, created_at),
           INDEX idx_mail_messages_status (status),
@@ -54,6 +55,7 @@ function admin_mail_ensure_schema($pdo) {
           INDEX idx_mail_messages_message_id (message_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
+    try { $pdo->exec("ALTER TABLE mail_messages ADD COLUMN linked_inquiry_id BIGINT UNSIGNED NULL DEFAULT NULL"); } catch (\Throwable $e) {}
 
     // 完全削除したメールのUIDLを記録して再受信を防ぐ
     $pdo->exec("
@@ -296,6 +298,12 @@ function admin_mail_parse_raw_message($raw) {
         }
     }
 
+    $linkedInquiryId = null;
+    if (!empty($headers['x-inquiry-id'])) {
+        $xid = (int)trim($headers['x-inquiry-id']);
+        if ($xid > 0) $linkedInquiryId = $xid;
+    }
+
     return [
         'headers' => $headers,
         'raw_headers' => $headerBlock,
@@ -309,6 +317,7 @@ function admin_mail_parse_raw_message($raw) {
         'body_html' => $body['html'],
         'has_attachments' => !empty($body['has_attachments']) ? 1 : 0,
         'received_at' => $receivedAt,
+        'linked_inquiry_id' => $linkedInquiryId,
     ];
 }
 
@@ -481,9 +490,9 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
         $insertStmt = $pdo->prepare("
             INSERT INTO mail_messages
               (mailbox, direction, uidl, message_id, thread_key, from_name, from_email, to_text, cc_text,
-               subject, body_text, body_html, raw_headers, has_attachments, status, received_at, created_at, updated_at)
+               subject, body_text, body_html, raw_headers, has_attachments, status, linked_inquiry_id, received_at, created_at, updated_at)
             VALUES
-              ('inbox', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unread', ?, NOW(), NOW())
+              ('inbox', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unread', ?, ?, NOW(), NOW())
         ");
 
         foreach ($items as $num => $uidl) {
@@ -510,6 +519,7 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
                 $parsed['body_html'] !== '' ? $parsed['body_html'] : null,
                 $parsed['raw_headers'],
                 (int)$parsed['has_attachments'],
+                $parsed['linked_inquiry_id'],
                 $parsed['received_at'] ?: date('Y-m-d H:i:s'),
             ]);
 

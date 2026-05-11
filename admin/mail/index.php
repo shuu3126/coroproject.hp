@@ -140,6 +140,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 if ($bulkType === 'archive') {
                     $pdo->prepare("UPDATE mail_messages SET mailbox='archive', status='read', updated_at=NOW() WHERE id IN ($ph)")->execute($ids);
                 } elseif ($bulkType === 'trash') {
+                    // 紐付きinquiryもアーカイブ
+                    $liqRows = $pdo->prepare("SELECT linked_inquiry_id FROM mail_messages WHERE id IN ($ph) AND linked_inquiry_id IS NOT NULL");
+                    $liqRows->execute($ids);
+                    foreach ($liqRows->fetchAll(PDO::FETCH_COLUMN) as $liqId) {
+                        $pdo->prepare("UPDATE inquiries SET status='archived' WHERE id=?")->execute([$liqId]);
+                    }
                     $pdo->prepare("UPDATE mail_messages SET mailbox='trash', status='read', updated_at=NOW() WHERE id IN ($ph)")->execute($ids);
                 } elseif ($bulkType === 'mark_read') {
                     $pdo->prepare("UPDATE mail_messages SET status='read', updated_at=NOW() WHERE id IN ($ph)")->execute($ids);
@@ -153,10 +159,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         $pdo->prepare("UPDATE mail_messages SET mailbox=?, updated_at=NOW() WHERE id=?")->execute([$tb, $r['id']]);
                     }
                 } elseif ($bulkType === 'delete_permanent') {
-                    $uStmt = $pdo->prepare("SELECT uidl FROM mail_messages WHERE id IN ($ph) AND uidl IS NOT NULL AND uidl != ''");
+                    $uStmt = $pdo->prepare("SELECT uidl, linked_inquiry_id FROM mail_messages WHERE id IN ($ph)");
                     $uStmt->execute($ids);
-                    foreach ($uStmt->fetchAll(PDO::FETCH_COLUMN) as $u) {
-                        $pdo->prepare('INSERT IGNORE INTO mail_deleted_uidls (uidl) VALUES (?)')->execute([$u]);
+                    foreach ($uStmt->fetchAll() as $ur) {
+                        if (!empty($ur['uidl'])) {
+                            $pdo->prepare('INSERT IGNORE INTO mail_deleted_uidls (uidl) VALUES (?)')->execute([$ur['uidl']]);
+                        }
+                        if (!empty($ur['linked_inquiry_id'])) {
+                            $pdo->prepare("UPDATE inquiries SET status='archived' WHERE id=?")->execute([$ur['linked_inquiry_id']]);
+                        }
                     }
                     $pdo->prepare("DELETE FROM mail_messages WHERE id IN ($ph)")->execute($ids);
                 }
@@ -183,7 +194,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             redirect_to($baseUrl . '/mail/index.php?mailbox=archive');
         }
         if ($action === 'trash') {
+            $row2 = $pdo->prepare('SELECT linked_inquiry_id FROM mail_messages WHERE id = ? LIMIT 1');
+            $row2->execute([$msgId]);
+            $liq = (int)($row2->fetchColumn() ?: 0);
             $pdo->prepare("UPDATE mail_messages SET mailbox = 'trash', status = 'read', updated_at = NOW() WHERE id = ?")->execute([$msgId]);
+            if ($liq > 0) {
+                $pdo->prepare("UPDATE inquiries SET status = 'archived' WHERE id = ?")->execute([$liq]);
+            }
             redirect_to($baseUrl . '/mail/index.php?mailbox=' . $mailbox);
         }
         if ($action === 'restore') {
@@ -196,11 +213,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         }
         if ($action === 'delete_permanent') {
             // UIDLを保存してから削除（再受信防止）
-            $uidlRow = $pdo->prepare('SELECT uidl FROM mail_messages WHERE id = ? LIMIT 1');
+            $uidlRow = $pdo->prepare('SELECT uidl, linked_inquiry_id FROM mail_messages WHERE id = ? LIMIT 1');
             $uidlRow->execute([$msgId]);
-            $uidlVal = $uidlRow->fetchColumn();
-            if ($uidlVal !== false && $uidlVal !== '') {
+            $msgRow2 = $uidlRow->fetch();
+            $uidlVal = $msgRow2['uidl'] ?? '';
+            $liq2    = (int)($msgRow2['linked_inquiry_id'] ?? 0);
+            if ($uidlVal !== '') {
                 $pdo->prepare('INSERT IGNORE INTO mail_deleted_uidls (uidl) VALUES (?)')->execute([$uidlVal]);
+            }
+            if ($liq2 > 0) {
+                $pdo->prepare("UPDATE inquiries SET status = 'archived' WHERE id = ?")->execute([$liq2]);
             }
             $pdo->prepare('DELETE FROM mail_messages WHERE id = ?')->execute([$msgId]);
             write_admin_log($pdo, (int)$user['id'], 'delete', 'mail', (string)$msgId, 'メールを完全削除しました');
@@ -394,8 +416,13 @@ function mailRowAction(id, action, confirmMsg) {
 }
 
 // ── Bulk selection ────────────────────────────────────────────
-function mailBulkAction(action) {
-  var ids = Array.from(document.querySelectorAll('.mail-row-check:checked')).map(function(cb){ return cb.value; });
+function mailBulkAction(action, selectAll) {
+  var ids;
+  if (selectAll) {
+    ids = Array.from(document.querySelectorAll('.mail-row-check')).map(function(cb){ return cb.value; });
+  } else {
+    ids = Array.from(document.querySelectorAll('.mail-row-check:checked')).map(function(cb){ return cb.value; });
+  }
   if (!ids.length) return;
   var f = document.createElement('form');
   f.method = 'post';
@@ -530,6 +557,11 @@ document.addEventListener('DOMContentLoaded', function() {
               <input type="hidden" name="action" value="sync">
               <button class="primary-btn" type="submit">受信</button>
             </form>
+          <?php endif; ?>
+          <?php if ($mailbox === 'trash' && $messages): ?>
+            <button class="ghost-btn danger" type="button"
+              onclick="if(confirm('ゴミ箱内のメールをすべて完全削除しますか？'))mailBulkAction('delete_permanent',true)"
+              style="white-space:nowrap;">ゴミ箱を空にする</button>
           <?php endif; ?>
         </div>
 

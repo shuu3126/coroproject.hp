@@ -83,6 +83,7 @@ if ($submitted) {
                 $_SERVER['REMOTE_ADDR'] ?? null,
                 mb_strimwidth($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 255),
             ]);
+            $newInquiryId = (int)$pdo->lastInsertId();
         } catch (Exception $e) {
             throw new Exception('データベースへの保存に失敗しました。');
         }
@@ -94,7 +95,7 @@ if ($submitted) {
             try {
                 // テンプレートを読み込む
                 $replySubject = $smtpConfig['contact_reply_subject'] ?: 'お問い合わせありがとうございます | CORO PROJECT';
-                $replyBodyTemplate = $smtpConfig['contact_reply_body'] ?: "お疲れ様です。\n\n{name}様\n\nこの度は、CORO PROJECTへのお問い合わせをいただき、ありがとうございます。\n\nお送りいただいたお問い合わせを受け付けいたしました。\n内容を確認のうえ、このメールアドレス宛にご返信差し上げます。\n\n【お問い合わせ内容】\nお問い合わせ種別: {topic}\n{company_line}\n\n---\n{message}\n---\n\nご不明な点がございましたら、お気軽にお問い合わせください。\n\nよろしくお願いいたします。\n\nCORO PROJECT\nhttps://coroproject.jp/";
+                $replyBodyTemplate = $smtpConfig['contact_reply_body'] ?: "{name}様\n\nこの度は、CORO PROJECTへのお問い合わせをいただき、ありがとうございます。\n\nお送りいただいたお問い合わせを受け付けいたしました。\n内容を確認のうえ、このメールアドレス宛にご返信差し上げます。\n\n【お問い合わせ内容】\nお問い合わせ種別: {topic}\n{company_line}\n\n---\n{message}\n---\n\nご不明な点がございましたら、お気軽にお問い合わせください。\n\nよろしくお願いいたします。\n\nCORO PROJECT\nhttps://coroproject.jp/";
 
                 // テンプレート変数を置換
                 $companyLine = $company ? "会社名: " . $company : "";
@@ -184,6 +185,9 @@ if ($submitted) {
                 $adminMail->addAddress($adminEmail);
                 $adminMail->Subject = '【お問い合わせ】' . $topic . ' — ' . $name;
                 $adminMail->Body    = $notifyBody;
+                if ($newInquiryId > 0) {
+                    $adminMail->addCustomHeader('X-Inquiry-ID', (string)$newInquiryId);
+                }
                 $adminMail->send();
             } catch (Exception $adminMailError) {
                 error_log('Contact form admin notify failed: ' . $adminMailError->getMessage());
