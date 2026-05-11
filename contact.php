@@ -124,6 +124,13 @@ if ($submitted) {
                     $mail->SMTPSecure = '';
                     $mail->SMTPAutoTLS = false;
                 }
+                $mail->SMTPOptions = [
+                    'ssl' => [
+                        'verify_peer'       => false,
+                        'verify_peer_name'  => false,
+                        'allow_self_signed' => true,
+                    ],
+                ];
 
                 $mail->setFrom($smtpConfig['from_email'], $smtpConfig['from_name']);
                 $mail->addAddress($email, $name);
