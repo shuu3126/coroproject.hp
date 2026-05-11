@@ -1,481 +1,291 @@
 <?php
-require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/includes/layout.php';
 
-/**
- * HTMLエスケープ
- */
-function esc($s) {
-    return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-}
+$pageTitle = $siteName . ' | VTuber・案件仲介・クリエイティブ支援の総合ポータル';
+$pageDescription = 'CORO PROJECTの総合ポータル。VTuber事務所、企業向け案件仲介、クリエイティブ支援を一体で案内し、活動設計・案件提案・制作進行の相談窓口へつなぎます。';
+$ogDescription = 'VTuber事務所、企業向け案件仲介、クリエイティブ支援を一体で案内するCORO PROJECTの総合ポータル。';
+$homeUrl = 'https://coroproject.jp/';
+$ogImage = 'https://coroproject.jp/images/ogp.png';
+$homeJsonLd = [
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'Organization',
+            'name' => 'CORO PROJECT',
+            'url' => $homeUrl,
+            'logo' => 'https://coroproject.jp/images/logo.png',
+        ],
+        [
+            '@type' => 'WebSite',
+            'name' => 'CORO PROJECT',
+            'url' => $homeUrl,
+        ],
+        [
+            '@type' => 'WebPage',
+            'name' => $pageTitle,
+            'url' => $homeUrl,
+            'description' => $ogDescription,
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                'name' => 'CORO PROJECT',
+                'url' => $homeUrl,
+            ],
+        ],
+        [
+            '@type' => 'ItemList',
+            'name' => 'CORO PROJECTの事業一覧',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Business Matching',
+                    'url' => 'https://coroproject.jp/business/',
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Creative Support',
+                    'url' => 'https://coroproject.jp/creative/',
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 3,
+                    'name' => 'Production',
+                    'url' => 'https://coroproject.jp/production/',
+                ],
+            ],
+        ],
+    ],
+];
 
-$topNews    = [];
-$topTalents = [];
-
-try {
-    // ===== News（TOP表示用：最新3件） =====
-    $TOP_NEWS_LIMIT = 3;
-
-    $sql = "
-        SELECT *
-        FROM news
-        WHERE is_published = 1
-        ORDER BY sort_order ASC, date DESC, id DESC
-        LIMIT :limit
-    ";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(':limit', $TOP_NEWS_LIMIT, PDO::PARAM_INT);
-    $stmt->execute();
-    $topNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // ===== Talents（TOP表示用：最新3名） =====
-    $sql = "
-        SELECT *
-        FROM talents
-        ORDER BY sort_order ASC, debut ASC, name ASC
-        LIMIT 3
-    ";
-    $stmt = $pdo->query($sql);
-    $topTalents = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // TOP用 avatar のパス補正（../ や ./ を削る）
-    foreach ($topTalents as &$t) {
-        $avatar = $t['avatar'] ?? '';
-        if (strpos($avatar, '../') === 0) {
-            $avatar = substr($avatar, 3);
-        } elseif (strpos($avatar, './') === 0) {
-            $avatar = substr($avatar, 2);
-        }
-        $t['avatar_for_top'] = $avatar;
-    }
-    unset($t);
-
-} catch (PDOException $e) {
-    $topNews    = [];
-    $topTalents = [];
-}
+render_head($siteName, $pageDescription, [
+    'title' => $pageTitle,
+    'canonical' => $homeUrl,
+    'robots' => 'index, follow',
+    'og_type' => 'website',
+    'og_title' => $pageTitle,
+    'og_description' => $ogDescription,
+    'og_url' => $homeUrl,
+    'og_image' => $ogImage,
+    'json_ld' => $homeJsonLd,
+    'shell_class' => 'page-shell',
+]);
+render_header('', false);
 ?>
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORO PROJECT | VTuberプロダクション公式サイト</title>
-  <meta name="description" content="CORO PROJECTは、紫・ピンクをテーマカラーとしたVTuberプロダクションです。所属タレント情報やオーディションのご案内など、最新情報をお届けします。">
+    <main>
+      <section class="hero-section">
+        <div class="hero-marquee hero-marquee-top">
+          <div class="marquee-track">CORO PROJECT // VTUBER PRODUCTION // NEXT GENERATION // CORO PROJECT // VTUBER PRODUCTION //</div>
+        </div>
+        <div class="hero-marquee hero-marquee-bottom">
+          <div class="marquee-track reverse">CREATIVE SUPPORT // BUSINESS MATCHING // CREATIVE SUPPORT // BUSINESS MATCHING //</div>
+        </div>
 
-  <link rel="canonical" href="https://coroproject.jp/">
+        <div class="hero-hud hero-hud-left">SYS.VER.1.0.4<br>STATUS: ONLINE</div>
+        <div class="hero-hud hero-hud-right">TARGET: ACQUIRED<br>COORD: 35.6895° N, 139.6917° E</div>
 
-  <!-- OGP -->
-  <meta property="og:site_name" content="CORO PROJECT">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="CORO PROJECT | VTuberプロダクション公式サイト">
-  <meta property="og:description" content="CORO PROJECTは、紫・ピンクをテーマカラーとしたVTuberプロダクションです。所属タレント情報やオーディションのご案内など、最新情報をお届けします。">
-  <meta property="og:url" content="https://coroproject.jp/">
-  <meta property="og:image" content="https://coroproject.jp/images/ogp.png">
+        <div class="container hero-content reveal">
+          <div class="hero-label cyber-clip">VTuber Total Solutions</div>
+          <h1 class="hero-title">
+            VTuberと企業・クリエイターを<br>
+            <span>つなぎ、可能性を拡張する。</span>
+          </h1>
+          <p class="hero-lead">
+            CORO PROJECTは、VTuber事務所運営を軸に、<br class="hide-mobile">
+            活動設計、企業案件の接続、制作進行までを一つの導線で支える総合支援ブランドです。
+          </p>
+        </div>
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CORO PROJECT | VTuberプロダクション公式サイト">
-  <meta name="twitter:description" content="CORO PROJECTは、紫・ピンクをテーマカラーとしたVTuberプロダクションです。">
-  <meta name="twitter:image" content="https://coroproject.jp/images/ogp.png">
-
-  <link rel="icon" type="image/png" href="images/logo.png">
-  <link rel="apple-touch-icon" href="images/logo.png">
-
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/top.css">
-</head>
-
-<body class="home is-loading">
-  <!-- Simple Loader -->
-  <div id="coro-loader" class="coro-loader" aria-label="Loading">
-    <div class="coro-loader__simple-inner">
-      <img src="images/logo.png" alt="CORO PROJECT" class="coro-loader__simple-logo">
-      <div class="coro-loader__simple-title">ころぷろじぇくと！</div>
-    </div>
-  </div>
-
-  <!-- App -->
-  <div id="app">
-    <!-- ===== Header ===== -->
-    <header class="site-header">
-      <div class="container header-inner">
-        <a href="#top" class="brand">
-          <img src="images/toukalogo.png" alt="CORO PROJECT ロゴ" class="brand-logo">
-          <span class="brand-text">CORO PROJECT</span>
-        </a>
-
-        <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="siteNav" aria-label="メニューを開く">
-          <span></span><span></span><span></span>
-        </button>
-
-        <nav class="nav" id="siteNav" aria-label="メインナビゲーション">
-          <a href="#about">About</a>
-          <a href="#news">News</a>
-          <a href="#talents">Talents</a>
-          <a href="html/audition.html">Audition</a>
-          <a href="html/contact.html">Contact</a>
-        </nav>
-      </div>
-    </header>
-
-    <main id="top">
-      <!-- ===== Hero ===== -->
-      <section class="hero">
-        <div class="hero-bg" aria-hidden="true"></div>
-
-        <div class="container hero-inner">
-          <div class="hero-copy">
-            <p class="hero-eyebrow">VTUBER PRODUCTION</p>
-            <h1 class="hero-title">ころぷろじぇくと！</h1>
-            <p class="hero-lead">“自分だけでは届かなかった場所へ”</p>
-            <p class="hero-sub">
-              紫とピンクをテーマに、配信・創作・企画のすべてを一緒に楽しむVTuberプロダクション。
-              あなたの「好き」を、もっと遠くまで届けます。
-            </p>
-
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="html/audition.html">オーディション</a>
-              <a class="btn btn-outline" href="html/talents.php">タレントを見る</a>
-            </div>
-          </div>
-
-          <div class="hero-visual">
-            <div class="hero-visual-inner">
-              <div class="hero-aurora" aria-hidden="true"></div>
-
-              <div class="shorts-phone">
-                <div class="shorts-phone-inner">
-                  <div class="shorts-track" id="shortsTrack">
-                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short1.mp4"></video></section>
-                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short2.mp4"></video></section>
-                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short3.mp4"></video></section>
-                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short4.mp4"></video></section>
-                  </div>
-                </div>
-                <div class="shorts-phone-bar"></div>
+        <div class="container cards-grid reveal" id="services">
+          <?php foreach ($divisions as $division): ?>
+            <a class="division-card cyber-clip-lg <?= h($division['class']) ?>" href="<?= h($basePath . '/' . $division['slug'] . '/') ?>">
+              <div class="corner corner-tl"></div>
+              <div class="card-top">
+                <span class="card-num"><?= h($division['num']) ?></span>
               </div>
+              <span class="card-en"><?= h($division['title']) ?></span>
+              <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
+              <p class="card-desc"><?= h($division['desc']) ?></p>
+              <span class="card-link">ENTER SYNC <span aria-hidden="true">›</span></span>
+            </a>
+          <?php endforeach; ?>
+        </div>
 
-              <div class="hero-badge">
-                <span class="badge-label">Coro Project Shorts</span>
-                <span class="badge-dot"></span>
-              </div>
-
-              <div class="hero-tags">
-                <span>#切り抜き</span>
-                <span>#VTuber</span>
-                <span>#CoroProject</span>
-              </div>
-
-              <div class="shorts-dots" aria-label="ショート動画のインジケーター">
-                <button type="button" data-index="0" class="is-active"></button>
-                <button type="button" data-index="1"></button>
-                <button type="button" data-index="2"></button>
-                <button type="button" data-index="3"></button>
-              </div>
-            </div>
-          </div>
+        <div class="hero-scroll reveal">
+          <div class="hero-scroll-line"></div>
+          <span>SCROLL DOWN</span>
         </div>
       </section>
 
-      <!-- ===== About ===== -->
-      <section id="about" class="section section-about reveal">
-        <div class="decor-line-left"></div>
-        <div class="decor-line-right"></div>
-        <div class="container about-inner">
-          <div class="section-head">
-            <h2 class="section-title">About</h2>
-            <p class="section-kicker">CORO PROJECTとは？</p>
+      <section class="content-section content-section-alt">
+        <div class="container section-head reveal">
+          <div class="section-title-wrap">
+            <span class="pink-bar"></span>
+            <div>
+              <span class="section-sub">WHY INTEGRATED</span>
+              <h2 class="section-title">分断されやすい仕事を、ひとつの流れにする。</h2>
+            </div>
           </div>
+          <p class="section-note">VTuber活動は、配信だけで完結しません。企画、営業、制作、告知、権利確認、納期管理が同時に動くからこそ、相談窓口を分けすぎない設計が必要です。</p>
+        </div>
+        <div class="container insight-grid reveal">
+          <article class="insight-card cyber-clip-lg">
+            <span class="insight-index">01</span>
+            <h3>活動者の魅力を、案件で消費しない</h3>
+            <p>タレントの人格、世界観、活動ペースを理解したうえで、無理に案件へ当てはめず、長く応援される見せ方へ整えます。</p>
+          </article>
+          <article class="insight-card cyber-clip-lg">
+            <span class="insight-index">02</span>
+            <h3>企業の目的を、施策に翻訳する</h3>
+            <p>商品紹介、認知拡大、来店促進、採用広報など、目的によって必要な出演形式や制作物は変わります。最初の相談段階から整理します。</p>
+          </article>
+          <article class="insight-card cyber-clip-lg">
+            <span class="insight-index">03</span>
+            <h3>制作物まで含めて進行を止めない</h3>
+            <p>サムネイル、告知画像、動画、配信画面、ロゴなど、案件や活動に必要な素材を制作相談へつなげ、実行までの抜け漏れを減らします。</p>
+          </article>
+        </div>
+      </section>
 
-          <div class="about-grid">
-            <div class="about-main">
-              <h3 class="about-title">「好き」と「続けられる」を、ちゃんと両立させるプロダクション。</h3>
+      <section class="about-section" id="about">
+        <div class="container about-grid">
+          <div class="about-copy reveal">
+            <div class="section-marker">
+              <span class="marker-bar"></span>
+              <span class="marker-text">MISSION OBJECTIVE</span>
+            </div>
+            <h2>
+              VTuberという新時代の才能を、<br>
+              一過性のブームではなく、<br>
+              多角的な価値へと<span>変革</span>していく。
+            </h2>
+            <div class="about-text">
               <p>
-                CORO PROJECTは、紫とピンクをテーマにした小さなVTuberプロダクションです。<br>
-                目指しているのは、大きな看板ではなく「ちゃんと隣で一緒に走ってくれる運営」。
+                CORO PROJECTは、単なるタレント事務所に留まりません。企業とタレントが互いの価値を高め合える案件の創出、
+                クリエイターのスキルを最適な形で接続する仕組み、そしてそれらを支える確かなマネジメントを構築します。
               </p>
               <p>
-                配信スケジュール、企画、コラボ、数字の伸び方。<br>
-                ひとつひとつの悩みに寄り添いながら、タレントと一緒に
-                <span class="about-highlight">“その人らしい活動スタイル”</span>を組み立てていきます。
-              </p>
-              <p>
-                「もっと本気でやりたいけど、ひとりだと限界を感じている」「でも、ガチガチの箱に入りたいわけじゃない」。<br>
-                そんな人の “ちょうどいい居場所” になれたら、と考えています。
+                大切にしているのは、短期的な話題づくりだけではなく、活動者・企業・制作パートナーが安心して関わり続けられる状態をつくること。
+                「三方よし」の精神で、VTuber業界のさらなる成熟と、そこに集うすべての人々の可能性を最大化することを使命としています。
               </p>
             </div>
-
-            <div class="about-side">
-              <div class="about-pill">Support &amp; Production</div>
-              <ul class="about-points">
-                <li><strong>配信まわりの伴走サポート</strong><span>企画相談 / 週次の振り返り / 方向性のすり合わせ など</span></li>
-                <li><strong>クリエイティブ制作の窓口</strong><span>キャラデザ・ロゴ・OPED・BGMなど、制作パートナーの紹介と進行サポート</span></li>
-                <li><strong>数字と生活のバランス設計</strong><span>無理のない活動ペースの設計 / 収益化までのロードマップ作成</span></li>
-                <li><strong>ファンと一緒に育てる企画</strong><span>周年企画 / グッズ / イベント運営 などの共同プランニング</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===== News ===== -->
-      <section id="news" class="section section-news reveal">
-        <div class="container">
-          <div class="section-head">
-            <h2 class="section-title">News</h2>
-            <a class="section-link" href="html/news.php">すべて見る</a>
+            <a href="about.php" class="outline-button cyber-clip">ABOUT CORO PROJECT <span aria-hidden="true">›</span></a>
           </div>
 
-          <div id="top-news-list" class="news-grid">
-            <?php if (empty($topNews)): ?>
-              <p class="news-empty" style="color:#9ca3c3; font-size:.9rem;">
-                現在表示できるニュースはありません。詳細は <a href="html/news.php">Newsページ</a> をご確認ください。
-              </p>
-            <?php else: ?>
-              <?php foreach ($topNews as $n): ?>
-                <article class="news-card">
-                  <a href="<?= $n['url'] ? esc($n['url']) : 'html/news.php' ?>">
-                    <div class="card-thumb" aria-hidden="true" style="<?= $n['thumb'] ? "background-image:url('".esc($n['thumb'])."')" : '' ?>"></div>
-                    <span class="news-label"><?= esc($n['tag'] ?: 'News') ?></span>
-                    <span class="news-date"><?= esc($n['date']) ?></span>
-                    <h3 class="news-title"><?= esc($n['title']) ?></h3>
-                    <p class="news-text"><?= esc($n['excerpt'] ?? '') ?></p>
-                  </a>
-                </article>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </div>
-
-          <noscript>
-            <p style="font-size:.85rem; color:#9ca3c3;">
-              JavaScriptが無効になっています。最新情報は<a href="html/news.php">Newsページ</a>からご確認ください。
-            </p>
-          </noscript>
-        </div>
-      </section>
-
-      <!-- ===== Talents ===== -->
-      <section id="talents" class="section section-talents reveal">
-        <div class="container">
-          <div class="section-head">
-            <h2 class="section-title">Talents</h2>
-            <a class="section-link" href="html/talents.php">一覧を見る</a>
-          </div>
-
-          <div class="talents-top-grid">
-            <?php foreach ($topTalents as $t): ?>
-              <a class="talent-top-card" href="html/talent.php?id=<?= esc($t['id']) ?>">
-                <div class="talent-top-thumb" style="background-image:url('<?= esc($t['avatar_for_top']) ?>');"></div>
-                <div class="talent-top-info">
-                  <p class="talent-top-label">Coro Project Talent</p>
-                  <h3 class="talent-top-name"><?= esc($t['name']) ?></h3>
-                </div>
-              </a>
-            <?php endforeach; ?>
-
-            <?php for ($i = count($topTalents); $i < 3; $i++): ?>
-              <div class="talent-top-card talent-top-card--empty">
-                <div class="talent-top-thumb"></div>
-                <div class="talent-top-info">
-                  <p class="talent-top-coming">COMING SOON</p>
-                </div>
+          <div class="about-visual reveal">
+            <div class="visual-frame cyber-clip-lg">
+              <div class="visual-gradient"></div>
+              <video class="visual-video" src="images/short/short1.mp4" autoplay muted loop playsinline preload="metadata" aria-label="青海しび ゲームプレイ動画"></video>
+              <div class="frame-corner frame-corner-tl"></div>
+              <div class="frame-corner frame-corner-br"></div>
+              <div class="visual-caption">
+                <span>FEATURED TALENT</span>
+                <strong class="talent-name">青海しび</strong>
               </div>
-            <?php endfor; ?>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ===== Audition CTA ===== -->
-      <section class="section section-cta section-cta--audition reveal">
-        <div class="container cta-audition">
-          <div class="cta-audition-copy">
-            <p class="cta-label">Audition</p>
-            <h2 class="cta-title">「一度ちゃんと、本気でやってみたい」人へ。</h2>
-            <p class="cta-lead">
-              CORO PROJECTのオーディションでは、登録者数や配信歴だけで判断しません。<br>
-              いまの数字よりも、これから一緒に作っていける「熱量」と「続ける意思」を大切にしています。
-            </p>
-            <ul class="cta-points">
-              <li><span>✔</span> 配信経験が少なくてもOK（未経験でも意欲があれば歓迎）</li>
-              <li><span>✔</span> 学業・仕事との両立を前提に、活動ペースを一緒に設計</li>
-              <li><span>✔</span> キャラクターや世界観づくりから相談可能</li>
-            </ul>
-            <div class="cta-actions">
-              <a class="btn btn-primary" href="html/audition.html">オーディションの詳細を見る</a>
-              <a class="btn btn-outline" href="html/contact.html">まずは相談してみる</a>
+      <section class="content-section service-overview">
+        <div class="container section-head reveal">
+          <div class="section-title-wrap">
+            <span class="pink-bar"></span>
+            <div>
+              <span class="section-sub">SERVICE OVERVIEW</span>
+              <h2 class="section-title">3つの窓口で、活動と案件と制作を止めない。</h2>
             </div>
-            <p class="cta-note">「自分に合っているのかわからない」「少しだけ話を聞きたい」などのご相談もお気軽にどうぞ。</p>
           </div>
+          <a href="service.php" class="ghost-link cyber-clip">VIEW SERVICE PAGE <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="container info-grid reveal">
+          <?php foreach ($divisions as $division): ?>
+            <article class="info-card cyber-clip-lg <?= h($division['class']) ?>">
+              <div class="corner corner-tl"></div>
+              <span class="info-num"><?= h($division['num']) ?></span>
+              <span class="info-eyebrow"><?= h($division['title']) ?></span>
+              <h3><?= h($division['title_jp']) ?></h3>
+              <p><?= h($division['summary']) ?></p>
+              <a href="<?= h($division['slug']) ?>/" class="card-link">OPEN DIVISION <span aria-hidden="true">›</span></a>
+            </article>
+          <?php endforeach; ?>
+        </div>
+      </section>
 
-          <div class="cta-audition-side">
-            <div class="cta-card">
-              <h3>募集しているイメージ</h3>
-              <ul>
-                <li>長期的に活動を続けたい意志がある方</li>
-                <li>リスナーとコミュニケーションをとるのが好きな方</li>
-                <li>新しいことに挑戦してみたい方</li>
-              </ul>
+      <section class="content-section">
+        <div class="container section-head reveal">
+          <div class="section-title-wrap">
+            <span class="pink-bar"></span>
+            <div>
+              <span class="section-sub">CONSULTATION ROUTES</span>
+              <h2 class="section-title">相談内容から、最適な入口を選べます。</h2>
             </div>
-            <div class="cta-card cta-card--soft">
-              <h3>選考フロー（例）</h3>
-              <ol>
-                <li>Webフォームから応募</li>
-                <li>書類・配信アーカイブの確認</li>
-                <li>オンライン面談（1〜2回）</li>
-              </ol>
-              <p class="cta-small">詳細は<a href="html/audition.html">オーディションページ</a>にてご確認ください。</p>
+          </div>
+          <a href="contact.php" class="ghost-link cyber-clip">START CONSULTATION <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="container route-grid reveal">
+          <article class="route-card cyber-clip-lg">
+            <span>FOR COMPANY</span>
+            <h3>企業案件・PR施策</h3>
+            <p>商品紹介、サービス認知、イベント出演、SNS施策など、目的に合わせてVTuber起用の形を整理します。</p>
+          </article>
+          <article class="route-card cyber-clip-lg">
+            <span>FOR CREATOR</span>
+            <h3>制作・デザイン相談</h3>
+            <p>イラスト、動画、配信素材、ロゴなど、活動や案件に必要な制作物を依頼しやすい粒度に整えます。</p>
+          </article>
+          <article class="route-card cyber-clip-lg">
+            <span>FOR TALENT</span>
+            <h3>所属・活動相談</h3>
+            <p>活動方針、企画、案件対応、制作の悩みまで、継続して活動するために必要な支援を一緒に確認します。</p>
+          </article>
+          <article class="route-card cyber-clip-lg">
+            <span>FOR PARTNER</span>
+            <h3>提携・取材・協業</h3>
+            <p>メディア掲載、共同企画、業務提携など、CORO PROJECTとの接点を広げる相談を受け付けています。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="content-section content-section-alt" id="news-preview">
+        <div class="container section-head reveal">
+          <div class="section-title-wrap">
+            <span class="pink-bar"></span>
+            <div>
+              <span class="section-sub">SIGNAL ARCHIVE</span>
+              <h2 class="section-title">NEWS</h2>
             </div>
+          </div>
+          <a href="news.php" class="ghost-link cyber-clip">OPEN NEWS PAGE <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="container news-list news-list-preview reveal">
+          <?php foreach (array_slice($newsItems, 0, 3) as $item): ?>
+            <article class="news-card cyber-clip-lg">
+              <div class="news-meta">
+                <span class="news-category"><?= h($item['category']) ?></span>
+                <span class="news-date"><?= h($item['date']) ?></span>
+              </div>
+              <h2><?= h($item['title']) ?></h2>
+              <p><?= h($item['excerpt']) ?></p>
+              <a href="news_detail.php?id=<?= urlencode($item['id']) ?>" class="card-link">READ DETAIL <span aria-hidden="true">›</span></a>
+            </article>
+          <?php endforeach; ?>
+        </div>
+      </section>
+
+      <section class="cta-section" id="contact">
+        <video class="cta-bg-video" src="images/short/short1.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+        <div class="cta-beam"></div>
+        <div class="container cta-inner reveal">
+          <div class="mini-tag">SYSTEM_PROMPT: NEXT_STEP</div>
+          <h2>企画の種を、<br>実行できる導線へ。</h2>
+          <p class="cta-lead">相談内容がまだ曖昧でも大丈夫です。目的、予算感、希望時期、必要な制作物を整理しながら、最初に開くべき窓口へつなぎます。</p>
+          <div class="cta-actions">
+            <a href="contact.php" class="primary-button cyber-clip">CONTACT US</a>
+            <a href="service.php" class="secondary-button cyber-clip">SERVICE / SYSTEM DETAIL</a>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- ===== Footer ===== -->
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <div class="footer-col">
-          <div class="footer-brand">
-            <img src="images/logo.png" alt="CORO PROJECT ロゴ" class="footer-logo">
-            <span class="footer-name">CORO PROJECT</span>
-          </div>
-          <p class="footer-text">VTuberのプロデュース・配信サポートを行うプロダクションです。</p>
-        </div>
-        <div class="footer-col">
-          <h4>Links</h4>
-          <ul>
-            <li><a href="html/news.php">News</a></li>
-            <li><a href="html/talents.php">Talents</a></li>
-            <li><a href="html/audition.html">Audition</a></li>
-            <li><a href="html/privacy.html">Privacy Policy</a></li>
-          </ul>
-        </div>
-        <div class="footer-col">
-          <h4>Social</h4>
-          <ul>
-            <li><a href="https://x.com/CoroProjectJP" target="_blank" rel="noopener">X（Twitter）</a></li>
-            <li><a href="#">YouTube</a></li>
-            <li><a href="#">Twitch</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <small>© <span id="year"></span> CORO PROJECT</small>
-      </div>
-    </footer>
-  </div><!-- /#app -->
-
-  <!-- ===== Scripts ===== -->
-  <script>
-    // 年号
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // モバイルナビ
-    (function(){
-      const btn = document.getElementById('navToggle');
-      const nav = document.getElementById('siteNav');
-      if(!btn || !nav) return;
-
-      btn.addEventListener('click', () => {
-        const open = btn.getAttribute('aria-expanded') === 'true';
-        btn.setAttribute('aria-expanded', String(!open));
-        document.body.classList.toggle('nav-open', !open);
-      });
-
-      nav.querySelectorAll('a').forEach(a => {
-        a.addEventListener('click', () => {
-          document.body.classList.remove('nav-open');
-          btn.setAttribute('aria-expanded', 'false');
-        });
-      });
-    })();
-
-    // Hero ショート動画（縦スワイプ風）
-    (function(){
-      const track = document.getElementById('shortsTrack');
-      if (!track) return;
-
-      const items  = Array.from(track.querySelectorAll('.shorts-item'));
-      const videos = items.map(it => it.querySelector('video'));
-      const dots   = Array.from(document.querySelectorAll('.shorts-dots button'));
-      const DURATION = 8000;
-
-      let index = 0;
-      let timer = null;
-
-      function go(to){
-        index = (to + items.length) % items.length;
-        track.style.transform = `translateY(-${index * 100}%)`;
-
-        videos.forEach((v,i)=>{
-          if (i === index){
-            try{ v.currentTime = 0; v.muted = true; v.play(); }catch(e){}
-          }else{
-            try{ v.pause(); }catch(e){}
-          }
-        });
-
-        dots.forEach((d,i)=>d.classList.toggle('is-active', i === index));
-        restart();
-      }
-
-      function restart(){
-        clearTimeout(timer);
-        timer = setTimeout(()=>go(index + 1), DURATION);
-      }
-
-      dots.forEach((btn,i)=>btn.addEventListener('click', ()=>go(i)));
-
-      videos.forEach(v=>{
-        v.setAttribute('playsinline','');
-        v.muted = true;
-      });
-
-      go(0);
-    })();
-
-    // Loader（最小・確実に消える）
-    (function () {
-      const MIN_SHOW_MS = 1800;
-      const FADE_MS     = 800;
-      const FAILSAFE_MS = 6000;
-
-      const start = performance.now();
-
-      function finish() {
-        const loader = document.getElementById("coro-loader");
-        if (loader) loader.classList.add("coro-loader--hide");
-
-        document.body.classList.remove("is-loading");
-        document.body.classList.add("is-loaded");
-
-        setTimeout(() => { if (loader) loader.remove(); }, FADE_MS);
-      }
-
-      window.addEventListener("load", () => {
-        const elapsed = performance.now() - start;
-        setTimeout(finish, Math.max(0, MIN_SHOW_MS - elapsed));
-      });
-
-      setTimeout(finish, FAILSAFE_MS);
-    })();
-
-    // reveal
-    (function(){
-      const reveals = Array.from(document.querySelectorAll('.reveal'));
-      if (!('IntersectionObserver' in window) || !reveals.length) {
-        reveals.forEach(el => el.classList.add('is-visible'));
-        return;
-      }
-      const io = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting){
-            entry.target.classList.add('is-visible');
-            io.unobserve(entry.target);
-          }
-        });
-      }, { threshold:0.15 });
-      reveals.forEach(el => io.observe(el));
-    })();
-  </script>
-</body>
-</html>
+<?php render_footer(); ?>

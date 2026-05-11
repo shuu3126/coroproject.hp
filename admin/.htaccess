@@ -1,0 +1,13 @@
+# ========================================
+# CORO PROJECT - 管理画面 Basic 認証
+# ========================================
+
+AuthType Basic
+AuthName "CORO PROJECT Admin"
+
+# !! 要設定 !!
+# サーバーの絶対パスに書き換えてください
+# 例: /home/ユーザー名/www/coroproject.jp/admin/.htpasswd
+AuthUserFile /絶対パス/admin/.htpasswd
+
+Require valid-user

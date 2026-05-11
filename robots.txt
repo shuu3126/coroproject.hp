@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /thanks.php
+
+Sitemap: https://coroproject.jp/sitemap.xml
