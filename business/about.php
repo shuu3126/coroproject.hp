@@ -1,10 +1,10 @@
 <?php
 require __DIR__ . '/includes/layout.php';
-$siteTitle = 'About | Business Matching | CORO PROJECT';
+$siteTitle = 'About | ころコネクト！ | CORO PROJECT';
 render_header('about', $siteTitle, [
-  'page_name' => 'About | Business Matching | CORO PROJECT',
+  'page_name' => 'About | ころコネクト！ | CORO PROJECT',
   'canonical' => 'https://coroproject.jp/business/about.php',
-  'description' => 'Business Matchingの考え方と支援方針。企業がVTuber施策を安心して進めるための相談窓口として、整理と実行支援の全体像を紹介します。'
+  'description' => 'ころコネクト！の考え方と支援方針。企業がVTuber施策を安心して進めるための相談窓口として、整理から実行支援までの全体像を紹介します。'
 ]);
 ?>
 <section class="hero page-hero">
@@ -18,7 +18,7 @@ render_header('about', $siteTitle, [
     </div>
     <aside class="hero-panel reveal delay-1">
       <div class="panel-frame">
-        <div class="panel-label">ABOUT BUSINESS MATCHING</div>
+        <div class="panel-label">ABOUT ころコネクト！</div>
         <div class="panel-card">
           <span class="panel-kicker">ABOUT</span>
           <h2>つなぐだけで終わらせない。</h2>
@@ -38,7 +38,7 @@ render_header('about', $siteTitle, [
         <span>相談しやすさと</span>
         <span class="nowrap-inline">実行のしやすさ。</span>
       </h2>
-      <p class="section-text">Business Matchingは、企業・ブランド・イベントとVTuberをつなぎ、起用の相談受付から企画整理、進行実務までを支える事業部です。施策を成立させるだけでなく、相談しやすく進めやすい状態まで整えることを大切にしています。</p>
+      <p class="section-text">ころコネクト！は、企業・ブランド・イベントとVTuberをつなぎ、起用の相談受付から企画整理、進行実務までを支える事業部です。施策を成立させるだけでなく、相談しやすく進めやすい状態まで整えることを大切にしています。</p>
       <p class="section-text">最初から大きな企画でなくても問題ありません。まずは「何ができるか知りたい」「小さく始めたい」という段階から対応できます。</p>
     </div>
     <div class="info-stack reveal delay-1">

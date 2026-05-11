@@ -230,8 +230,15 @@ start_page($pageTitle, '請求書を作成します。');
           <select name="talent_id" required>
             <option value="">選択してください</option>
             <?php foreach ($talents as $t): ?>
+              <?php
+                $realName = trim((string)($t['invoice_name'] ?? ''));
+                $label = $t['name'];
+                if ($realName !== '' && $realName !== $t['name']) {
+                    $label .= '（' . $realName . '）';
+                }
+              ?>
               <option value="<?= h((string)$t['id']) ?>" <?= selected($form['talent_id'], (string)$t['id']) ?>>
-                <?= h($t['name']) ?>
+                <?= h($label) ?>
               </option>
             <?php endforeach; ?>
           </select>

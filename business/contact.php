@@ -1,10 +1,10 @@
 <?php
 require __DIR__ . '/includes/layout.php';
-$siteTitle = 'Contact | Business Matching | CORO PROJECT';
+$siteTitle = 'Contact | ころコネクト！ | CORO PROJECT';
 render_header('contact', $siteTitle, [
-  'page_name' => 'Contact | Business Matching | CORO PROJECT',
+  'page_name' => 'Contact | ころコネクト！ | CORO PROJECT',
   'canonical' => 'https://coroproject.jp/business/contact.php',
-  'description' => 'Business Matchingのお問い合わせページ。VTuber起用、PR施策、イベント出演、タイアップなどの企業向け案件相談を受け付けています。'
+  'description' => 'ころコネクト！のお問い合わせページ。VTuber起用・PR施策・イベント出演・タイアップなどの企業向け案件相談を受け付けています。'
 ]);
 ?>
 <section class="hero page-hero">

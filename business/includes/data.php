@@ -11,15 +11,15 @@ $navItems = [
 ];
 
 $bmSite = [
-  'brand' => 'BUSINESS MATCHING',
+  'brand' => 'ころコネクト！',
   'hero' => [
-    'kicker' => 'PARTNER SOLUTIONS',
+    'kicker' => 'VTuber BUSINESS CONNECT',
     'lines' => [
-      ['class' => 'solid', 'text' => 'VTuber起用を、'],
-      ['class' => 'outline', 'text' => '相談しやすく。'],
-      ['class' => 'accent', 'text' => '実行しやすく。'],
+      ['class' => 'solid', 'text' => '企業とVTuberを、'],
+      ['class' => 'outline', 'text' => 'つなぐ窓口。'],
+      ['class' => 'accent', 'text' => 'ころコネクト！'],
     ],
-    'lead' => '企業・店舗・地方自治体・広告代理店に向けて、VTuber施策の相談受付から候補提案、条件整理、進行支援までを一体で担う総合窓口です。所属タレントに限らず、案件内容に応じて相性の良いVTuberの提案にも対応します。',
+    'lead' => '企業・店舗・地方自治体・広告代理店に向けて、VTuber起用の相談から候補提案・条件整理・進行支援までを一体で担う総合窓口です。インフルエンサーマーケティング・事務所タイアップ依頼・プロモーション相談はこちら。',
   ],
   'supports' => [
     [
