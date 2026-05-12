@@ -159,8 +159,6 @@ try {
       <!-- ===== Hero ===== -->
       <section class="hero">
         <div class="hero-bg" aria-hidden="true"></div>
-        <div class="hero-bg-word" aria-hidden="true">CORO</div>
-
         <div class="container hero-inner">
           <div class="hero-copy">
             <p class="hero-eyebrow">VTUBER PRODUCTION</p>

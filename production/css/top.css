@@ -215,33 +215,6 @@ body.home .site-header{
   overflow:hidden;
 }
 
-/* giant decorative outline word */
-.hero-bg-word{
-  position:absolute;
-  top:50%;
-  right:-4%;
-  transform:translateY(-50%) rotate(-8deg);
-  font-family:'Keifont', system-ui, sans-serif;
-  font-size:clamp(130px, 22vw, 290px);
-  font-weight:900;
-  letter-spacing:.06em;
-  color:transparent;
-  -webkit-text-stroke:3px rgba(255,255,255,.07);
-  white-space:nowrap;
-  pointer-events:none;
-  user-select:none;
-  z-index:0;
-  line-height:1;
-}
-@media (max-width:959px){
-  .hero-bg-word{
-    top:auto;
-    bottom:2%;
-    right:-8%;
-    transform:rotate(-6deg);
-    font-size:clamp(90px, 28vw, 180px);
-  }
-}
 
 .hero-bg{
   position:absolute;
