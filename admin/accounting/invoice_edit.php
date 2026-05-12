@@ -61,6 +61,51 @@ function invoice_edit_fetch_latest_usd_jpy_rate($apiKey) {
     ];
 }
 
+// 収益試算 AJAX エンドポイント
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && (isset($_GET['action']) ? $_GET['action'] : '') === 'preview_revenue') {
+    header('Content-Type: application/json; charset=utf-8');
+    $previewSettings = load_app_settings($pdo, $config);
+    $previewDefaultFx = (float)$previewSettings['fx_default_rate'];
+
+    $previewTalentId = trim(isset($_GET['talent_id']) ? $_GET['talent_id'] : '');
+    $previewYear     = (int)(isset($_GET['year'])      ? $_GET['year']      : date('Y'));
+    $previewMonth    = (int)(isset($_GET['month'])     ? $_GET['month']     : date('n'));
+    $previewFxRate   = (float)(isset($_GET['fx_rate']) ? $_GET['fx_rate']   : $previewDefaultFx);
+    if ($previewFxRate <= 0) $previewFxRate = $previewDefaultFx;
+
+    if ($previewTalentId === '') {
+        echo json_encode(['ok' => false, 'error' => 'タレントを選択してください']);
+        exit;
+    }
+
+    $previewMonths = accounting_get_uninvoiced_months_upto($pdo, $previewTalentId, $previewYear, $previewMonth);
+    if (!$previewMonths) {
+        echo json_encode(['ok' => false, 'error' => '指定した締め月までの未請求月がありません（すべて請求済み、または収益データが未登録です）']);
+        exit;
+    }
+
+    $previewItems = [];
+    $previewTotal = 0.0;
+    foreach ($previewMonths as $pm) {
+        $share = accounting_calc_office_share_jpy_for_month($pdo, $previewTalentId, $pm['year'], $pm['month'], $previewFxRate);
+        if ($share <= 0) continue;
+        $previewItems[] = [
+            'label'  => sprintf('%d年%02d月', $pm['year'], $pm['month']),
+            'amount' => (int)round($share),
+        ];
+        $previewTotal += $share;
+    }
+
+    echo json_encode([
+        'ok'          => true,
+        'items'       => $previewItems,
+        'total'       => (int)round($previewTotal),
+        'can_invoice' => $previewTotal >= accounting_threshold_yen(),
+        'threshold'   => (int)accounting_threshold_yen(),
+    ]);
+    exit;
+}
+
 $mode     = isset($_GET['mode'])       ? (string)$_GET['mode']       : 'revenue';
 $division = isset($_GET['division'])   ? (string)$_GET['division']   : 'production';
 $preDealId    = trim($_GET['deal_id']    ?? '');
@@ -80,7 +125,7 @@ $fxApiKey = isset($settings['fx_api_key']) ? (string)$settings['fx_api_key'] : '
 $form = [
     'mode'         => $mode,
     'division'     => $division,
-    'talent_id'    => '',
+    'talent_id'    => isset($_GET['talent_id']) ? trim($_GET['talent_id']) : '',
     'client_id'    => $preClientId,
     'deal_id'      => $preDealId,
     'project_id'   => $preProjectId,
@@ -296,12 +341,23 @@ start_page($pageTitle, '請求書を作成します。');
         <textarea name="details_text" rows="8" placeholder="イベント参加費|25000&#10;デザイン費|18000"><?= h($form['details_text']) ?></textarea>
       </label>
     <?php else: ?>
-      <div class="card">
-        <strong>自動計算ルール</strong>
-        <p class="muted">
-          指定した締め年月までの未請求月をまとめて計算し、
-          タレントごとの取り分率で円換算、5,000円以上なら請求書を作成します。
-        </p>
+      <div class="invoice-preview-box" id="revenue-preview-box">
+        <div class="invoice-preview-title">試算：請求対象の未請求月</div>
+        <div id="rev-preview-placeholder" class="invoice-preview-placeholder">
+          タレントと締め年月を選択すると試算が表示されます
+        </div>
+        <div id="rev-preview-content" style="display:none;">
+          <div id="rev-preview-items"></div>
+          <div class="invoice-preview-total">
+            <span>試算合計（取り分後）</span>
+            <strong id="rev-preview-total"></strong>
+          </div>
+          <div class="invoice-preview-footer">
+            <span id="rev-preview-status"></span>
+            <span class="invoice-preview-hint" id="rev-preview-note"></span>
+          </div>
+        </div>
+        <div id="rev-preview-error" style="display:none;font-size:12px;color:var(--danger);padding:4px 0;"></div>
       </div>
     <?php endif; ?>
 
@@ -316,4 +372,109 @@ start_page($pageTitle, '請求書を作成します。');
     </div>
   </form>
 </main>
+<script>
+(function () {
+  var previewBox = document.getElementById('revenue-preview-box');
+  if (!previewBox) return;
+
+  var talentSel  = document.querySelector('select[name="talent_id"]');
+  var yearInput  = document.querySelector('input[name="year"]');
+  var monthInput = document.querySelector('input[name="month"]');
+  var fxInput    = document.querySelector('input[name="fx_rate"]');
+
+  var placeholder   = document.getElementById('rev-preview-placeholder');
+  var content       = document.getElementById('rev-preview-content');
+  var itemsEl       = document.getElementById('rev-preview-items');
+  var totalEl       = document.getElementById('rev-preview-total');
+  var statusEl      = document.getElementById('rev-preview-status');
+  var noteEl        = document.getElementById('rev-preview-note');
+  var errorEl       = document.getElementById('rev-preview-error');
+
+  function showPlaceholder(msg) {
+    placeholder.textContent = msg || 'タレントと締め年月を選択すると試算が表示されます';
+    placeholder.style.display = '';
+    content.style.display = 'none';
+    errorEl.style.display = 'none';
+  }
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = '';
+    placeholder.style.display = 'none';
+    content.style.display = 'none';
+  }
+
+  function showContent(data) {
+    var html = data.items.map(function (item) {
+      return '<div class="invoice-preview-row">'
+        + '<span>' + item.label + '</span>'
+        + '<span>¥' + item.amount.toLocaleString() + '</span>'
+        + '</div>';
+    }).join('');
+    itemsEl.innerHTML = html || '<div style="font-size:12px;color:var(--sub);padding:4px 0;">計算対象の月がありません</div>';
+    totalEl.textContent = '¥' + data.total.toLocaleString();
+
+    if (data.can_invoice) {
+      statusEl.innerHTML = '<span class="status-badge success">請求可能</span>';
+      noteEl.textContent = '';
+    } else {
+      statusEl.innerHTML = '<span class="status-badge warning">次月繰越</span>';
+      noteEl.textContent = '合計 ¥' + data.threshold.toLocaleString() + ' 未満のため請求書を発行できません';
+    }
+
+    placeholder.style.display = 'none';
+    content.style.display = '';
+    errorEl.style.display = 'none';
+  }
+
+  var timer = null;
+  function schedulePreview() {
+    clearTimeout(timer);
+    timer = setTimeout(fetchPreview, 400);
+  }
+
+  function fetchPreview() {
+    if (!talentSel) return;
+    var talentId = talentSel.value;
+    var year     = yearInput  ? yearInput.value.trim()  : '';
+    var month    = monthInput ? monthInput.value.trim() : '';
+    var fx       = fxInput    ? fxInput.value.trim()    : '';
+
+    if (!talentId || !year || !month) {
+      showPlaceholder();
+      return;
+    }
+
+    showPlaceholder('試算中...');
+
+    var url = '<?= h($baseUrl) ?>/accounting/invoice_edit.php'
+      + '?action=preview_revenue'
+      + '&talent_id=' + encodeURIComponent(talentId)
+      + '&year='      + encodeURIComponent(year)
+      + '&month='     + encodeURIComponent(month)
+      + '&fx_rate='   + encodeURIComponent(fx || '150');
+
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          showContent(data);
+        } else {
+          showError(data.error || 'エラーが発生しました');
+        }
+      })
+      .catch(function () {
+        showError('試算の取得に失敗しました');
+      });
+  }
+
+  [talentSel, yearInput, monthInput, fxInput].forEach(function (el) {
+    if (!el) return;
+    el.addEventListener('change', schedulePreview);
+    if (el.tagName !== 'SELECT') el.addEventListener('input', schedulePreview);
+  });
+
+  fetchPreview();
+})();
+</script>
 <?php end_page(); ?>

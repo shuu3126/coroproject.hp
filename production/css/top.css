@@ -245,22 +245,6 @@ body.home .site-header{
 .hero-copy{
   max-width:480px;
 }
-.hero-eyebrow{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  margin:0 0 12px;
-  font-size:.75rem;
-  letter-spacing:.28em;
-  text-indent:.28em;
-  text-transform:uppercase;
-  font-weight:700;
-  padding:5px 14px;
-  border-radius:999px;
-  background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.22);
-  backdrop-filter:blur(6px);
-}
 .hero-title{
   margin:0 0 12px;
   font-family:'Keifont', system-ui, sans-serif;
@@ -268,18 +252,19 @@ body.home .site-header{
   letter-spacing:.12em;
   text-shadow:0 4px 24px rgba(0,0,0,.4);
   white-space:nowrap;
+  animation:title-glow 4s ease-in-out infinite alternate;
 }
 .hero-lead{
-  margin:0 0 16px;
+  margin:0 0 28px;
   font-family:'nicokaku', system-ui, sans-serif;
   font-size:1rem;
   letter-spacing:.18em;
-}
-.hero-sub{
-  margin:0 0 22px;
-  font-size:.92rem;
-  line-height:1.85;
-  color:rgba(254,245,255,.88);
+  background:linear-gradient(90deg,#fff 0%,#f9a8ff 25%,#9f8bff 50%,#7dd3fc 75%,#fff 100%);
+  background-size:250% auto;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:text-shimmer 6s linear infinite;
 }
 .hero-actions{
   display:flex;
@@ -1470,4 +1455,136 @@ body.is-loaded #app{
     gap:14px;
     text-align:center;
   }
+}
+
+/* ============================
+   Hero Decorative Background Text
+   ============================ */
+.hero-deco-bg{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:0;
+}
+.deco-bg-word{
+  position:absolute;
+  font-family:'Keifont',system-ui,sans-serif;
+  color:#fff;
+  user-select:none;
+  white-space:nowrap;
+  text-transform:uppercase;
+  will-change:transform;
+}
+.deco-bg-word--a{
+  top:5%;
+  left:-2%;
+  font-size:clamp(80px,14vw,200px);
+  letter-spacing:.08em;
+  opacity:.05;
+  transform:rotate(-8deg);
+  animation:deco-float-a 16s ease-in-out infinite alternate;
+}
+.deco-bg-word--b{
+  top:52%;
+  right:-4%;
+  font-size:clamp(50px,10vw,140px);
+  letter-spacing:.06em;
+  opacity:.035;
+  transform:rotate(6deg);
+  animation:deco-float-b 20s ease-in-out infinite alternate;
+}
+.deco-bg-word--c{
+  bottom:7%;
+  left:16%;
+  font-size:clamp(38px,7vw,100px);
+  letter-spacing:.1em;
+  opacity:.035;
+  transform:rotate(-3deg);
+  animation:deco-float-c 18s ease-in-out infinite alternate;
+}
+.deco-bg-word--d{
+  top:26%;
+  right:6%;
+  font-family:'nicokaku',system-ui,sans-serif;
+  font-size:clamp(72px,13vw,180px);
+  opacity:.06;
+  animation:deco-float-d 22s ease-in-out infinite alternate;
+}
+.deco-bg-word--e{
+  top:10%;
+  right:30%;
+  font-size:clamp(28px,5vw,72px);
+  letter-spacing:.14em;
+  opacity:.042;
+  transform:rotate(13deg);
+  animation:deco-float-e 13s ease-in-out infinite alternate;
+}
+
+@keyframes deco-float-a{
+  0%  {transform:rotate(-8deg) translateY(0);}
+  100%{transform:rotate(-5deg) translateY(-26px);}
+}
+@keyframes deco-float-b{
+  0%  {transform:rotate(6deg) translateY(0);}
+  100%{transform:rotate(4deg) translateY(-34px);}
+}
+@keyframes deco-float-c{
+  0%  {transform:rotate(-3deg) translateY(0);}
+  100%{transform:rotate(-1deg) translateY(-20px);}
+}
+@keyframes deco-float-d{
+  0%  {transform:translateY(0) scale(1);}
+  100%{transform:translateY(-30px) scale(1.015);}
+}
+@keyframes deco-float-e{
+  0%  {transform:rotate(13deg) translateY(0);}
+  100%{transform:rotate(10deg) translateY(-17px);}
+}
+
+@keyframes title-glow{
+  0%  {text-shadow:0 3px 18px rgba(0,0,0,.35);}
+  100%{text-shadow:0 3px 18px rgba(0,0,0,.35),0 0 50px rgba(244,114,255,.38),0 0 90px rgba(159,139,255,.22);}
+}
+
+@keyframes text-shimmer{
+  0%  {background-position:250% center;}
+  100%{background-position:0% center;}
+}
+
+/* ============================
+   Ticker Strip
+   ============================ */
+.ticker-strip{
+  overflow:hidden;
+  padding:13px 0;
+  background:var(--bg);
+  border-top:1px solid rgba(244,114,255,.22);
+  border-bottom:1px solid rgba(159,139,255,.18);
+}
+.ticker-track{
+  display:inline-flex;
+  align-items:center;
+  white-space:nowrap;
+  animation:ticker-scroll 40s linear infinite;
+}
+.ticker-strip--rev .ticker-track{
+  animation-direction:reverse;
+}
+.ticker-item{
+  font-family:'Keifont',system-ui,sans-serif;
+  font-size:.88rem;
+  letter-spacing:.2em;
+  color:rgba(253,253,255,.62);
+  padding:0 24px;
+}
+.ticker-sep{
+  font-size:.6rem;
+  color:var(--accent);
+  opacity:.52;
+  flex-shrink:0;
+}
+@keyframes ticker-scroll{
+  from{transform:translateX(0);}
+  to  {transform:translateX(-50%);}
 }

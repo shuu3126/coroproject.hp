@@ -54,7 +54,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
   <link rel="icon" type="image/png" sizes="192x192" href="<?= h($faviconUrl) ?>">
   <link rel="apple-touch-icon" href="<?= h($faviconUrl) ?>">
   <link rel="shortcut icon" href="<?= h($faviconUrl) ?>">
-  <link rel="stylesheet" href="<?= h($adminRoot) ?>/assets/css/admin.css?v=20260508-3">
+  <link rel="stylesheet" href="<?= h($adminRoot) ?>/assets/css/admin.css?v=20260512-1">
   <script>
     window.CORO_ADMIN_SESSION = <?= json_encode([
         'timeoutMs' => ((int)($adminSessionIdleTimeout ?? 3600)) * 1000,
