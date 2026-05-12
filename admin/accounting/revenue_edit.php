@@ -74,9 +74,12 @@ start_page($isEdit ? '収益を編集' : '収益を追加', '過去分を含め�
       <label>
         <span>タレント</span>
         <select name="talent_id" required>
-          <?php foreach ($talents as $t): ?>
+          <?php foreach ($talents as $t):
+            $rn  = trim((string)($t['invoice_name'] ?? ''));
+            $lbl = $t['name'] . ($rn !== '' && $rn !== $t['name'] ? '（' . $rn . '）' : '');
+          ?>
             <option value="<?= h($t['id']) ?>" <?= selected($row['talent_id'], $t['id']) ?>>
-              <?= h($t['name']) ?>
+              <?= h($lbl) ?>
             </option>
           <?php endforeach; ?>
         </select>

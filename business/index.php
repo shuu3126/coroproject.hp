@@ -11,11 +11,11 @@ if ($_biz_pdo) {
     } catch (Throwable $e) {}
 }
 
-$siteTitle = 'Business Matching | VTuber案件仲介・企業コラボ相談 | CORO PROJECT';
+$siteTitle = 'ころコネクト！ | VTuber案件窓口・企業コラボ相談 | CORO PROJECT';
 render_header('', $siteTitle, [
-  'page_name' => 'Business Matching | VTuber案件仲介・企業コラボ相談 | CORO PROJECT',
+  'page_name' => 'ころコネクト！ | VTuber案件窓口・企業コラボ相談 | CORO PROJECT',
   'canonical' => 'https://coroproject.jp/business/',
-  'description' => 'CORO PROJECTのBusiness Matching。VTuber起用、PR施策、タイアップ、イベント出演などの企業向け案件相談を、整理から進行管理まで一体で支援します。'
+  'description' => 'ころコネクト！はCORO PROJECTの企業向けVTuber案件総合窓口。VTuber起用相談・候補提案・条件整理・進行支援まで一体で対応します。'
 ]);
 global $bmSite, $contactUrl;
 ?>
@@ -65,7 +65,7 @@ global $bmSite, $contactUrl;
         <span>相談窓口と</span>
         <span class="nowrap-inline">実行支援。</span>
       </h2>
-      <p class="section-text">Business Matchingは、企業・ブランド・イベントとVTuberをつなぎ、起用の相談受付から企画整理、候補提案、条件調整、実施進行までを一体で支える事業部です。案件をつなぐだけで終わらせず、実施しやすい形へ整えることを役割にしています。</p>
+      <p class="section-text">ころコネクト！は、企業・ブランド・イベントとVTuberをつなぎ、起用の相談受付から企画整理、候補提案、条件調整、実施進行までを一体で支える事業部です。案件をつなぐだけで終わらせず、実施しやすい形へ整えることを役割にしています。</p>
       <p class="section-text">VTuber業界に不慣れな企業でも相談しやすいように、何を目的に起用するべきか、どの規模の施策から始めるべきか、配信・SNS・イベントのどこが適しているか、といった入口から伴走します。</p>
     </div>
     <div class="info-stack reveal delay-1">
@@ -164,7 +164,6 @@ global $bmSite, $contactUrl;
   </div>
 </section>
 
-<?php if ($_biz_news): ?>
 <section class="content-section news-preview">
   <div class="container">
     <div class="section-head-row">
@@ -175,24 +174,27 @@ global $bmSite, $contactUrl;
       <a class="btn btn-secondary" href="news.php">すべて見る</a>
     </div>
     <div class="news-list">
-      <?php foreach ($_biz_news as $item): ?>
-        <?php
-          $dateStr = !empty($item['date']) ? date('Y.m.d', strtotime($item['date'])) : '';
-          $link    = !empty($item['url']) ? $item['url'] : 'news.php';
-          $target  = !empty($item['url']) ? ' target="_blank" rel="noopener"' : '';
-        ?>
-        <article class="news-item">
-          <div class="news-item-meta">
-            <?php if ($dateStr): ?><time class="news-date"><?= h($dateStr) ?></time><?php endif; ?>
-            <?php if (!empty($item['tag'])): ?><span class="news-tag"><?= h($item['tag']) ?></span><?php endif; ?>
-          </div>
-          <a class="news-item-title" href="<?= h($link) ?>"<?= $target ?>><?= h($item['title']) ?></a>
-        </article>
-      <?php endforeach; ?>
+      <?php if ($_biz_news): ?>
+        <?php foreach ($_biz_news as $item): ?>
+          <?php
+            $dateStr = !empty($item['date']) ? date('Y.m.d', strtotime($item['date'])) : '';
+            $link    = !empty($item['url']) ? $item['url'] : 'news.php';
+            $target  = !empty($item['url']) ? ' target="_blank" rel="noopener"' : '';
+          ?>
+          <article class="news-item">
+            <div class="news-item-meta">
+              <?php if ($dateStr): ?><time class="news-date"><?= h($dateStr) ?></time><?php endif; ?>
+              <?php if (!empty($item['tag'])): ?><span class="news-tag"><?= h($item['tag']) ?></span><?php endif; ?>
+            </div>
+            <a class="news-item-title" href="<?= h($link) ?>"<?= $target ?>><?= h($item['title']) ?></a>
+          </article>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p class="news-empty">現在お知らせはありません。<a href="news.php">ニュース一覧へ</a></p>
+      <?php endif; ?>
     </div>
   </div>
 </section>
-<?php endif; ?>
 
 <section class="content-section contact-band">
   <div class="container contact-band__inner">

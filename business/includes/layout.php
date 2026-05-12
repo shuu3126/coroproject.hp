@@ -8,7 +8,7 @@ function h(string $value): string {
 function render_header(string $currentPage, string $siteTitle, array $seo = []): void {
   global $navItems, $siteRoot, $contactUrl, $bmSite;
   $pageName = $seo['page_name'] ?? $siteTitle;
-  $description = $seo['description'] ?? 'CORO PROJECTのBusiness Matching。VTuber起用、PR施策、タイアップ、イベント出演などの案件相談を支える総合窓口です。';
+  $description = $seo['description'] ?? 'ころコネクト！はCORO PROJECTの企業向けVTuber案件総合窓口。VTuber起用相談・候補提案・条件整理・進行支援まで一体で対応します。';
   $canonical = $seo['canonical'] ?? 'https://coroproject.jp/business/';
   $ogType = $seo['og_type'] ?? 'website';
   ?>
@@ -37,7 +37,7 @@ function render_header(string $currentPage, string $siteTitle, array $seo = []):
       "@graph": [
         {
           "@type": "Organization",
-          "name": "CORO PROJECT Business Matching",
+          "name": "ころコネクト！",
           "url": "https://coroproject.jp/business/",
           "parentOrganization": {
             "@type": "Organization",
@@ -48,15 +48,15 @@ function render_header(string $currentPage, string $siteTitle, array $seo = []):
         },
         {
           "@type": "Service",
-          "name": "CORO PROJECT Business Matching",
-          "serviceType": "VTuber案件仲介・企業コラボ相談",
+          "name": "ころコネクト！",
+          "serviceType": "VTuberビジネス窓口・企業向けキャスティング相談",
           "provider": {
             "@type": "Organization",
-            "name": "CORO PROJECT Business Matching"
+            "name": "ころコネクト！"
           },
           "areaServed": "JP",
           "url": "https://coroproject.jp/business/",
-          "description": "VTuber起用、PR施策、タイアップ、イベント出演などの案件相談を支える企業向け案件仲介サービス。"
+          "description": "企業・店舗・地方自治体・広告代理店向けに、VTuber起用相談から候補提案・条件整理・進行支援までを一体で担う総合窓口。"
         },
         {
           "@type": "WebPage",
@@ -119,7 +119,7 @@ function render_footer(): void {
           <img src="assets/icons/brand-mark.png" alt="CORO PROJECT">
           <span><?= h($bmSite['brand']) ?></span>
         </a>
-        <p>VTuber起用、PR施策、タイアップ、イベント出演などの案件相談を支えるCORO PROJECTの案件仲介窓口です。</p>
+        <p>企業とVTuberをつなぐ、CORO PROJECTの総合窓口。VTuber起用・PR施策・タイアップ・イベント相談をワンストップで整えます。</p>
       </div>
       <div class="footer-links">
         <?php foreach ($navItems as $item): ?>

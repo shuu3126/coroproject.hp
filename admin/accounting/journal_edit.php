@@ -8,9 +8,11 @@ $id = (int)(isset($_GET['id']) ? $_GET['id'] : 0);
 $isEdit = $id > 0;
 
 $talents = $pdo->query("
-    SELECT id, name
-    FROM talents
-    ORDER BY sort_order ASC, name ASC, id ASC
+    SELECT t.id, t.name, COALESCE(ts.invoice_name, '') AS invoice_name
+    FROM talents t
+    LEFT JOIN accounting_talent_settings ts ON ts.talent_id = t.id
+    WHERE t.is_published = 1
+    ORDER BY t.sort_order ASC, t.name ASC, t.id ASC
 ")->fetchAll();
 
 $categories = $pdo->query("
@@ -137,8 +139,12 @@ start_page($isEdit ? '記帳を編集' : '記帳を追加', '手入力で収入�
       <select name="talent_id">
         <option value="">選択しない</option>
         <?php foreach ($talents as $t): ?>
+          <?php
+            $rn = trim((string)($t['invoice_name'] ?? ''));
+            $lbl = $t['name'] . ($rn !== '' && $rn !== $t['name'] ? '（' . $rn . '）' : '');
+          ?>
           <option value="<?= h((string)$t['id']) ?>" <?= selected($row['talent_id'], $t['id']) ?>>
-            <?= h($t['name']) ?>
+            <?= h($lbl) ?>
           </option>
         <?php endforeach; ?>
       </select>

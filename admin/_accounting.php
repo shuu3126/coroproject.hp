@@ -139,11 +139,14 @@ function accounting_threshold_yen() {
 }
 
 function accounting_list_talents($pdo, $includeUnpublished = true) {
-    $sql = 'SELECT id, name, kana, talent_group, status, debut, last_active, avatar, bio, long_bio_json, tags_json, sort_order, is_published FROM talents';
+    $sql = 'SELECT t.id, t.name, t.kana, t.talent_group, t.status, t.debut, t.last_active, t.avatar, t.bio, t.long_bio_json, t.tags_json, t.sort_order, t.is_published,
+                   COALESCE(ts.invoice_name, \'\') AS invoice_name
+            FROM talents t
+            LEFT JOIN accounting_talent_settings ts ON ts.talent_id = t.id';
     if (!$includeUnpublished) {
-        $sql .= ' WHERE is_published = 1';
+        $sql .= ' WHERE t.is_published = 1';
     }
-    $sql .= ' ORDER BY sort_order ASC, debut ASC, name ASC';
+    $sql .= ' ORDER BY t.sort_order ASC, t.debut ASC, t.name ASC';
     return $pdo->query($sql)->fetchAll();
 }
 
