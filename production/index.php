@@ -153,19 +153,21 @@ try {
     <main id="top">
       <!-- ===== Hero ===== -->
       <section class="hero">
-        <div class="hero-bg" aria-hidden="true"></div>
+        <div class=”hero-bg” aria-hidden=”true”></div>
+        <div class=”hero-deco-bg” aria-hidden=”true”>
+          <span class=”deco-bg-word deco-bg-word--a”>VTUBER</span>
+          <span class=”deco-bg-word deco-bg-word--b”>PRODUCTION</span>
+          <span class=”deco-bg-word deco-bg-word--c”>STREAMING</span>
+          <span class=”deco-bg-word deco-bg-word--d”>ころぷろ</span>
+          <span class=”deco-bg-word deco-bg-word--e”>LIVE</span>
+        </div>
 
-        <div class="container hero-inner">
-          <div class="hero-copy">
-            <p class="hero-eyebrow">VTUBER PRODUCTION</p>
-            <h1 class="hero-title">ころぷろじぇくと！</h1>
-            <p class="hero-lead">“自分だけでは届かなかった場所へ”</p>
-            <p class="hero-sub">
-              紫とピンクをテーマに、配信・創作・企画のすべてを一緒に楽しむVTuberプロダクション。
-              あなたの「好き」を、もっと遠くまで届けます。
-            </p>
+        <div class=”container hero-inner”>
+          <div class=”hero-copy”>
+            <h1 class=”hero-title”>ころぷろじぇくと！</h1>
+            <p class=”hero-lead”>”自分だけでは届かなかった場所へ”</p>
 
-            <div class="hero-actions">
+            <div class=”hero-actions”>
               <a class="btn btn-primary" href="html/audition.html">オーディション</a>
               <a class="btn btn-outline" href="html/talents.php">タレントを見る</a>
             </div>
@@ -208,6 +210,44 @@ try {
           </div>
         </div>
       </section>
+
+      <!-- Ticker #1 -->
+      <div class="ticker-strip" aria-hidden="true">
+        <div class="ticker-track">
+          <span class="ticker-item">VTUBER PRODUCTION</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">ころぷろじぇくと！</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">#配信</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">#VTuber</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">#CoroProject</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">CORO PROJECT</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">自分だけでは届かなかった場所へ</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">TALENT MANAGEMENT</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">VTUBER PRODUCTION</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">ころぷろじぇくと！</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">#配信</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">#VTuber</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">#CoroProject</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">CORO PROJECT</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">自分だけでは届かなかった場所へ</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">TALENT MANAGEMENT</span>
+          <span class="ticker-sep">✦</span>
+        </div>
+      </div>
 
       <!-- ===== About ===== -->
       <section id="about" class="section section-about reveal">
@@ -285,6 +325,44 @@ try {
           </noscript>
         </div>
       </section>
+
+      <!-- Ticker #2 (reverse) -->
+      <div class="ticker-strip ticker-strip--rev" aria-hidden="true">
+        <div class="ticker-track">
+          <span class="ticker-item">TALENT</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">所属メンバー</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">DEBUT</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">STREAMING</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">VTuber</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">CREATOR</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">配信</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">COLLAB</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">TALENT</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">所属メンバー</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">DEBUT</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">STREAMING</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">VTuber</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">CREATOR</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">配信</span>
+          <span class="ticker-sep">✦</span>
+          <span class="ticker-item">COLLAB</span>
+          <span class="ticker-sep">✦</span>
+        </div>
+      </div>
 
       <!-- ===== Talents ===== -->
       <section id="talents" class="section section-talents reveal">

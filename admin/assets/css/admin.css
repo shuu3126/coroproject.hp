@@ -1440,4 +1440,137 @@ tbody tr:hover { background: rgba(0,0,0,.02); }
   .mail-left-nav { display: none; }
   .mail-compose-modal { width: 100%; right: 0; }
   .table-wrap { -webkit-overflow-scrolling: touch; }
+  .pending-cards { grid-template-columns: 1fr; }
+}
+
+/* ── Warning button ─────────────────────────────────────────────── */
+.warning-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--warning);
+  border: 1px solid rgba(217,119,6,.35);
+  border-radius: var(--radius-sm);
+  font: 600 12px/1 inherit;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  text-decoration: none;
+}
+.warning-btn:hover {
+  background: rgba(217,119,6,.08);
+  border-color: var(--warning);
+}
+
+/* ── Pending revenue summary ────────────────────────────────────── */
+.pending-summary { }
+.pending-summary-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.pending-summary-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sub);
+}
+.pending-summary-note {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.pending-cards {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.pending-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pending-card--ready { border-color: rgba(22,163,74,.4); }
+.pending-card--carry { border-color: rgba(217,119,6,.35); }
+.pending-card-name   { font-size: 13px; font-weight: 700; }
+.pending-card-amount {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  line-height: 1.1;
+  margin: 2px 0 0;
+}
+.pending-card--ready .pending-card-amount { color: var(--success); }
+.pending-card--carry .pending-card-amount { color: var(--warning); }
+.pending-card-months { font-size: 11px; color: var(--sub); margin-bottom: 2px; }
+.pending-card-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+}
+.pending-card--ready .pending-card-badge { background: #dcfce7; color: var(--success); }
+.pending-card--carry .pending-card-badge { background: #fef3c7; color: var(--warning); }
+.pending-card .primary-btn { font-size: 11px; padding: 6px 12px; margin-top: 2px; }
+
+/* ── Invoice revenue preview panel ─────────────────────────────── */
+.invoice-preview-box {
+  background: var(--surface-2);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.invoice-preview-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sub);
+  margin-bottom: 10px;
+}
+.invoice-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.invoice-preview-row:last-of-type { border-bottom: none; }
+.invoice-preview-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0 6px;
+  border-top: 2px solid var(--line-bright);
+  margin-top: 2px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.invoice-preview-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.invoice-preview-hint { font-size: 11px; color: var(--sub); }
+.invoice-preview-placeholder {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 10px;
 }

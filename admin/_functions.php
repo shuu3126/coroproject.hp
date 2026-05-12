@@ -200,6 +200,37 @@ function talent_status_is_active($status) {
     return !in_array($status, $inactiveWords, true);
 }
 
+function fetch_ogp_image_url($pageUrl) {
+    $pageUrl = trim((string)$pageUrl);
+    if ($pageUrl === '' || strpos($pageUrl, 'http') !== 0) return null;
+
+    $context = stream_context_create([
+        'http' => [
+            'timeout' => 8,
+            'user_agent' => 'Mozilla/5.0 (compatible; CoroBot/1.0)',
+            'follow_location' => true,
+            'max_redirects' => 3,
+        ],
+    ]);
+
+    $html = @file_get_contents($pageUrl, false, $context);
+    if (!is_string($html) || $html === '') return null;
+
+    // property="og:image" content="..." と content="..." property="og:image" の両パターンに対応
+    $patterns = [
+        '/<meta\s[^>]*property=["\']og:image["\'][^>]*content=["\'](https?:[^"\']+)["\']/si',
+        '/<meta\s[^>]*content=["\'](https?:[^"\']+)["\']\s[^>]*property=["\']og:image["\']/si',
+    ];
+
+    foreach ($patterns as $pat) {
+        if (preg_match($pat, $html, $m)) {
+            return htmlspecialchars_decode(trim($m[1]));
+        }
+    }
+
+    return null;
+}
+
 function start_page($title, $description = '') {
     global $page_title, $page_description, $baseUrl, $config, $pdo;
     $page_title = $title;

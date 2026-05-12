@@ -46,6 +46,23 @@ function news_lines_from_any_content($jsonOrText) {
 // Ensure targets column exists
 try { $pdo->exec("ALTER TABLE news ADD COLUMN targets VARCHAR(120) NOT NULL DEFAULT 'main,production'"); } catch (Exception $e) {}
 
+// OGP画像取得AJAXエンドポイント
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && (isset($_GET['action']) ? $_GET['action'] : '') === 'fetch_ogp') {
+    header('Content-Type: application/json; charset=utf-8');
+    $fetchUrl = trim((string)(isset($_GET['url']) ? $_GET['url'] : ''));
+    if ($fetchUrl === '') {
+        echo json_encode(['ok' => false, 'error' => 'URLが未入力です']);
+        exit;
+    }
+    $imgUrl = fetch_ogp_image_url($fetchUrl);
+    if ($imgUrl === null) {
+        echo json_encode(['ok' => false, 'error' => 'OGP画像が見つかりませんでした']);
+        exit;
+    }
+    echo json_encode(['ok' => true, 'url' => $imgUrl]);
+    exit;
+}
+
 $id = (isset($_GET['id']) ? trim((string)$_GET['id']) : '');
 $lookupTitle = (isset($_GET['lookup_title']) ? trim((string)$_GET['lookup_title']) : '');
 $lookupDate = (isset($_GET['lookup_date']) ? trim((string)$_GET['lookup_date']) : '');
@@ -155,6 +172,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         if ($upload !== null) {
             $thumb = $upload;
+        }
+
+        // 画像未設定かつURLがある場合、OGP画像を自動取得
+        if ($thumb === '' && $url !== '') {
+            $ogpImg = fetch_ogp_image_url($url);
+            if ($ogpImg !== null) {
+                $thumb = $ogpImg;
+            }
         }
 
         $contentJson = parse_text_lines_to_json($contentText);
@@ -275,8 +300,13 @@ start_page($isEdit ? 'ニュースを編集' : 'ニュースを追加', 'ニュ�
 
     <label>
       <span>関連URL</span>
-      <input type="text" name="url" value="<?= h($row['url']) ?>">
+      <input type="text" name="url" id="news-url" value="<?= h($row['url']) ?>">
     </label>
+
+    <div id="ogp-fetch-wrap" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <button type="button" id="ogp-fetch-btn" class="ghost-btn" style="font-size:.82em;">URLからOGP画像を取得</button>
+      <span id="ogp-fetch-status" style="font-size:.8em;color:#666;"></span>
+    </div>
 
     <div>
       <span style="font-size:.82em;font-weight:700;display:block;margin-bottom:8px;">掲載先（複数選択可）</span>
@@ -301,4 +331,60 @@ start_page($isEdit ? 'ニュースを編集' : 'ニュースを追加', 'ニュ�
     </div>
   </form>
 </main>
+<script>
+(function () {
+  var btn = document.getElementById('ogp-fetch-btn');
+  var status = document.getElementById('ogp-fetch-status');
+  var thumbInput = document.querySelector('input[name="thumb"]');
+  var thumbPreview = document.querySelector('.inline-preview');
+  var urlInput = document.getElementById('news-url');
+
+  if (!btn || !thumbInput || !urlInput) return;
+
+  btn.addEventListener('click', function () {
+    var url = urlInput.value.trim();
+    if (!url) {
+      status.textContent = 'URLを入力してください。';
+      status.style.color = '#c0392b';
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = '取得中...';
+    status.style.color = '#666';
+
+    var endpoint = '<?= h($baseUrl) ?>/news_edit.php?action=fetch_ogp&url=' + encodeURIComponent(url);
+    fetch(endpoint)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          thumbInput.value = data.url;
+          status.textContent = 'OGP画像を取得しました。';
+          status.style.color = '#27ae60';
+          // プレビュー更新
+          if (thumbPreview) {
+            thumbPreview.src = data.url;
+            thumbPreview.style.display = '';
+          } else {
+            var img = document.createElement('img');
+            img.className = 'inline-preview';
+            img.src = data.url;
+            img.alt = 'thumb';
+            thumbInput.closest('form').insertBefore(img, document.getElementById('ogp-fetch-wrap'));
+          }
+        } else {
+          status.textContent = data.error || 'OGP画像が見つかりませんでした。';
+          status.style.color = '#c0392b';
+        }
+      })
+      .catch(function () {
+        status.textContent = '取得に失敗しました。';
+        status.style.color = '#c0392b';
+      })
+      .finally(function () {
+        btn.disabled = false;
+      });
+  });
+})();
+</script>
 <?php end_page(); ?>

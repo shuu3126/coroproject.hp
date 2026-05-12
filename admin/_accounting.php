@@ -834,6 +834,74 @@ function accounting_save_journal($pdo, $userId, $id, $data) {
     return (int)$pdo->lastInsertId();
 }
 
+function accounting_fetch_all_revenues_with_status($pdo, $q = '') {
+    $sql = '
+        SELECT r.*,
+               t.name,
+               COALESCE(ts.invoice_name, t.name) AS invoice_name,
+               CASE WHEN im.id IS NOT NULL THEN 1 ELSE 0 END AS is_invoiced
+        FROM accounting_revenues r
+        JOIN talents t ON t.id = r.talent_id
+        LEFT JOIN accounting_talent_settings ts ON ts.talent_id = t.id
+        LEFT JOIN accounting_invoiced_months im
+            ON im.talent_id = r.talent_id
+            AND im.year = r.year
+            AND im.month = r.month
+    ';
+    $params = [];
+    if ($q !== '') {
+        $sql .= ' WHERE (t.name LIKE ? OR t.id LIKE ? OR r.memo LIKE ?)';
+        $params = ["%{$q}%", "%{$q}%", "%{$q}%"];
+    }
+    $sql .= ' ORDER BY r.year DESC, r.month DESC, t.name ASC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function accounting_get_pending_summaries($pdo, $fxRate) {
+    $stmt = $pdo->query('
+        SELECT r.talent_id, r.year, r.month, r.currency,
+               (r.amount_streaming + r.amount_goods + r.amount_sponsor) AS month_total,
+               COALESCE(ts.invoice_name, t.name) AS invoice_name,
+               COALESCE(ts.office_share_percent, 40) AS share_percent
+        FROM accounting_revenues r
+        JOIN talents t ON t.id = r.talent_id
+        LEFT JOIN accounting_talent_settings ts ON ts.talent_id = t.id
+        LEFT JOIN accounting_invoiced_months im
+            ON im.talent_id = r.talent_id
+            AND im.year = r.year
+            AND im.month = r.month
+        WHERE im.id IS NULL
+        ORDER BY r.talent_id, r.year, r.month
+    ');
+    $rows = $stmt->fetchAll();
+
+    $byTalent = [];
+    foreach ($rows as $row) {
+        $tid = (string)$row['talent_id'];
+        if (!isset($byTalent[$tid])) {
+            $byTalent[$tid] = [
+                'talent_id'     => $tid,
+                'invoice_name'  => (string)$row['invoice_name'],
+                'share_percent' => (float)$row['share_percent'],
+                'months'        => [],
+                'estimated_jpy' => 0.0,
+            ];
+        }
+        $monthLabel = sprintf('%04d-%02d', $row['year'], $row['month']);
+        if (!in_array($monthLabel, $byTalent[$tid]['months'], true)) {
+            $byTalent[$tid]['months'][] = $monthLabel;
+        }
+        $amountJpy = strtoupper((string)$row['currency']) === 'USD'
+            ? (float)$row['month_total'] * (float)$fxRate
+            : (float)$row['month_total'];
+        $byTalent[$tid]['estimated_jpy'] += $amountJpy * ($byTalent[$tid]['share_percent'] / 100.0);
+    }
+
+    return array_values($byTalent);
+}
+
 function accounting_fetch_categories($pdo, $kind = null) {
     $sql = 'SELECT * FROM accounting_journal_categories WHERE is_active = 1';
     $params = [];
