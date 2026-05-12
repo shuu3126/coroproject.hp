@@ -108,6 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         set_flash('error', '名前は必須です。');
         redirect_to($baseUrl . '/talent_edit.php' . ($isEdit ? '?id=' . urlencode($id) : ''));
     }
+
+    // 請求書の宛名が未設定の場合はタレント名を使用
+    if ($invoiceName === '') {
+        $invoiceName = $name;
+    }
     if ($talentId === '') {
         $talentId = $isEdit ? $id : generate_talent_id($pdo, $name, $id);
     }

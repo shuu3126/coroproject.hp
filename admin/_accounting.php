@@ -905,6 +905,211 @@ function accounting_get_pending_summaries($pdo, $fxRate) {
     return array_values($byTalent);
 }
 
+// ── Portal revenue functions ──────────────────────────────────
+
+function accounting_portal_pending_count($pdo) {
+    if (!admin_table_has_column($pdo, 'accounting_revenues', 'status')) return 0;
+    try {
+        return (int)$pdo->query("SELECT COUNT(*) FROM accounting_revenues WHERE status = 'pending'")->fetchColumn();
+    } catch (Exception $e) { return 0; }
+}
+
+function accounting_portal_confirm_revenue($pdo, $id, $userId) {
+    if (!admin_table_has_column($pdo, 'accounting_revenues', 'status')) return false;
+    try {
+        $pdo->prepare("UPDATE accounting_revenues SET status = 'confirmed', updated_by = ?, updated_at = NOW() WHERE id = ?")
+            ->execute([$userId, (int)$id]);
+        return true;
+    } catch (Exception $e) { return false; }
+}
+
+function accounting_portal_reject_revenue($pdo, $id, $userId, $note = '') {
+    if (!admin_table_has_column($pdo, 'accounting_revenues', 'status')) return false;
+    try {
+        $pdo->prepare("UPDATE accounting_revenues SET status = 'rejected', portal_note = ?, updated_by = ?, updated_at = NOW() WHERE id = ?")
+            ->execute([mb_substr(trim($note), 0, 1000), $userId, (int)$id]);
+        return true;
+    } catch (Exception $e) { return false; }
+}
+
+function accounting_portal_fetch_pending_list($pdo) {
+    if (!admin_table_has_column($pdo, 'accounting_revenues', 'status')) return [];
+    try {
+        $stmt = $pdo->query("
+            SELECT r.id, r.talent_id, r.year, r.month, r.currency,
+                   r.amount_streaming, r.amount_goods, r.amount_sponsor,
+                   r.evidence_path, r.portal_note, r.status, r.submitted_by, r.updated_at,
+                   COALESCE(ts.invoice_name, t.name) AS invoice_name
+            FROM accounting_revenues r
+            JOIN talents t ON t.id = r.talent_id
+            LEFT JOIN accounting_talent_settings ts ON ts.talent_id = t.id
+            WHERE r.status = 'pending'
+            ORDER BY r.updated_at ASC
+        ");
+        return $stmt->fetchAll();
+    } catch (Exception $e) { return []; }
+}
+
+// ── Portal account functions ──────────────────────────────────
+
+function accounting_portal_accounts_list($pdo) {
+    if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return [];
+    try {
+        $stmt = $pdo->query("
+            SELECT pa.*, t.name AS talent_name
+            FROM talent_portal_accounts pa
+            JOIN talents t ON t.id = pa.talent_id
+            ORDER BY pa.created_at DESC
+        ");
+        return $stmt->fetchAll();
+    } catch (Exception $e) { return []; }
+}
+
+function accounting_portal_account_create($pdo, $talentId, $loginId, $password, $userId) {
+    if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return ['error' => 'テーブルが存在しません。'];
+    try {
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+        $pdo->prepare("
+            INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, created_by)
+            VALUES (?, ?, ?, ?)
+        ")->execute([$talentId, trim($loginId), $hash, $userId]);
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'アカウント作成に失敗しました。'];
+    }
+}
+
+function accounting_portal_account_update($pdo, $id, $data, $userId) {
+    if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return ['error' => 'テーブルが存在しません。'];
+    try {
+        $sets = [];
+        $params = [];
+        if (isset($data['login_id'])) {
+            $sets[] = 'login_id = ?';
+            $params[] = trim($data['login_id']);
+        }
+        if (isset($data['password']) && $data['password'] !== '') {
+            $sets[] = 'password_hash = ?';
+            $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+        if (isset($data['is_active'])) {
+            $sets[] = 'is_active = ?';
+            $params[] = (int)$data['is_active'];
+        }
+        $sets[] = 'updated_by = ?';
+        $params[] = $userId;
+        $params[] = (int)$id;
+        $pdo->prepare("UPDATE talent_portal_accounts SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = ?")
+            ->execute($params);
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'アカウント更新に失敗しました。'];
+    }
+}
+
+function accounting_portal_account_delete($pdo, $id) {
+    if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return ['error' => 'テーブルが存在しません。'];
+    try {
+        $pdo->prepare("DELETE FROM talent_portal_accounts WHERE id = ?")->execute([(int)$id]);
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'アカウント削除に失敗しました。'];
+    }
+}
+
+// ── Portal notices functions ──────────────────────────────────
+
+function accounting_portal_notices_list($pdo) {
+    if (!admin_table_has_column($pdo, 'talent_portal_notices', 'id')) return [];
+    try {
+        $stmt = $pdo->query("
+            SELECT * FROM talent_portal_notices
+            ORDER BY COALESCE(published_at, created_at) DESC
+        ");
+        return $stmt->fetchAll();
+    } catch (Exception $e) { return []; }
+}
+
+function accounting_portal_notice_create($pdo, $title, $body, $isPublished, $userId) {
+    if (!admin_table_has_column($pdo, 'talent_portal_notices', 'id')) return ['error' => 'テーブルが存在しません。'];
+    try {
+        $publishedAt = $isPublished ? 'NOW()' : 'NULL';
+        $pdo->prepare("
+            INSERT INTO talent_portal_notices (title, body, is_published, published_at, created_by)
+            VALUES (?, ?, ?, {$publishedAt}, ?)
+        ")->execute([trim($title), trim($body), (int)$isPublished, $userId]);
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'お知らせ作成に失敗しました。'];
+    }
+}
+
+function accounting_portal_notice_update($pdo, $id, $data, $userId) {
+    if (!admin_table_has_column($pdo, 'talent_portal_notices', 'id')) return ['error' => 'テーブルが存在しません。'];
+    try {
+        $sets = [];
+        $params = [];
+        if (isset($data['title'])) {
+            $sets[] = 'title = ?';
+            $params[] = trim($data['title']);
+        }
+        if (isset($data['body'])) {
+            $sets[] = 'body = ?';
+            $params[] = trim($data['body']);
+        }
+        if (isset($data['is_published'])) {
+            $sets[] = 'is_published = ?';
+            $params[] = (int)$data['is_published'];
+            if ($data['is_published']) {
+                $sets[] = 'published_at = NOW()';
+            }
+        }
+        $sets[] = 'updated_by = ?';
+        $params[] = $userId;
+        $params[] = (int)$id;
+        $pdo->prepare("UPDATE talent_portal_notices SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = ?")
+            ->execute($params);
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'お知らせ更新に失敗しました。'];
+    }
+}
+
+function accounting_portal_notice_delete($pdo, $id) {
+    if (!admin_table_has_column($pdo, 'talent_portal_notices', 'id')) return ['error' => 'テーブルが存在しません。'];
+    try {
+        $pdo->prepare("DELETE FROM talent_portal_notices WHERE id = ?")->execute([(int)$id]);
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'お知らせ削除に失敗しました。'];
+    }
+}
+
+// ── Fix invoice names ───────────────────────────────────────
+
+function accounting_fix_empty_invoice_names($pdo) {
+    try {
+        $stmt = $pdo->query("
+            SELECT ts.talent_id, t.name
+            FROM accounting_talent_settings ts
+            JOIN talents t ON t.id = ts.talent_id
+            WHERE ts.invoice_name IS NULL OR ts.invoice_name = ''
+        ");
+        $rows = $stmt->fetchAll();
+        if (!$rows) return ['message' => '修正が必要なデータはありませんでした。'];
+
+        $updateStmt = $pdo->prepare("UPDATE accounting_talent_settings SET invoice_name = ? WHERE talent_id = ?");
+        $count = 0;
+        foreach ($rows as $row) {
+            $updateStmt->execute([$row['name'], $row['talent_id']]);
+            $count++;
+        }
+        return ['message' => "{$count}件の請求書宛名を修正しました。"];
+    } catch (Exception $e) {
+        return ['error' => '修正に失敗しました: ' . $e->getMessage()];
+    }
+}
+
 function accounting_fetch_categories($pdo, $kind = null) {
     $sql = 'SELECT * FROM accounting_journal_categories WHERE is_active = 1';
     $params = [];

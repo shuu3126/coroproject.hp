@@ -94,6 +94,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
           <a href="<?= h($adminRoot) ?>/talents.php" class="<?= _nav_is_active('talents.php', $adminRoot) ? 'active' : '' ?>">タレント管理</a>
           <a href="<?= h($adminRoot) ?>/news.php" class="<?= _nav_is_active('news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
           <a href="<?= h($adminRoot) ?>/accounting/revenues.php" class="<?= _nav_is_active('accounting/revenues.php', $adminRoot) ? 'active' : '' ?>">収益入力</a>
+          <a href="<?= h($adminRoot) ?>/talent_portal.php" class="<?= _nav_is_active('talent_portal.php', $adminRoot) ? 'active' : '' ?>">ポータルアカウント</a>
+          <a href="<?= h($adminRoot) ?>/notices.php" class="<?= _nav_is_active('notices.php', $adminRoot) ? 'active' : '' ?>">ポータルお知らせ</a>
         </div>
       </div>
 

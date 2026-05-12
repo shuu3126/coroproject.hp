@@ -388,3 +388,36 @@ CREATE TABLE IF NOT EXISTS inquiry_replies (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_inquiry_replies_inquiry (inquiry_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================
+-- Talent Portal（タレントポータル）
+-- ============================================================
+
+-- ※ accounting_revenues へのカラム追加は別ファイル admin/portal_migrate.sql を
+--   一度だけ実行してください（既存DBへの影響を分離するため）
+
+CREATE TABLE IF NOT EXISTS talent_portal_accounts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  talent_id VARCHAR(191) NOT NULL UNIQUE,
+  login_id VARCHAR(100) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  last_login_at DATETIME NULL,
+  login_attempts INT NOT NULL DEFAULT 0,
+  locked_until DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_talent_portal_accounts_talent (talent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS talent_portal_notices (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  body TEXT NOT NULL,
+  is_published TINYINT(1) NOT NULL DEFAULT 1,
+  published_at DATETIME NULL,
+  created_by BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_talent_portal_notices_published (is_published, published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -13,6 +13,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['action']) ? $_POST['
     redirect_to($baseUrl . '/accounting/revenues.php');
 }
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id > 0) {
+        if ($action === 'confirm') {
+            if (accounting_portal_confirm_revenue($pdo, $id, (int)$user['id'])) {
+                write_admin_log($pdo, (int)$user['id'], 'update', 'accounting_revenue', $id, '収益データを承認しました');
+                set_flash('success', '収益データを承認しました。');
+            } else {
+                set_flash('error', '承認に失敗しました。');
+            }
+        } elseif ($action === 'reject') {
+            $note = trim($_POST['reject_note'] ?? '');
+            if (accounting_portal_reject_revenue($pdo, $id, (int)$user['id'], $note)) {
+                write_admin_log($pdo, (int)$user['id'], 'update', 'accounting_revenue', $id, '収益データを却下しました');
+                set_flash('success', '収益データを却下しました。');
+            } else {
+                set_flash('error', '却下に失敗しました。');
+            }
+        }
+    }
+    redirect_to($baseUrl . '/accounting/revenues.php');
+}
+
 $q         = trim(isset($_GET['q']) ? $_GET['q'] : '');
 $rows      = accounting_fetch_all_revenues_with_status($pdo, $q);
 $settings  = load_app_settings($pdo, $config);
@@ -103,12 +127,13 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
             <th class="text-right">スポンサー</th>
             <th class="text-right">合計</th>
             <th>状態</th>
+            <th>ポータル</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
           <?php if (!$rows): ?>
-            <tr><td colspan="9" class="empty-state">まだ収益データがありません。</td></tr>
+            <tr><td colspan="10" class="empty-state">まだ収益データがありません。</td></tr>
           <?php endif; ?>
           <?php foreach ($rows as $row):
             $sum = (float)$row['amount_streaming'] + (float)$row['amount_goods'] + (float)$row['amount_sponsor'];
@@ -128,7 +153,30 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
                   <span class="status-badge warning">未請求</span>
                 <?php endif; ?>
               </td>
+              <td>
+                <?php
+                $portalStatus = $row['status'] ?? 'confirmed';
+                if ($portalStatus === 'pending') {
+                    echo '<span class="status-badge warning">確認待ち</span>';
+                } elseif ($portalStatus === 'confirmed') {
+                    echo '<span class="status-badge success">確定済</span>';
+                } elseif ($portalStatus === 'rejected') {
+                    echo '<span class="status-badge danger">要修正</span>';
+                } else {
+                    echo '<span class="status-badge muted">' . h($portalStatus) . '</span>';
+                }
+                ?>
+              </td>
               <td class="actions-inline">
+                <?php if (($row['status'] ?? 'confirmed') === 'pending'): ?>
+                  <form method="post" style="display:inline;">
+                    <input type="hidden" name="action" value="confirm">
+                    <input type="hidden" name="id" value="<?= h((string)$row['id']) ?>">
+                    <button class="primary-btn" type="submit" style="font-size:11px;padding:4px 8px;">承認</button>
+                  </form>
+                  <button class="danger-btn" type="button" style="font-size:11px;padding:4px 8px;"
+                          onclick="rejectRevenue(<?= (int)$row['id'] ?>, '<?= h($row['invoice_name']) ?>')">却下</button>
+                <?php endif; ?>
                 <a class="ghost-btn"
                    href="<?= h($baseUrl) ?>/accounting/revenue_edit.php?id=<?= urlencode((string)$row['id']) ?>">編集</a>
                 <form method="post" data-confirm="この収益データを削除しますか？">
@@ -145,4 +193,22 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
   </div>
 
 </main>
+
+<script>
+function rejectRevenue(id, name) {
+    const note = prompt('却下理由を入力してください（任意）：\n' + name + ' の収益データを却下します。');
+    if (note !== null) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="reject">
+            <input type="hidden" name="id" value="${id}">
+            <input type="hidden" name="reject_note" value="${note.replace(/"/g, '&quot;')}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
 <?php end_page(); ?>
