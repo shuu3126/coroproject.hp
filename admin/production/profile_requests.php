@@ -58,7 +58,7 @@ function admin_profile_apply_request($pdo, $request, $userId, $note = '') {
     try {
         $stmt = $pdo->prepare('
             UPDATE talents
-            SET name = ?, kana = ?, talent_group = ?, debut = ?, bio = ?,
+            SET name = ?, kana = ?, talent_group = ?, debut = ?, avatar = ?, bio = ?,
                 long_bio_json = ?, platforms_json = ?, links_json = ?, tags_json = ?,
                 updated_at = NOW()
             WHERE id = ?
@@ -68,6 +68,7 @@ function admin_profile_apply_request($pdo, $request, $userId, $note = '') {
             trim((string)($payload['kana'] ?? '')),
             trim((string)($payload['talent_group'] ?? '')),
             trim((string)($payload['debut'] ?? '')) ?: null,
+            trim((string)($payload['avatar'] ?? '')),
             trim((string)($payload['bio'] ?? '')),
             $longBioJson,
             $platformsJson,
@@ -200,6 +201,7 @@ start_page('HP掲載情報申請', 'タレント本人から送信された公�
             <tr><th>かな</th><td><?= h($payload['kana'] ?? '') ?></td></tr>
             <tr><th>グループ</th><td><?= h($payload['talent_group'] ?? '') ?></td></tr>
             <tr><th>デビュー日</th><td><?= h($payload['debut'] ?? '') ?></td></tr>
+            <tr><th>プロフィール画像</th><td><?= h($payload['avatar'] ?? '') ?></td></tr>
             <tr><th>短い紹介文</th><td style="white-space:pre-wrap;"><?= h($payload['bio'] ?? '') ?></td></tr>
             <tr><th>ロングプロフィール</th><td style="white-space:pre-wrap;"><?= h($payload['long_bio_text'] ?? '') ?></td></tr>
             <tr><th>配信プラットフォーム</th><td style="white-space:pre-wrap;"><?= h($payload['platforms_text'] ?? '') ?></td></tr>

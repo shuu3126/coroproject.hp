@@ -45,22 +45,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $errors[] = $result['error'];
         } elseif ($action === 'public_profile') {
-            $result = portal_submit_public_profile_request($pdo, $talent['talent_id'], [
-                'name'           => $_POST['name'] ?? '',
-                'kana'           => $_POST['kana'] ?? '',
-                'talent_group'   => $_POST['talent_group'] ?? '',
-                'debut'          => $_POST['debut'] ?? '',
-                'bio'            => $_POST['bio'] ?? '',
-                'long_bio_text'  => $_POST['long_bio_text'] ?? '',
-                'platforms_text' => $_POST['platforms_text'] ?? '',
-                'links_text'     => $_POST['links_text'] ?? '',
-                'tags_text'      => $_POST['tags_text'] ?? '',
-            ]);
-            if (isset($result['success'])) {
-                portal_flash_set('success', 'HP掲載情報の変更申請を送信しました。管理者の承認後にHPへ反映されます。');
-                portal_redirect($portalBase . '/settings.php');
+            $avatar = (string)($_POST['avatar'] ?? '');
+            if (isset($_FILES['avatar_file']) && $_FILES['avatar_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+                $upload = portal_upload_public_profile_image($_FILES['avatar_file'], $talent['talent_id']);
+                if (isset($upload['error'])) {
+                    $errors[] = $upload['error'];
+                } else {
+                    $avatar = $upload['path'];
+                }
             }
-            $errors[] = $result['error'];
+
+            if (!$errors) {
+                $result = portal_submit_public_profile_request($pdo, $talent['talent_id'], [
+                    'name'           => $_POST['name'] ?? '',
+                    'kana'           => $_POST['kana'] ?? '',
+                    'talent_group'   => $_POST['talent_group'] ?? '',
+                    'debut'          => $_POST['debut'] ?? '',
+                    'avatar'         => $avatar,
+                    'bio'            => $_POST['bio'] ?? '',
+                    'long_bio_text'  => $_POST['long_bio_text'] ?? '',
+                    'platforms_text' => $_POST['platforms_text'] ?? '',
+                    'links_text'     => $_POST['links_text'] ?? '',
+                    'tags_text'      => $_POST['tags_text'] ?? '',
+                ]);
+                if (isset($result['success'])) {
+                    portal_flash_set('success', 'HP掲載情報の変更申請を送信しました。管理者の承認後にHPへ反映されます。');
+                    portal_redirect($portalBase . '/settings.php');
+                }
+                $errors[] = $result['error'];
+            }
         }
     }
     if (($_POST['action'] ?? '') === 'public_profile') {
@@ -87,7 +100,7 @@ require __DIR__ . '/_header.php';
   </div>
 <?php endif; ?>
 
-<form method="post" class="portal-card">
+<form method="post" enctype="multipart/form-data" class="portal-card">
   <input type="hidden" name="_csrf" value="<?= portal_h(portal_csrf_token()) ?>">
   <input type="hidden" name="action" value="profile">
 
@@ -149,7 +162,7 @@ require __DIR__ . '/_header.php';
   <button class="portal-btn portal-btn-primary" type="submit">設定を保存する</button>
 </form>
 
-<form method="post" class="portal-card">
+<form method="post" enctype="multipart/form-data" class="portal-card">
   <input type="hidden" name="_csrf" value="<?= portal_h(portal_csrf_token()) ?>">
   <input type="hidden" name="action" value="public_profile">
 
@@ -200,6 +213,15 @@ require __DIR__ . '/_header.php';
     <div class="portal-form-group">
       <label for="public_debut">デビュー日</label>
       <input type="date" id="public_debut" name="debut" value="<?= portal_h($publicProfile['debut'] ?? '') ?>">
+    </div>
+  </div>
+
+  <input type="hidden" name="avatar" value="<?= portal_h($publicProfile['avatar'] ?? '') ?>">
+  <div class="portal-form-group">
+    <label for="public_avatar">プロフィール画像</label>
+    <input type="file" id="public_avatar" name="avatar_file" accept="image/*">
+    <div class="portal-form-note">
+      未選択の場合は現在の画像を維持します。画像変更も管理者の承認後に反映されます。
     </div>
   </div>
 

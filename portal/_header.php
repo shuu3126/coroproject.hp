@@ -40,6 +40,31 @@ $_portalPageTitle = isset($portalPageTitle) ? $portalPageTitle . ' | ころぷ�
     </div>
   </header>
 
+  <?php if ($_portalTalent): ?>
+  <nav class="portal-bottom-nav" aria-label="タレントポータル">
+    <a href="<?= portal_h($portalBase) ?>/dashboard.php"  class="<?= basename($_SERVER['SCRIPT_NAME']) === 'dashboard.php'  ? 'active' : '' ?>">
+      <span class="portal-bottom-icon" aria-hidden="true"></span>
+      <span>ホーム</span>
+    </a>
+    <a href="<?= portal_h($portalBase) ?>/submit.php"     class="<?= basename($_SERVER['SCRIPT_NAME']) === 'submit.php'     ? 'active' : '' ?>">
+      <span class="portal-bottom-icon" aria-hidden="true"></span>
+      <span>報告</span>
+    </a>
+    <a href="<?= portal_h($portalBase) ?>/history.php"    class="<?= basename($_SERVER['SCRIPT_NAME']) === 'history.php'    ? 'active' : '' ?>">
+      <span class="portal-bottom-icon" aria-hidden="true"></span>
+      <span>履歴</span>
+    </a>
+    <a href="<?= portal_h($portalBase) ?>/invoices.php"   class="<?= basename($_SERVER['SCRIPT_NAME']) === 'invoices.php'   ? 'active' : '' ?>">
+      <span class="portal-bottom-icon" aria-hidden="true"></span>
+      <span>書類</span>
+    </a>
+    <a href="<?= portal_h($portalBase) ?>/settings.php"   class="<?= basename($_SERVER['SCRIPT_NAME']) === 'settings.php'   ? 'active' : '' ?>">
+      <span class="portal-bottom-icon" aria-hidden="true"></span>
+      <span>設定</span>
+    </a>
+  </nav>
+  <?php endif; ?>
+
   <main class="portal-main">
 
     <?php if ($_portalFlash): ?>

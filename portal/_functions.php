@@ -319,6 +319,7 @@ function portal_submit_public_profile_request($pdo, $talent_id, $data) {
         'kana' => mb_substr(trim((string)($data['kana'] ?? '')), 0, 255),
         'talent_group' => mb_substr(trim((string)($data['talent_group'] ?? '')), 0, 255),
         'debut' => trim((string)($data['debut'] ?? '')),
+        'avatar' => mb_substr(trim((string)($data['avatar'] ?? '')), 0, 500),
         'bio' => mb_substr(trim((string)($data['bio'] ?? '')), 0, 2000),
         'long_bio_text' => mb_substr(trim((string)($data['long_bio_text'] ?? '')), 0, 6000),
         'platforms_text' => mb_substr(trim((string)($data['platforms_text'] ?? '')), 0, 6000),
@@ -344,6 +345,53 @@ function portal_submit_public_profile_request($pdo, $talent_id, $data) {
     } catch (Exception $e) {
         return ['error' => 'HP掲載情報の申請に失敗しました。時間をおいて再試行してください。'];
     }
+}
+
+function portal_upload_public_profile_image($file, $talent_id) {
+    if (!isset($file['tmp_name']) || (int)$file['error'] !== UPLOAD_ERR_OK) {
+        return ['error' => '画像のアップロードに失敗しました。'];
+    }
+
+    $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
+
+    if (!in_array($mime, $allowed, true)) {
+        return ['error' => 'JPG・PNG・GIF・WebPのみアップロードできます。'];
+    }
+
+    if ((int)$file['size'] > 10 * 1024 * 1024) {
+        return ['error' => '画像サイズは10MB以下にしてください。'];
+    }
+
+    $extMap = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp',
+    ];
+    $ext = $extMap[$mime] ?? 'jpg';
+    $ym = date('Ym');
+    $dir = PORTAL_UPLOAD_DIR . '/profile/' . $ym;
+
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+        file_put_contents($dir . '/.htaccess', "Options -Indexes\n<Files ~ \"\\.(php|phtml|php3|php4|php5|phps|phar)$\">\n  Deny from all\n</Files>\n");
+    }
+
+    $filename = sprintf(
+        '%s_profile_%s.%s',
+        preg_replace('/[^a-z0-9_\-]/', '', strtolower((string)$talent_id)),
+        bin2hex(random_bytes(6)),
+        $ext
+    );
+    $dest = $dir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        return ['error' => '画像の保存に失敗しました。'];
+    }
+
+    return ['path' => 'portal/uploads/profile/' . $ym . '/' . $filename];
 }
 
 function portal_change_password($pdo, $account_id, $talent_id, $current_password, $new_password, $new_password_confirm) {

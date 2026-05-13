@@ -48,7 +48,6 @@ CREATE TABLE IF NOT EXISTS talents (
   talent_group VARCHAR(255) NULL,
   status VARCHAR(100) NULL,
   debut DATE NULL,
-  last_active DATE NULL,
   avatar VARCHAR(500) NULL,
   bio TEXT NULL,
   long_bio_json LONGTEXT NULL,
