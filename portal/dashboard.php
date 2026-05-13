@@ -31,7 +31,7 @@ require __DIR__ . '/_header.php';
 
 <?php if ($notices): ?>
 <div class="portal-card">
-  <div class="portal-card-title">📢 お知らせ</div>
+  <div class="portal-card-title">お知らせ</div>
   <?php foreach ($notices as $notice): ?>
     <div class="portal-notice">
       <div class="portal-notice-title"><?= portal_h($notice['title']) ?></div>
@@ -62,7 +62,7 @@ require __DIR__ . '/_header.php';
 
 <div class="portal-grid-2">
   <div class="portal-card">
-    <div class="portal-card-title">💰 今月の収益を報告する</div>
+    <div class="portal-card-title">月次収益を報告する</div>
     <p style="font-size:13px;color:var(--sub);margin:0 0 16px;">
       配信収益・グッズ売上・スポンサー収入をまとめて報告できます。<br>
       エビデンス（スクリーンショット等）も一緒に添付してください。
@@ -73,7 +73,7 @@ require __DIR__ . '/_header.php';
   </div>
 
   <div class="portal-card">
-    <div class="portal-card-title">📄 請求書・領収書</div>
+    <div class="portal-card-title">請求書・領収書</div>
     <p style="font-size:13px;color:var(--sub);margin:0 0 16px;">
       過去に発行された請求書・領収書を確認・ダウンロードできます。
     </p>
@@ -81,11 +81,21 @@ require __DIR__ . '/_header.php';
       書類を確認する →
     </a>
   </div>
+
+  <div class="portal-card">
+    <div class="portal-card-title">登録情報</div>
+    <p style="font-size:13px;color:var(--sub);margin:0 0 16px;">
+      本名・連絡先・住所・振込口座を更新できます。管理画面のタレント情報にも反映されます。
+    </p>
+    <a class="portal-btn portal-btn-outline portal-btn-sm" href="<?= portal_h($portalBase) ?>/settings.php">
+      設定を開く →
+    </a>
+  </div>
 </div>
 
 <?php if ($history): ?>
 <div class="portal-card">
-  <div class="portal-card-title">📋 直近の提出履歴</div>
+  <div class="portal-card-title">直近の提出履歴</div>
   <div class="portal-table-wrap">
     <table class="portal-table">
       <thead>

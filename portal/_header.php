@@ -12,7 +12,7 @@ $_portalPageTitle = isset($portalPageTitle) ? $portalPageTitle . ' | ころぷ�
   <title><?= portal_h($_portalPageTitle) ?></title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="<?= portal_h($portalBase) ?>/../images/logo.png">
-  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260513">
+  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260513-2">
 </head>
 <body>
 
@@ -21,7 +21,7 @@ $_portalPageTitle = isset($portalPageTitle) ? $portalPageTitle . ' | ころぷ�
   <header class="portal-header">
     <div class="portal-header-inner">
       <a class="portal-brand" href="<?= portal_h($portalBase) ?>/dashboard.php">
-        <span class="portal-brand-name">ころぷろ</span>
+        <span class="portal-brand-name">CORO PROJECT</span>
         <span class="portal-brand-sub">タレントポータル</span>
       </a>
       <?php if ($_portalTalent): ?>
@@ -30,6 +30,7 @@ $_portalPageTitle = isset($portalPageTitle) ? $portalPageTitle . ' | ころぷ�
         <a href="<?= portal_h($portalBase) ?>/submit.php"     class="<?= basename($_SERVER['SCRIPT_NAME']) === 'submit.php'     ? 'active' : '' ?>">収益報告</a>
         <a href="<?= portal_h($portalBase) ?>/history.php"    class="<?= basename($_SERVER['SCRIPT_NAME']) === 'history.php'    ? 'active' : '' ?>">提出履歴</a>
         <a href="<?= portal_h($portalBase) ?>/invoices.php"   class="<?= basename($_SERVER['SCRIPT_NAME']) === 'invoices.php'   ? 'active' : '' ?>">請求書・領収書</a>
+        <a href="<?= portal_h($portalBase) ?>/settings.php"   class="<?= basename($_SERVER['SCRIPT_NAME']) === 'settings.php'   ? 'active' : '' ?>">設定</a>
       </nav>
       <div class="portal-user">
         <span class="portal-user-name"><?= portal_h($_portalTalent['talent_name']) ?></span>

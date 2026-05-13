@@ -1,1 +1,2 @@
-<?php echo realpath('.'); ?>
+<?php
+require __DIR__ . '/system/checkpath.php';

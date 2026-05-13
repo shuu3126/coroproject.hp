@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $flash = get_flash();
 $currentUser = current_admin_user();
 $adminRoot = $baseUrl;
@@ -16,9 +16,13 @@ if ($_scriptBasename === 'index.php'
     && strpos($_script, '/admin/accounting/') === false) {
     $_navSection = 'dashboard';
 } elseif (strpos($_script, '/admin/business') !== false)       $_navSection = 'business';
+elseif (strpos($_script, '/admin/crm') !== false)              $_navSection = 'business';
+elseif (strpos($_script, '/admin/production') !== false)       $_navSection = 'production';
+elseif (strpos($_script, '/admin/content') !== false)          $_navSection = 'production';
 elseif (strpos($_script, '/admin/creative') !== false)         $_navSection = 'creative';
 elseif (strpos($_script, '/admin/accounting') !== false)       $_navSection = 'accounting';
 elseif (strpos($_script, '/admin/mail/') !== false
+         || strpos($_script, '/admin/inquiries/') !== false
          || in_array($_scriptBasename, ['mail.php', 'mail_compose.php', 'mail_contacts.php', 'mail_detail.php', 'mail_settings.php', 'messages.php', 'message_detail.php'])) $_navSection = 'mail';
 elseif ($_scriptBasename === 'logs.php')                       $_navSection = 'logs';
 elseif ($_scriptBasename === 'settings.php')                   $_navSection = 'settings';
@@ -33,6 +37,7 @@ if (!function_exists('_nav_is_active')) {
 
 // 未読メール数（メール + お問い合わせ合算）
 $_nav_mail_unread = 0;
+$_nav_profile_request_pending = 0;
 if (isset($pdo) && $pdo instanceof PDO) {
     try {
         if (admin_table_has_column($pdo, 'mail_messages', 'status')) {
@@ -40,6 +45,9 @@ if (isset($pdo) && $pdo instanceof PDO) {
         }
         if (admin_table_has_column($pdo, 'inquiries', 'status')) {
             $_nav_mail_unread += (int)$pdo->query("SELECT COUNT(*) FROM inquiries WHERE status = 'unread'")->fetchColumn();
+        }
+        if (admin_table_has_column($pdo, 'talent_profile_change_requests', 'status')) {
+            $_nav_profile_request_pending = (int)$pdo->query("SELECT COUNT(*) FROM talent_profile_change_requests WHERE status = 'pending'")->fetchColumn();
         }
     } catch (Exception $e) {}
 }
@@ -58,7 +66,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
   <script>
     window.CORO_ADMIN_SESSION = <?= json_encode([
         'timeoutMs' => ((int)($adminSessionIdleTimeout ?? 3600)) * 1000,
-        'touchUrl' => rtrim($adminRoot, '/') . '/session_touch.php',
+        'touchUrl' => rtrim($adminRoot, '/') . '/system/session_touch.php',
         'logoutUrl' => rtrim($adminRoot, '/') . '/logout.php?reason=timeout',
     ], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
   </script>
@@ -91,11 +99,14 @@ if (isset($pdo) && $pdo instanceof PDO) {
           <span class="nav-arrow">›</span>
         </button>
         <div class="nav-section-items <?= $_navSection === 'production' ? 'open' : '' ?>">
-          <a href="<?= h($adminRoot) ?>/talents.php" class="<?= _nav_is_active('talents.php', $adminRoot) ? 'active' : '' ?>">タレント管理</a>
-          <a href="<?= h($adminRoot) ?>/news.php" class="<?= _nav_is_active('news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
+          <a href="<?= h($adminRoot) ?>/production/talents.php" class="<?= _nav_is_active('production/talents.php', $adminRoot) ? 'active' : '' ?>">タレント管理</a>
+          <a href="<?= h($adminRoot) ?>/content/news.php" class="<?= _nav_is_active('content/news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
           <a href="<?= h($adminRoot) ?>/accounting/revenues.php" class="<?= _nav_is_active('accounting/revenues.php', $adminRoot) ? 'active' : '' ?>">収益入力</a>
-          <a href="<?= h($adminRoot) ?>/talent_portal.php" class="<?= _nav_is_active('talent_portal.php', $adminRoot) ? 'active' : '' ?>">ポータルアカウント</a>
-          <a href="<?= h($adminRoot) ?>/notices.php" class="<?= _nav_is_active('notices.php', $adminRoot) ? 'active' : '' ?>">ポータルお知らせ</a>
+          <a href="<?= h($adminRoot) ?>/production/profile_requests.php" class="<?= _nav_is_active('production/profile_requests.php', $adminRoot) ? 'active' : '' ?>">
+            HP掲載情報申請<?= $_nav_profile_request_pending > 0 ? '（' . h((string)$_nav_profile_request_pending) . '）' : '' ?>
+          </a>
+          <a href="<?= h($adminRoot) ?>/production/talent_portal.php" class="<?= _nav_is_active('production/talent_portal.php', $adminRoot) ? 'active' : '' ?>">ポータルアカウント</a>
+          <a href="<?= h($adminRoot) ?>/production/notices.php" class="<?= _nav_is_active('production/notices.php', $adminRoot) ? 'active' : '' ?>">ポータルお知らせ</a>
         </div>
       </div>
 
@@ -110,8 +121,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
         <div class="nav-section-items <?= $_navSection === 'business' ? 'open' : '' ?>">
           <a href="<?= h($adminRoot) ?>/business/deals.php" class="<?= _nav_is_active('business/deals.php', $adminRoot) ? 'active' : '' ?>">案件管理</a>
           <a href="<?= h($adminRoot) ?>/business/ext_talents.php" class="<?= _nav_is_active('business/ext_talents.php', $adminRoot) ? 'active' : '' ?>">所属外VTuberリスト</a>
-          <a href="<?= h($adminRoot) ?>/clients.php" class="<?= _nav_is_active('clients.php', $adminRoot) ? 'active' : '' ?>">クライアント管理</a>
-          <a href="<?= h($adminRoot) ?>/news.php" class="<?= _nav_is_active('news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
+          <a href="<?= h($adminRoot) ?>/crm/clients.php" class="<?= _nav_is_active('crm/clients.php', $adminRoot) ? 'active' : '' ?>">クライアント管理</a>
+          <a href="<?= h($adminRoot) ?>/content/news.php" class="<?= _nav_is_active('content/news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
         </div>
       </div>
 
@@ -126,8 +137,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
         <div class="nav-section-items <?= $_navSection === 'creative' ? 'open' : '' ?>">
           <a href="<?= h($adminRoot) ?>/creative/projects.php" class="<?= _nav_is_active('creative/projects.php', $adminRoot) ? 'active' : '' ?>">制作案件管理</a>
           <a href="<?= h($adminRoot) ?>/creative/creators.php" class="<?= _nav_is_active('creative/creators.php', $adminRoot) ? 'active' : '' ?>">クリエイターリスト</a>
-          <a href="<?= h($adminRoot) ?>/clients.php" class="<?= _nav_is_active('clients.php', $adminRoot) ? 'active' : '' ?>">クライアント管理</a>
-          <a href="<?= h($adminRoot) ?>/news.php" class="<?= _nav_is_active('news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
+          <a href="<?= h($adminRoot) ?>/crm/clients.php" class="<?= _nav_is_active('crm/clients.php', $adminRoot) ? 'active' : '' ?>">クライアント管理</a>
+          <a href="<?= h($adminRoot) ?>/content/news.php" class="<?= _nav_is_active('content/news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
         </div>
       </div>
 
@@ -171,7 +182,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
 
       <!-- 操作ログ -->
       <div class="nav-section">
-        <a class="nav-section-toggle nav-direct-link <?= $_navSection === 'logs' ? 'active' : '' ?>" href="<?= h($adminRoot) ?>/logs.php">
+        <a class="nav-section-toggle nav-direct-link <?= $_navSection === 'logs' ? 'active' : '' ?>" href="<?= h($adminRoot) ?>/system/logs.php">
           <span class="nav-section-label">操作ログ</span>
           <span class="nav-arrow">›</span>
         </a>
@@ -186,14 +197,14 @@ if (isset($pdo) && $pdo instanceof PDO) {
           <span class="nav-arrow">›</span>
         </button>
         <div class="nav-section-items <?= $_navSection === 'settings' ? 'open' : '' ?>">
-          <a href="<?= h($adminRoot) ?>/settings.php#settings-general">全体設定</a>
-          <a href="<?= h($adminRoot) ?>/settings.php#settings-public-links">公開SNS・連絡先リンク</a>
-          <a href="<?= h($adminRoot) ?>/settings.php#settings-mail">メール送信設定</a>
-          <a href="<?= h($adminRoot) ?>/settings.php#settings-accounting">Production会計設定</a>
-          <a href="<?= h($adminRoot) ?>/settings.php#settings-pdf">PDF設定</a>
+          <a href="<?= h($adminRoot) ?>/system/settings.php#settings-general">全体設定</a>
+          <a href="<?= h($adminRoot) ?>/system/settings.php#settings-public-links">公開SNS・連絡先リンク</a>
+          <a href="<?= h($adminRoot) ?>/system/settings.php#settings-mail">メール送信設定</a>
+          <a href="<?= h($adminRoot) ?>/system/settings.php#settings-accounting">Production会計設定</a>
+          <a href="<?= h($adminRoot) ?>/system/settings.php#settings-pdf">PDF設定</a>
           <?php if ($_navCanManageUsers): ?>
-            <a href="<?= h($adminRoot) ?>/settings.php#settings-data-transfer">データ入出力</a>
-            <a href="<?= h($adminRoot) ?>/settings.php#settings-admin-users">ログインユーザー管理</a>
+            <a href="<?= h($adminRoot) ?>/system/settings.php#settings-data-transfer">データ入出力</a>
+            <a href="<?= h($adminRoot) ?>/system/settings.php#settings-admin-users">ログインユーザー管理</a>
           <?php endif; ?>
         </div>
       </div>

@@ -85,7 +85,7 @@ require __DIR__ . '/_header.php';
   <input type="hidden" name="_csrf" value="<?= portal_h(portal_csrf_token()) ?>">
 
   <div class="portal-card">
-    <div class="portal-card-title">📅 対象年月</div>
+    <div class="portal-card-title">対象年月</div>
     <div class="portal-form-row">
       <div class="portal-form-group">
         <label for="year">年</label>
@@ -118,7 +118,7 @@ require __DIR__ . '/_header.php';
   </div>
 
   <div class="portal-card">
-    <div class="portal-card-title">💰 収益内訳</div>
+    <div class="portal-card-title">収益内訳</div>
     <div class="portal-form-row">
       <div class="portal-form-group">
         <label for="amount_streaming">配信収益</label>
@@ -145,7 +145,7 @@ require __DIR__ . '/_header.php';
   </div>
 
   <div class="portal-card">
-    <div class="portal-card-title">📎 エビデンス（証拠資料）</div>
+    <div class="portal-card-title">エビデンス（証拠資料）</div>
     <div class="portal-upload-box" id="uploadBox">
       <input type="file" name="evidence" id="evidenceInput"
              accept=".jpg,.jpeg,.png,.gif,.webp,.pdf">
@@ -163,7 +163,7 @@ require __DIR__ . '/_header.php';
   </div>
 
   <div class="portal-card">
-    <div class="portal-card-title">💬 コメント（任意）</div>
+    <div class="portal-card-title">コメント（任意）</div>
     <div class="portal-form-group" style="margin:0;">
       <textarea id="portal_note" name="portal_note" rows="3"
                 placeholder="特記事項があれば記入してください（例：〇月はグッズ売上が多い月でした、など）"><?= portal_h($prefill['portal_note'] ?? $_POST['portal_note'] ?? '') ?></textarea>

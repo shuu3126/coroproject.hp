@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once dirname(__DIR__) . '/_bootstrap.php';
 require_admin_login();
 $user = current_admin_user();
@@ -103,7 +103,7 @@ start_page($isEdit ? '制作案件を編集' : '制作案件を追加', '');
             <option value="<?= h($c['id']) ?>" <?= selected($row['client_id'] ?? '', $c['id']) ?>><?= h($c['name']) ?></option>
           <?php endforeach; ?>
         </select>
-        <span class="help-text"><a href="<?= h($baseUrl) ?>/client_edit.php" target="_blank">新規クライアントを追加</a></span>
+        <span class="help-text"><a href="<?= h($baseUrl) ?>/crm/client_edit.php" target="_blank">新規クライアントを追加</a></span>
       </label>
       <label><span>担当クリエイター</span>
         <select name="creator_id">

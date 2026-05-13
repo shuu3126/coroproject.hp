@@ -43,17 +43,149 @@ function portal_revenue_status($status) {
 }
 
 function portal_get_talent_info($pdo, $talent_id) {
+    $extra = [];
+    foreach (portal_talent_profile_fields() as $field) {
+        $extra[] = _portal_table_has_column($pdo, 'accounting_talent_settings', $field)
+            ? 'ts.' . $field
+            : 'NULL AS ' . $field;
+    }
+
     $stmt = $pdo->prepare('
         SELECT t.id, t.name, t.avatar,
                COALESCE(ts.invoice_name, t.name) AS invoice_name,
                COALESCE(ts.office_share_percent, 40) AS office_share_percent,
-               ts.email, ts.bank_info
+               ts.email, ts.bank_info,
+               ' . implode(",\n               ", $extra) . '
         FROM talents t
         LEFT JOIN accounting_talent_settings ts ON ts.talent_id = t.id
         WHERE t.id = ?
     ');
     $stmt->execute([$talent_id]);
     return $stmt->fetch();
+}
+
+function portal_talent_profile_fields() {
+    return ['real_name', 'phone', 'postal_code', 'address', 'emergency_contact', 'profile_note'];
+}
+
+function portal_lines_from_json($json) {
+    $decoded = json_decode((string)$json, true);
+    if (!is_array($decoded)) {
+        return '';
+    }
+    $lines = [];
+    foreach ($decoded as $line) {
+        if (is_array($line)) {
+            continue;
+        }
+        $line = trim((string)$line);
+        if ($line !== '') {
+            $lines[] = $line;
+        }
+    }
+    return implode("\n", $lines);
+}
+
+function portal_parse_lines($text) {
+    $text = trim((string)$text);
+    if ($text === '') {
+        return [];
+    }
+    $lines = preg_split('/\R/u', $text);
+    $out = [];
+    foreach ($lines as $line) {
+        $line = trim((string)$line);
+        if ($line !== '') {
+            $out[] = $line;
+        }
+    }
+    return $out;
+}
+
+function portal_parse_pipe_lines($text, $leftKey, $rightKey) {
+    $rows = [];
+    foreach (portal_parse_lines($text) as $line) {
+        $parts = array_map('trim', explode('|', $line, 2));
+        if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
+            $rows[] = [$leftKey => mb_substr($parts[0], 0, 100), $rightKey => mb_substr($parts[1], 0, 500)];
+        }
+    }
+    return $rows;
+}
+
+function portal_pipe_lines_from_rows($rows, $leftKey, $rightKey) {
+    $lines = [];
+    foreach ((array)$rows as $row) {
+        $left = trim((string)($row[$leftKey] ?? ''));
+        $right = trim((string)($row[$rightKey] ?? ''));
+        if ($left !== '' || $right !== '') {
+            $lines[] = $left . '|' . $right;
+        }
+    }
+    return implode("\n", $lines);
+}
+
+function portal_profile_columns_ready($pdo) {
+    foreach (portal_talent_profile_fields() as $field) {
+        if (!_portal_table_has_column($pdo, 'accounting_talent_settings', $field)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function portal_profile_requests_ready($pdo) {
+    return _portal_table_has_column($pdo, 'talent_profile_change_requests', 'id');
+}
+
+function portal_fetch_public_profile($pdo, $talent_id) {
+    $stmt = $pdo->prepare('
+        SELECT id, name, kana, talent_group, status, debut, avatar, bio,
+               long_bio_json, tags_json
+        FROM talents
+        WHERE id = ?
+        LIMIT 1
+    ');
+    $stmt->execute([(string)$talent_id]);
+    $profile = $stmt->fetch();
+    if (!$profile) {
+        return null;
+    }
+
+    $stmt = $pdo->prepare('SELECT name, url FROM talent_platforms WHERE talent_id = ? ORDER BY id ASC');
+    $stmt->execute([(string)$talent_id]);
+    $platforms = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare('SELECT label, url FROM talent_links WHERE talent_id = ? ORDER BY id ASC');
+    $stmt->execute([(string)$talent_id]);
+    $links = $stmt->fetchAll();
+
+    $tags = json_decode((string)($profile['tags_json'] ?? '[]'), true);
+    $profile['long_bio_text'] = portal_lines_from_json($profile['long_bio_json'] ?? '[]');
+    $profile['tags_text'] = is_array($tags) ? implode(', ', array_filter(array_map('strval', $tags))) : '';
+    $profile['platforms_text'] = portal_pipe_lines_from_rows($platforms, 'name', 'url');
+    $profile['links_text'] = portal_pipe_lines_from_rows($links, 'label', 'url');
+
+    return $profile;
+}
+
+function portal_fetch_latest_public_profile_request($pdo, $talent_id) {
+    if (!portal_profile_requests_ready($pdo)) {
+        return null;
+    }
+    try {
+        $stmt = $pdo->prepare('
+            SELECT *
+            FROM talent_profile_change_requests
+            WHERE talent_id = ?
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        ');
+        $stmt->execute([(string)$talent_id]);
+        return $stmt->fetch() ?: null;
+    } catch (Exception $e) {
+        return null;
+    }
 }
 
 function portal_fetch_revenue_history($pdo, $talent_id) {
@@ -107,6 +239,154 @@ function portal_fetch_notices($pdo) {
         return $stmt->fetchAll();
     } catch (Exception $e) {
         return [];
+    }
+}
+
+function portal_update_talent_profile($pdo, $talent_id, $data) {
+    if (!portal_profile_columns_ready($pdo)) {
+        return ['error' => 'プロフィール用のDB更新が未実行です。運営に連絡してください。'];
+    }
+
+    $invoiceName      = mb_substr(trim((string)($data['invoice_name'] ?? '')), 0, 255);
+    $email            = mb_substr(trim((string)($data['email'] ?? '')), 0, 255);
+    $realName         = mb_substr(trim((string)($data['real_name'] ?? '')), 0, 255);
+    $phone            = mb_substr(trim((string)($data['phone'] ?? '')), 0, 50);
+    $postalCode       = mb_substr(trim((string)($data['postal_code'] ?? '')), 0, 20);
+    $address          = mb_substr(trim((string)($data['address'] ?? '')), 0, 2000);
+    $bankInfo         = mb_substr(trim((string)($data['bank_info'] ?? '')), 0, 2000);
+    $emergencyContact = mb_substr(trim((string)($data['emergency_contact'] ?? '')), 0, 2000);
+    $profileNote      = mb_substr(trim((string)($data['profile_note'] ?? '')), 0, 2000);
+
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return ['error' => 'メールアドレスの形式が正しくありません。'];
+    }
+
+    try {
+        $stmt = $pdo->prepare('SELECT name FROM talents WHERE id = ? LIMIT 1');
+        $stmt->execute([(string)$talent_id]);
+        $talentName = (string)$stmt->fetchColumn();
+        if ($invoiceName === '') {
+            $invoiceName = $realName !== '' ? $realName : $talentName;
+        }
+
+        $pdo->prepare('
+            INSERT INTO accounting_talent_settings
+                (talent_id, invoice_name, email, real_name, phone, postal_code, address, bank_info, emergency_contact, profile_note, updated_at)
+            VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ON DUPLICATE KEY UPDATE
+                invoice_name = VALUES(invoice_name),
+                email = VALUES(email),
+                real_name = VALUES(real_name),
+                phone = VALUES(phone),
+                postal_code = VALUES(postal_code),
+                address = VALUES(address),
+                bank_info = VALUES(bank_info),
+                emergency_contact = VALUES(emergency_contact),
+                profile_note = VALUES(profile_note),
+                updated_at = NOW()
+        ')->execute([
+            (string)$talent_id,
+            $invoiceName,
+            $email,
+            $realName,
+            $phone,
+            $postalCode,
+            $address,
+            $bankInfo,
+            $emergencyContact,
+            $profileNote,
+        ]);
+
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'プロフィールの保存に失敗しました。時間をおいて再試行してください。'];
+    }
+}
+
+function portal_submit_public_profile_request($pdo, $talent_id, $data) {
+    if (!portal_profile_requests_ready($pdo)) {
+        return ['error' => 'HP掲載情報申請用のDB更新が未実行です。運営に連絡してください。'];
+    }
+
+    $name = mb_substr(trim((string)($data['name'] ?? '')), 0, 255);
+    if ($name === '') {
+        return ['error' => '活動名を入力してください。'];
+    }
+
+    $payload = [
+        'name' => $name,
+        'kana' => mb_substr(trim((string)($data['kana'] ?? '')), 0, 255),
+        'talent_group' => mb_substr(trim((string)($data['talent_group'] ?? '')), 0, 255),
+        'debut' => trim((string)($data['debut'] ?? '')),
+        'bio' => mb_substr(trim((string)($data['bio'] ?? '')), 0, 2000),
+        'long_bio_text' => mb_substr(trim((string)($data['long_bio_text'] ?? '')), 0, 6000),
+        'platforms_text' => mb_substr(trim((string)($data['platforms_text'] ?? '')), 0, 6000),
+        'links_text' => mb_substr(trim((string)($data['links_text'] ?? '')), 0, 6000),
+        'tags_text' => mb_substr(trim((string)($data['tags_text'] ?? '')), 0, 1000),
+    ];
+
+    if ($payload['debut'] !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $payload['debut'])) {
+        return ['error' => 'デビュー日は正しい日付形式で入力してください。'];
+    }
+
+    try {
+        $pdo->prepare('
+            INSERT INTO talent_profile_change_requests
+                (talent_id, payload_json, status, created_at, updated_at)
+            VALUES
+                (?, ?, "pending", NOW(), NOW())
+        ')->execute([
+            (string)$talent_id,
+            json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'HP掲載情報の申請に失敗しました。時間をおいて再試行してください。'];
+    }
+}
+
+function portal_change_password($pdo, $account_id, $talent_id, $current_password, $new_password, $new_password_confirm) {
+    $current_password = (string)$current_password;
+    $new_password = (string)$new_password;
+    $new_password_confirm = (string)$new_password_confirm;
+
+    if ($current_password === '' || $new_password === '' || $new_password_confirm === '') {
+        return ['error' => '現在のパスワードと新しいパスワードを入力してください。'];
+    }
+    if ($new_password !== $new_password_confirm) {
+        return ['error' => '新しいパスワードが確認用と一致しません。'];
+    }
+    if (strlen($new_password) < 8) {
+        return ['error' => '新しいパスワードは8文字以上で設定してください。'];
+    }
+    if ($current_password === $new_password) {
+        return ['error' => '現在と異なるパスワードを設定してください。'];
+    }
+
+    try {
+        $stmt = $pdo->prepare('SELECT id, password_hash FROM talent_portal_accounts WHERE id = ? AND talent_id = ? LIMIT 1');
+        $stmt->execute([(int)$account_id, (string)$talent_id]);
+        $account = $stmt->fetch();
+        if (!$account || !password_verify($current_password, $account['password_hash'])) {
+            return ['error' => '現在のパスワードが正しくありません。'];
+        }
+
+        $sql = 'UPDATE talent_portal_accounts SET password_hash = ?, login_attempts = 0, locked_until = NULL, updated_at = NOW()';
+        if (_portal_table_has_column($pdo, 'talent_portal_accounts', 'password_changed_at')) {
+            $sql .= ', password_changed_at = NOW()';
+        }
+        $sql .= ' WHERE id = ? AND talent_id = ?';
+
+        $pdo->prepare($sql)->execute([
+            password_hash($new_password, PASSWORD_DEFAULT),
+            (int)$account_id,
+            (string)$talent_id,
+        ]);
+
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'パスワード変更に失敗しました。時間をおいて再試行してください。'];
     }
 }
 

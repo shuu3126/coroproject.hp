@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS talent_portal_accounts (
   last_login_at DATETIME NULL,
   login_attempts INT NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
+  password_changed_at DATETIME NULL,
   created_by BIGINT UNSIGNED NULL,
   updated_by BIGINT UNSIGNED NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -34,6 +35,20 @@ CREATE TABLE IF NOT EXISTS talent_portal_notices (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_talent_portal_notices_published (is_published, published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS talent_profile_change_requests (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  talent_id VARCHAR(191) NOT NULL,
+  payload_json LONGTEXT NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  admin_note TEXT NULL,
+  reviewed_by BIGINT UNSIGNED NULL,
+  reviewed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_talent_profile_requests_talent (talent_id),
+  INDEX idx_talent_profile_requests_status (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 DROP PROCEDURE IF EXISTS coro_add_column_if_missing;
@@ -92,8 +107,51 @@ CALL coro_add_column_if_missing(
 
 CALL coro_add_column_if_missing(
   'talent_portal_accounts',
+  'password_changed_at',
+  'DATETIME NULL AFTER `locked_until`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_portal_accounts',
   'updated_by',
   'BIGINT UNSIGNED NULL AFTER `created_by`'
+);
+
+-- accounting_talent_settings: タレント本人がポータルから更新するプロフィール
+CALL coro_add_column_if_missing(
+  'accounting_talent_settings',
+  'real_name',
+  'VARCHAR(255) NULL AFTER `email`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_talent_settings',
+  'phone',
+  'VARCHAR(50) NULL AFTER `real_name`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_talent_settings',
+  'postal_code',
+  'VARCHAR(20) NULL AFTER `phone`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_talent_settings',
+  'address',
+  'TEXT NULL AFTER `postal_code`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_talent_settings',
+  'emergency_contact',
+  'TEXT NULL AFTER `bank_info`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_talent_settings',
+  'profile_note',
+  'TEXT NULL AFTER `emergency_contact`'
 );
 
 CALL coro_add_column_if_missing(

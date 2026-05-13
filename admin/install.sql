@@ -435,3 +435,17 @@ CREATE TABLE IF NOT EXISTS talent_portal_notices (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_talent_portal_notices_published (is_published, published_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS talent_profile_change_requests (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  talent_id VARCHAR(191) NOT NULL,
+  payload_json LONGTEXT NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  admin_note TEXT NULL,
+  reviewed_by BIGINT UNSIGNED NULL,
+  reviewed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_talent_profile_requests_talent (talent_id),
+  INDEX idx_talent_profile_requests_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

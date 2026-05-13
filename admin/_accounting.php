@@ -1,6 +1,6 @@
 <?php
 function app_settings_defaults($config) {
-    return [
+    $setting = [
         'office_name'       => 'CORO PROJECT',
         'office_email'      => 'info@coroproject.jp',
         'public_social_x_url' => 'https://x.com/CoroProjectJP',
@@ -156,6 +156,10 @@ function accounting_find_talent($pdo, $talentId) {
     return $stmt->fetch();
 }
 
+function accounting_talent_profile_fields() {
+    return ['real_name', 'phone', 'postal_code', 'address', 'emergency_contact', 'profile_note'];
+}
+
 function accounting_get_talent_setting($pdo, $talentId) {
     $stmt = $pdo->prepare('SELECT * FROM accounting_talent_settings WHERE talent_id = ? LIMIT 1');
     $stmt->execute([(string)$talentId]);
@@ -173,25 +177,28 @@ function accounting_get_talent_setting($pdo, $talentId) {
         'memo' => $row ? (string)$row['memo'] : '',
         'is_active' => $row ? (int)$row['is_active'] : 1,
     ];
+
+    foreach (accounting_talent_profile_fields() as $field) {
+        $setting[$field] = ($row && array_key_exists($field, $row)) ? (string)$row[$field] : '';
+    }
+
+    return $setting;
 }
 
 function accounting_upsert_talent_setting($pdo, $talentId, $data, $userId) {
-    $stmt = $pdo->prepare('
-        INSERT INTO accounting_talent_settings
-            (talent_id, office_share_percent, invoice_name, email, bank_info, memo, is_active, updated_by, updated_at)
-        VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-        ON DUPLICATE KEY UPDATE
-            office_share_percent = VALUES(office_share_percent),
-            invoice_name = VALUES(invoice_name),
-            email = VALUES(email),
-            bank_info = VALUES(bank_info),
-            memo = VALUES(memo),
-            is_active = VALUES(is_active),
-            updated_by = VALUES(updated_by),
-            updated_at = NOW()
-    ');
-    $stmt->execute([
+    $columns = ['talent_id', 'office_share_percent', 'invoice_name', 'email', 'bank_info', 'memo', 'is_active', 'updated_by', 'updated_at'];
+    $values  = ['?', '?', '?', '?', '?', '?', '?', '?', 'NOW()'];
+    $updates = [
+        'office_share_percent = VALUES(office_share_percent)',
+        'invoice_name = VALUES(invoice_name)',
+        'email = VALUES(email)',
+        'bank_info = VALUES(bank_info)',
+        'memo = VALUES(memo)',
+        'is_active = VALUES(is_active)',
+        'updated_by = VALUES(updated_by)',
+        'updated_at = NOW()',
+    ];
+    $params = [
         (string)$talentId,
         (float)$data['office_share_percent'],
         (string)$data['invoice_name'],
@@ -200,7 +207,28 @@ function accounting_upsert_talent_setting($pdo, $talentId, $data, $userId) {
         (string)$data['memo'],
         !empty($data['is_active']) ? 1 : 0,
         $userId ?: null,
-    ]);
+    ];
+
+    foreach (accounting_talent_profile_fields() as $field) {
+        if (!admin_table_has_column($pdo, 'accounting_talent_settings', $field)) {
+            continue;
+        }
+        $columns[] = $field;
+        $values[] = '?';
+        $updates[] = "{$field} = VALUES({$field})";
+        $params[] = (string)($data[$field] ?? '');
+    }
+
+    $sql = '
+        INSERT INTO accounting_talent_settings
+            (' . implode(', ', $columns) . ')
+        VALUES
+            (' . implode(', ', $values) . ')
+        ON DUPLICATE KEY UPDATE
+            ' . implode(",\n            ", $updates);
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
 }
 
 function accounting_next_invoice_no($pdo) {
@@ -1021,15 +1049,20 @@ function accounting_portal_account_create($pdo, $talentId, $loginId, $password, 
     if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return ['error' => 'テーブルが存在しません。'];
     try {
         $hash = password_hash($password, PASSWORD_DEFAULT);
+        $hasPasswordChangedAt = admin_table_has_column($pdo, 'talent_portal_accounts', 'password_changed_at');
         if (admin_table_has_column($pdo, 'talent_portal_accounts', 'created_by')) {
+            $passwordColumn = $hasPasswordChangedAt ? ', password_changed_at' : '';
+            $passwordValue  = $hasPasswordChangedAt ? ', NOW()' : '';
             $pdo->prepare("
-                INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active, created_by)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active, created_by{$passwordColumn})
+                VALUES (?, ?, ?, ?, ?{$passwordValue})
             ")->execute([$talentId, trim($loginId), $hash, (int)$isActive, $userId]);
         } else {
+            $passwordColumn = $hasPasswordChangedAt ? ', password_changed_at' : '';
+            $passwordValue  = $hasPasswordChangedAt ? ', NOW()' : '';
             $pdo->prepare("
-                INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active{$passwordColumn})
+                VALUES (?, ?, ?, ?{$passwordValue})
             ")->execute([$talentId, trim($loginId), $hash, (int)$isActive]);
         }
         return ['success' => true];
@@ -1050,6 +1083,9 @@ function accounting_portal_account_update($pdo, $id, $data, $userId) {
         if (isset($data['password']) && $data['password'] !== '') {
             $sets[] = 'password_hash = ?';
             $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
+            if (admin_table_has_column($pdo, 'talent_portal_accounts', 'password_changed_at')) {
+                $sets[] = 'password_changed_at = NOW()';
+            }
         }
         if (isset($data['is_active'])) {
             $sets[] = 'is_active = ?';

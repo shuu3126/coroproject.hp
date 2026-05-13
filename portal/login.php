@@ -27,13 +27,13 @@ $flash = portal_flash_get();
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ログイン | ころぷろタレントポータル</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260513">
+  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260513-2">
 </head>
 <body class="portal-login-body">
 
 <div class="portal-login-card">
   <div class="portal-login-brand">
-    <span class="portal-login-brand-name">ころぷろじぇくと！</span>
+    <span class="portal-login-brand-name">CORO PROJECT</span>
     <span class="portal-login-brand-sub">タレントポータル</span>
   </div>
 

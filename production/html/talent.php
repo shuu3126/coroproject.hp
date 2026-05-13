@@ -223,10 +223,6 @@ if (!empty($talent['long_bio_json'])) {
                 <dt>Debut</dt>
                 <dd><?= esc($talent['debut'] ?: '-') ?></dd>
               </div>
-              <div>
-                <dt>Last Active</dt>
-                <dd><?= esc($talent['last_active'] ?: '-') ?></dd>
-              </div>
               <?php if ($extra['birthday']): ?>
               <div>
                 <dt>Birthday</dt>
