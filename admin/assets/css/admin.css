@@ -559,6 +559,36 @@ select {
   border-color: var(--danger);
 }
 
+.ghost-btn:disabled,
+.danger-btn:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.danger-btn:disabled:hover {
+  background: transparent;
+  border-color: rgba(248,113,113,.3);
+}
+
+.journal-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  min-width: 136px;
+}
+
+.journal-actions form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.journal-actions .ghost-btn,
+.journal-actions .danger-btn {
+  min-width: 60px;
+  min-height: 36px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
 /* ── Table ───────────────────────────────────────────────────── */
 .table-wrap { overflow-x: auto; }
 
