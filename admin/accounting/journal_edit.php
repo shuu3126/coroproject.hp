@@ -31,6 +31,7 @@ $row = [
     'talent_id' => '',
     'evidence_path' => '',
     'source' => 'manual',
+    'invoice_id' => null,
 ];
 
 if ($isEdit) {
@@ -51,25 +52,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $talentId = trim((string)(isset($_POST['talent_id']) ? $_POST['talent_id'] : ''));
     $talentId = $talentId !== '' ? $talentId : null;
     $evidence = trim(isset($_POST['evidence_path']) ? $_POST['evidence_path'] : '');
+    $isInvoiceAuto = $isEdit && (isset($row['source']) ? $row['source'] : '') === 'invoice_auto';
 
     try {
-        $upload = save_uploaded_file_any(
-            $_FILES['evidence_file'] ?? [],
-            $config['uploads']['accounting_root'] . '/journal',
-            $config['uploads']['accounting_prefix'] . '/journal',
-            'journal-' . $date
-        );
-        if ($upload) {
-            $evidence = $upload['path'];
+        if (!$isInvoiceAuto) {
+            $upload = save_uploaded_file_any(
+                $_FILES['evidence_file'] ?? [],
+                $config['uploads']['accounting_root'] . '/journal',
+                $config['uploads']['accounting_prefix'] . '/journal',
+                'journal-' . $date
+            );
+            if ($upload) {
+                $evidence = $upload['path'];
+            }
         }
 
         if ($isEdit) {
-            $stmt = $pdo->prepare('
-                UPDATE accounting_journal_entries
-                SET `date` = ?, kind = ?, category = ?, amount = ?, description = ?, talent_id = ?, evidence_path = ?, updated_by = ?, updated_at = NOW()
-                WHERE id = ?
-            ');
-            $stmt->execute([$date, $kind, $category, $amount, $description, $talentId, $evidence, $user['id'], $id]);
+            if ($isInvoiceAuto) {
+                $stmt = $pdo->prepare('
+                    UPDATE accounting_journal_entries
+                    SET talent_id = ?, updated_by = ?, updated_at = NOW()
+                    WHERE id = ?
+                ');
+                $stmt->execute([$talentId, $user['id'], $id]);
+
+                if (!empty($row['invoice_id'])) {
+                    $pdo->prepare('UPDATE accounting_invoices SET talent_id = ?, updated_by = ?, updated_at = NOW() WHERE id = ?')
+                        ->execute([$talentId, $user['id'], (int)$row['invoice_id']]);
+                }
+            } else {
+                $stmt = $pdo->prepare('
+                    UPDATE accounting_journal_entries
+                    SET `date` = ?, kind = ?, category = ?, amount = ?, description = ?, talent_id = ?, evidence_path = ?, updated_by = ?, updated_at = NOW()
+                    WHERE id = ?
+                ');
+                $stmt->execute([$date, $kind, $category, $amount, $description, $talentId, $evidence, $user['id'], $id]);
+            }
 
             write_admin_log($pdo, (int)$user['id'], 'edit', 'accounting_journal', $id, '記帳を更新しました');
         } else {
@@ -94,18 +112,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 start_page($isEdit ? '記帳を編集' : '記帳を追加', '手入力で収入・支出の記録を追加します。');
+$isInvoiceAuto = $isEdit && (isset($row['source']) ? $row['source'] : '') === 'invoice_auto';
 ?>
 <main class="page-container narrow">
   <form method="post" enctype="multipart/form-data" class="card form-card form-stack">
+    <?php if ($isInvoiceAuto): ?>
+      <div class="alert-box alert-success" style="margin:0;">
+        請求書から作成された自動記帳です。金額や内容は請求書に連動するため、ここではタレント紐付けのみ変更できます。
+      </div>
+    <?php endif; ?>
+
     <div class="form-grid two">
       <label>
         <span>日付</span>
-        <input type="date" name="date" value="<?= h($row['date']) ?>">
+        <input type="date" name="date" value="<?= h($row['date']) ?>" <?= $isInvoiceAuto ? 'disabled' : '' ?>>
       </label>
 
       <label>
         <span>種別</span>
-        <select name="kind">
+        <select name="kind" <?= $isInvoiceAuto ? 'disabled' : '' ?>>
           <option value="income" <?= selected($row['kind'], 'income') ?>>収入</option>
           <option value="expense" <?= selected($row['kind'], 'expense') ?>>支出</option>
         </select>
@@ -115,7 +140,7 @@ start_page($isEdit ? '記帳を編集' : '記帳を追加', '手入力で収入�
     <div class="form-grid two">
       <label>
         <span>カテゴリ</span>
-        <input type="text" list="category-list" name="category" value="<?= h($row['category']) ?>">
+        <input type="text" list="category-list" name="category" value="<?= h($row['category']) ?>" <?= $isInvoiceAuto ? 'disabled' : '' ?>>
         <datalist id="category-list">
           <?php foreach ($categories as $c): ?>
             <option value="<?= h($c['name']) ?>">
@@ -125,13 +150,13 @@ start_page($isEdit ? '記帳を編集' : '記帳を追加', '手入力で収入�
 
       <label>
         <span>金額</span>
-        <input type="number" step="0.01" name="amount" value="<?= h((string)$row['amount']) ?>">
+        <input type="number" step="0.01" name="amount" value="<?= h((string)$row['amount']) ?>" <?= $isInvoiceAuto ? 'disabled' : '' ?>>
       </label>
     </div>
 
     <label>
       <span>内容</span>
-      <textarea name="description" rows="4"><?= h($row['description']) ?></textarea>
+      <textarea name="description" rows="4" <?= $isInvoiceAuto ? 'disabled' : '' ?>><?= h($row['description']) ?></textarea>
     </label>
 
     <label>
@@ -152,12 +177,12 @@ start_page($isEdit ? '記帳を編集' : '記帳を追加', '手入力で収入�
 
     <label>
       <span>証憑ファイルパス</span>
-      <input type="text" name="evidence_path" value="<?= h($row['evidence_path']) ?>">
+      <input type="text" name="evidence_path" value="<?= h($row['evidence_path']) ?>" <?= $isInvoiceAuto ? 'disabled' : '' ?>>
     </label>
 
     <label>
       <span>証憑ファイルをアップロード</span>
-      <input type="file" name="evidence_file">
+      <input type="file" name="evidence_file" <?= $isInvoiceAuto ? 'disabled' : '' ?>>
     </label>
 
     <div class="actions-inline">

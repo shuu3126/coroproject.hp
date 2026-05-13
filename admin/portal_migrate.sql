@@ -1,17 +1,11 @@
 -- ============================================================
 -- Talent Portal マイグレーション
 -- 既存DBにタレントポータル用テーブル・カラムを追加します。
--- ※ 一度だけ実行してください。
+--
+-- phpMyAdmin / 古いMySQLでも実行できるように、
+-- ALTER TABLE ... ADD COLUMN IF NOT EXISTS は使っていません。
+-- ※ 一度実行後に再実行しても、既存カラムはスキップされます。
 -- ============================================================
-
--- status: 'pending'（タレント申告・要確認）/ 'confirmed'（管理者確定）/ 'rejected'（要修正）
--- submitted_by: 'admin' / 'talent'
--- portal_note: タレントからのコメント
-
-ALTER TABLE accounting_revenues
-  ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'confirmed' AFTER memo,
-  ADD COLUMN IF NOT EXISTS submitted_by VARCHAR(20) NOT NULL DEFAULT 'admin' AFTER status,
-  ADD COLUMN IF NOT EXISTS portal_note TEXT NULL AFTER submitted_by;
 
 CREATE TABLE IF NOT EXISTS talent_portal_accounts (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -42,18 +36,70 @@ CREATE TABLE IF NOT EXISTS talent_portal_notices (
   INDEX idx_talent_portal_notices_published (is_published, published_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 途中版のマイグレーションを実行済みの場合に不足列を補います。
-ALTER TABLE talent_portal_accounts
-  ADD COLUMN IF NOT EXISTS created_by BIGINT UNSIGNED NULL AFTER locked_until,
-  ADD COLUMN IF NOT EXISTS updated_by BIGINT UNSIGNED NULL AFTER created_by;
+DROP PROCEDURE IF EXISTS coro_add_column_if_missing;
 
-ALTER TABLE talent_portal_notices
-  ADD COLUMN IF NOT EXISTS updated_by BIGINT UNSIGNED NULL AFTER created_by;
+DELIMITER //
+CREATE PROCEDURE coro_add_column_if_missing(
+  IN p_table_name VARCHAR(64),
+  IN p_column_name VARCHAR(64),
+  IN p_column_definition TEXT
+)
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+      FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = p_table_name
+       AND COLUMN_NAME = p_column_name
+  ) THEN
+    SET @coro_sql = CONCAT(
+      'ALTER TABLE `', REPLACE(p_table_name, '`', '``'),
+      '` ADD COLUMN `', REPLACE(p_column_name, '`', '``'),
+      '` ', p_column_definition
+    );
+    PREPARE coro_stmt FROM @coro_sql;
+    EXECUTE coro_stmt;
+    DEALLOCATE PREPARE coro_stmt;
+  END IF;
+END//
+DELIMITER ;
 
--- MySQL 5.x（ADD COLUMN IF NOT EXISTS 非対応）の場合は下記を使用:
--- ALTER TABLE accounting_revenues ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'confirmed' AFTER memo;
--- ALTER TABLE accounting_revenues ADD COLUMN submitted_by VARCHAR(20) NOT NULL DEFAULT 'admin' AFTER status;
--- ALTER TABLE accounting_revenues ADD COLUMN portal_note TEXT NULL AFTER submitted_by;
--- ALTER TABLE talent_portal_accounts ADD COLUMN created_by BIGINT UNSIGNED NULL AFTER locked_until;
--- ALTER TABLE talent_portal_accounts ADD COLUMN updated_by BIGINT UNSIGNED NULL AFTER created_by;
--- ALTER TABLE talent_portal_notices ADD COLUMN updated_by BIGINT UNSIGNED NULL AFTER created_by;
+-- accounting_revenues: タレント申告ステータス
+CALL coro_add_column_if_missing(
+  'accounting_revenues',
+  'status',
+  'VARCHAR(20) NOT NULL DEFAULT ''confirmed'' AFTER `memo`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_revenues',
+  'submitted_by',
+  'VARCHAR(20) NOT NULL DEFAULT ''admin'' AFTER `status`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_revenues',
+  'portal_note',
+  'TEXT NULL AFTER `submitted_by`'
+);
+
+-- 途中版を実行済みの場合の不足列補完
+CALL coro_add_column_if_missing(
+  'talent_portal_accounts',
+  'created_by',
+  'BIGINT UNSIGNED NULL AFTER `locked_until`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_portal_accounts',
+  'updated_by',
+  'BIGINT UNSIGNED NULL AFTER `created_by`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_portal_notices',
+  'updated_by',
+  'BIGINT UNSIGNED NULL AFTER `created_by`'
+);
+
+DROP PROCEDURE IF EXISTS coro_add_column_if_missing;
