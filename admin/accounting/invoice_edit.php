@@ -192,7 +192,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo, $config, $user['id'],
                     $clientId ?: null, $year, $month,
                     $subject, $details, $note,
-                    $division, $dealId, $projectId
+                    $division, $dealId, $projectId,
+                    trim($form['talent_id']) ?: null
                 );
             } else {
                 $talentId = trim($form['talent_id']);
@@ -267,6 +268,23 @@ start_page($pageTitle, '請求書を作成します。');
             <option value="">— 未選択（直接入力）—</option>
             <?php foreach ($clients as $c): ?>
               <option value="<?= h($c['id']) ?>" <?= selected($form['client_id'], $c['id']) ?>><?= h($c['name']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </label>
+        <label><span>関連タレント（任意）</span>
+          <select name="talent_id">
+            <option value="">選択しない</option>
+            <?php foreach ($talents as $t): ?>
+              <?php
+                $realName = trim((string)($t['invoice_name'] ?? ''));
+                $label = $t['name'];
+                if ($realName !== '' && $realName !== $t['name']) {
+                    $label .= '（' . $realName . '）';
+                }
+              ?>
+              <option value="<?= h((string)$t['id']) ?>" <?= selected($form['talent_id'], (string)$t['id']) ?>>
+                <?= h($label) ?>
+              </option>
             <?php endforeach; ?>
           </select>
         </label>

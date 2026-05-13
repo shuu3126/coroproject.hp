@@ -9,13 +9,9 @@ $settings = load_app_settings($pdo, $config);
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $action = trim($_POST['action'] ?? 'save');
 
-    if ($action === 'test_pop') {
+    if ($action === 'test_receive') {
         try {
-            $fp = admin_mail_pop3_connect($settings);
-            @fwrite($fp, "QUIT\r\n");
-            if (is_resource($fp)) {
-                fclose($fp);
-            }
+            admin_mail_test_receive_connection($settings);
             set_flash('success', '受信サーバーへの接続に成功しました。');
         } catch (Exception $e) {
             set_flash('error', '受信サーバー接続に失敗しました: ' . $e->getMessage());
@@ -41,7 +37,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         redirect_to($baseUrl . '/mail/settings.php');
     }
 
-    // SMTP/POP3設定の保存
+    // SMTP/受信設定の保存
     $fields = [
         'smtp_host',
         'smtp_port',
@@ -50,6 +46,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         'smtp_pass',
         'smtp_from_email',
         'smtp_from_name',
+        'mail_receive_protocol',
         'mail_pop_host',
         'mail_pop_port',
         'mail_pop_encryption',
@@ -80,6 +77,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     if ((int)$map['mail_sync_limit'] <= 0) {
         $map['mail_sync_limit'] = '50';
     }
+    if (!in_array($map['mail_receive_protocol'], ['imap', 'pop3'], true)) {
+        $map['mail_receive_protocol'] = 'imap';
+    }
 
     save_app_settings_map($pdo, (int)$user['id'], $map);
     write_admin_log($pdo, (int)$user['id'], 'edit', 'mail_settings', null, 'メール設定を更新しました');
@@ -89,13 +89,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
 $settings = load_app_settings($pdo, $config);
 
-start_page('メール設定', 'ミニムのSMTP/POP3情報を設定します');
+$receiveProtocol = admin_mail_receive_protocol($settings);
+
+start_page('メール設定', 'ミニムのSMTP/IMAP情報を設定します');
 ?>
 <main class="page-container narrow">
   <section class="page-header-block with-actions">
     <div>
       <h1>メール設定</h1>
-      <p>ミニムのメールアカウント情報を保存すると、管理画面で送受信できます。</p>
+      <p>送信は現在動いている localhost SMTP を維持し、受信方式はIMAP/POP3から選べます。</p>
     </div>
     <div class="actions-inline">
       <a class="ghost-btn" href="<?= h($baseUrl) ?>/mail.php">メール管理</a>
@@ -109,8 +111,8 @@ start_page('メール設定', 'ミニムのSMTP/POP3情報を設定します');
 
       <h2 class="section-heading">送信設定 SMTP</h2>
       <div class="form-grid two">
-        <label><span>SMTPホスト</span><input type="text" name="smtp_host" value="<?= h($settings['smtp_host']) ?>" placeholder="s221.myssl.jp" required></label>
-        <label><span>SMTPポート</span><input type="number" name="smtp_port" value="<?= h($settings['smtp_port']) ?>" placeholder="465" required></label>
+        <label><span>SMTPホスト</span><input type="text" name="smtp_host" value="<?= h($settings['smtp_host'] ?? 'localhost') ?>" placeholder="localhost" required></label>
+        <label><span>SMTPポート</span><input type="number" name="smtp_port" value="<?= h($settings['smtp_port'] ?? '25') ?>" placeholder="25" required></label>
       </div>
       <div class="form-grid two">
         <label><span>SMTP暗号化</span>
@@ -131,28 +133,35 @@ start_page('メール設定', 'ミニムのSMTP/POP3情報を設定します');
         <label><span>送信者名</span><input type="text" name="smtp_from_name" value="<?= h($settings['smtp_from_name']) ?>" placeholder="CORO PROJECT"></label>
       </div>
 
-      <h2 class="section-heading mt-24">受信設定 POP3</h2>
+      <h2 class="section-heading mt-24">受信設定</h2>
+      <label><span>受信方式</span>
+        <select name="mail_receive_protocol">
+          <option value="imap" <?= selected($receiveProtocol, 'imap') ?>>IMAP（推奨）</option>
+          <option value="pop3" <?= selected($receiveProtocol, 'pop3') ?>>POP3（従来方式）</option>
+        </select>
+      </label>
       <div class="form-grid two">
-        <label><span>POP3ホスト</span><input type="text" name="mail_pop_host" value="<?= h($settings['mail_pop_host']) ?>" placeholder="s221.myssl.jp" required></label>
-        <label><span>POP3ポート</span><input type="number" name="mail_pop_port" value="<?= h($settings['mail_pop_port']) ?>" placeholder="995" required></label>
+        <label><span>受信ホスト</span><input type="text" name="mail_pop_host" value="<?= h($settings['mail_pop_host'] ?? 's221.myssl.jp') ?>" placeholder="s221.myssl.jp" required></label>
+        <label><span>受信ポート</span><input type="number" name="mail_pop_port" value="<?= h($settings['mail_pop_port'] ?? ($receiveProtocol === 'imap' ? '993' : '995')) ?>" placeholder="<?= $receiveProtocol === 'imap' ? '993' : '995' ?>" required></label>
       </div>
       <div class="form-grid two">
-        <label><span>POP3暗号化</span>
+        <label><span>受信暗号化</span>
           <select name="mail_pop_encryption">
-            <option value="ssl" <?= selected($settings['mail_pop_encryption'] ?? 'ssl', 'ssl') ?>>SSL / POP3S</option>
+            <option value="ssl" <?= selected($settings['mail_pop_encryption'] ?? 'ssl', 'ssl') ?>>SSL</option>
+            <option value="tls" <?= selected($settings['mail_pop_encryption'] ?? 'ssl', 'tls') ?>>STARTTLS</option>
             <option value="none" <?= selected($settings['mail_pop_encryption'] ?? 'ssl', 'none') ?>>なし</option>
           </select>
         </label>
-        <label><span>POP3ユーザー名</span><input type="text" name="mail_pop_user" value="<?= h($settings['mail_pop_user']) ?>" placeholder="m13017-info" required></label>
+        <label><span>受信ユーザー名</span><input type="text" name="mail_pop_user" value="<?= h($settings['mail_pop_user'] ?? 'm13017-info') ?>" placeholder="m13017-info" required></label>
       </div>
       <label>
-        <span>POP3パスワード<?= !empty($settings['mail_pop_pass']) ? '（保存済み。変更時だけ入力）' : '' ?></span>
+        <span>受信パスワード<?= !empty($settings['mail_pop_pass']) ? '（保存済み。変更時だけ入力）' : '' ?></span>
         <input type="password" name="mail_pop_pass" value="" autocomplete="new-password" <?= empty($settings['mail_pop_pass']) ? 'required' : '' ?>>
       </label>
       <label><span>1回の受信同期件数</span><input type="number" name="mail_sync_limit" value="<?= h($settings['mail_sync_limit']) ?>" min="1" max="200"></label>
 
       <div class="alert-box alert-success" style="margin:0;">
-        ミニムのSSL設定は通常、SMTP/POP3ともにホスト <strong>s221.myssl.jp</strong>、SMTP 465、POP3 995、ユーザー名はメールアカウントIDです。
+        送信は動作確認済みの <strong>localhost:25</strong> を使えます。IMAP受信は通常 <strong>s221.myssl.jp:993 SSL</strong>、POP3受信は <strong>s221.myssl.jp:995 SSL</strong> です。
       </div>
 
       <div class="actions-inline">
@@ -193,9 +202,9 @@ start_page('メール設定', 'ミニムのSMTP/POP3情報を設定します');
 
   <section class="card form-card mt-24">
     <h2 class="section-heading">接続確認</h2>
-    <p class="muted">保存済みの受信設定でPOP3サーバーにログインできるか確認します。</p>
+    <p class="muted">保存済みの受信設定でサーバーにログインできるか確認します。</p>
     <form method="post" class="actions-inline">
-      <input type="hidden" name="action" value="test_pop">
+      <input type="hidden" name="action" value="test_receive">
       <button class="ghost-btn" type="submit">受信接続を確認</button>
       <a class="primary-btn" href="<?= h($baseUrl) ?>/mail.php?mailbox=inbox">受信トレイで同期</a>
     </form>

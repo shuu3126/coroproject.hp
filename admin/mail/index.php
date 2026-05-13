@@ -30,7 +30,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     // ── 通常メール: 受信同期 ──
     if ($action === 'sync') {
         try {
-            $result = admin_mail_sync_pop3($pdo, $settings, (int)$user['id']);
+            $result = admin_mail_sync_receive($pdo, $settings, (int)$user['id']);
             write_admin_log($pdo, (int)$user['id'], 'sync', 'mail', null, 'メールを受信同期しました');
             set_flash('success', '受信完了 — 新着 ' . (int)$result['inserted'] . ' 件');
         } catch (Exception $e) {
@@ -247,15 +247,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     }
 }
 
-// POP3設定が揃っているか確認（自動受信・表示両方で使用）
-$popReady  = admin_mail_setting($settings, 'mail_pop_host') !== ''
-    && admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user')) !== ''
-    && admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass')) !== '';
+// 受信設定が揃っているか確認（自動受信・表示両方で使用）
+$receiveReady = admin_mail_receive_ready($settings);
 
 // 受信トレイを開いたとき自動受信
-if ($mailbox === 'inbox' && $popReady && $_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($mailbox === 'inbox' && $receiveReady && $_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        $autoResult = admin_mail_sync_pop3($pdo, $settings, (int)$user['id']);
+        $autoResult = admin_mail_sync_receive($pdo, $settings, (int)$user['id']);
         if ((int)($autoResult['inserted'] ?? 0) > 0) {
             set_flash('success', '新着メール ' . (int)$autoResult['inserted'] . ' 件を受信しました。');
         }
@@ -501,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <div class="mail-page-outer">
 
-  <?php if (!$popReady && !$isInquiryMode): ?>
+  <?php if (!$receiveReady && !$isInquiryMode): ?>
     <div class="alert-box alert-error mail-alert">
       受信設定が未完了です。<a href="<?= h($baseUrl) ?>/mail_settings.php" style="text-decoration:underline;font-weight:700;">メール設定</a>でサーバー情報を保存してください。
     </div>

@@ -5,15 +5,13 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 
 $settings = load_app_settings($pdo, $config);
-$popReady = admin_mail_setting($settings, 'mail_pop_host') !== ''
-    && admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user')) !== ''
-    && admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass')) !== '';
+$receiveReady = admin_mail_receive_ready($settings);
 
 $inserted = 0;
-if ($popReady) {
+if ($receiveReady) {
     try {
         $u = current_admin_user();
-        $result = admin_mail_sync_pop3($pdo, $settings, (int)$u['id']);
+        $result = admin_mail_sync_receive($pdo, $settings, (int)$u['id']);
         $inserted = (int)($result['inserted'] ?? 0);
     } catch (Exception $e) {
         // silent

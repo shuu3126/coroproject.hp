@@ -72,6 +72,37 @@ function admin_mail_setting($settings, $key, $fallback = '') {
     return $value !== '' ? $value : $fallback;
 }
 
+function admin_mail_receive_protocol($settings) {
+    $protocol = strtolower(admin_mail_setting($settings, 'mail_receive_protocol', 'pop3'));
+    return in_array($protocol, ['imap', 'pop3'], true) ? $protocol : 'pop3';
+}
+
+function admin_mail_receive_ready($settings) {
+    return admin_mail_setting($settings, 'mail_pop_host') !== ''
+        && admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user')) !== ''
+        && admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass')) !== '';
+}
+
+function admin_mail_sync_receive($pdo, $settings, $userId = null) {
+    return admin_mail_receive_protocol($settings) === 'imap'
+        ? admin_mail_sync_imap($pdo, $settings, $userId)
+        : admin_mail_sync_pop3($pdo, $settings, $userId);
+}
+
+function admin_mail_test_receive_connection($settings) {
+    if (admin_mail_receive_protocol($settings) === 'imap') {
+        $imap = admin_mail_imap_open($settings);
+        imap_close($imap);
+        return;
+    }
+
+    $fp = admin_mail_pop3_connect($settings);
+    @fwrite($fp, "QUIT\r\n");
+    if (is_resource($fp)) {
+        fclose($fp);
+    }
+}
+
 function admin_mail_unread_count($pdo) {
     if (!admin_table_has_column($pdo, 'mail_messages', 'status')) {
         return 0;
@@ -531,6 +562,131 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
     } finally {
         if (is_resource($fp)) {
             fclose($fp);
+        }
+    }
+
+    return ['inserted' => $inserted, 'skipped' => $skipped];
+}
+
+function admin_mail_imap_mailbox($settings) {
+    $host = admin_mail_setting($settings, 'mail_pop_host', 's221.myssl.jp');
+    $port = (int)admin_mail_setting($settings, 'mail_pop_port', '993');
+    $encryption = admin_mail_setting($settings, 'mail_pop_encryption', 'ssl');
+    $flags = '/imap';
+
+    if ($encryption === 'ssl') {
+        $flags .= '/ssl';
+    } elseif ($encryption === 'tls') {
+        $flags .= '/tls';
+    } else {
+        $flags .= '/notls';
+    }
+
+    return sprintf('{%s:%d%s}INBOX', $host, $port > 0 ? $port : 993, $flags);
+}
+
+function admin_mail_imap_open($settings) {
+    if (!function_exists('imap_open')) {
+        throw new RuntimeException('PHPのIMAP拡張が有効ではありません。サーバーでphp-imapを有効化するか、受信方式をPOP3に戻してください。');
+    }
+
+    $user = admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user', ''));
+    $pass = admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass', ''));
+    if ($user === '' || $pass === '') {
+        throw new RuntimeException('受信設定のユーザー名、パスワードを入力してください。');
+    }
+
+    $mailbox = admin_mail_imap_mailbox($settings);
+    $imap = @imap_open($mailbox, $user, $pass, OP_READONLY, 1);
+    if (!$imap) {
+        $errors = function_exists('imap_errors') ? imap_errors() : [];
+        throw new RuntimeException('IMAPサーバーに接続できません: ' . ($errors ? implode(' / ', $errors) : $mailbox));
+    }
+
+    return $imap;
+}
+
+function admin_mail_sync_imap($pdo, $settings, $userId = null) {
+    admin_mail_ensure_schema($pdo);
+
+    $limit = (int)admin_mail_setting($settings, 'mail_sync_limit', '30');
+    if ($limit <= 0 || $limit > 200) {
+        $limit = 30;
+    }
+
+    $imap = admin_mail_imap_open($settings);
+    $inserted = 0;
+    $skipped = 0;
+    $host = admin_mail_setting($settings, 'mail_pop_host', 's221.myssl.jp');
+    $user = admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user', ''));
+    $uidPrefix = 'imap:' . $host . ':' . $user . ':INBOX:';
+
+    try {
+        $uids = imap_search($imap, 'ALL', SE_UID);
+        if (!$uids) {
+            return ['inserted' => 0, 'skipped' => 0];
+        }
+
+        rsort($uids, SORT_NUMERIC);
+        $uids = array_slice($uids, 0, $limit);
+
+        $existsStmt = $pdo->prepare(
+            'SELECT 1 FROM mail_messages WHERE uidl = ? LIMIT 1
+             UNION ALL
+             SELECT 1 FROM mail_deleted_uidls WHERE uidl = ? LIMIT 1'
+        );
+        $insertStmt = $pdo->prepare("
+            INSERT INTO mail_messages
+              (mailbox, direction, uidl, message_id, thread_key, from_name, from_email, to_text, cc_text,
+               subject, body_text, body_html, raw_headers, has_attachments, status, linked_inquiry_id, received_at, created_at, updated_at)
+            VALUES
+              ('inbox', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        ");
+
+        foreach ($uids as $uid) {
+            $uidl = $uidPrefix . (int)$uid;
+            $existsStmt->execute([$uidl, $uidl]);
+            if ($existsStmt->fetch()) {
+                $skipped++;
+                continue;
+            }
+
+            $header = imap_fetchheader($imap, (int)$uid, FT_UID);
+            $body = imap_body($imap, (int)$uid, FT_UID | FT_PEEK);
+            if ($header === false || $body === false) {
+                $skipped++;
+                continue;
+            }
+
+            $parsed = admin_mail_parse_raw_message($header . "\r\n" . $body);
+            $threadKey = admin_mail_thread_key($parsed['subject'], $parsed['from_email']);
+            $overviewRows = imap_fetch_overview($imap, (string)(int)$uid, FT_UID);
+            $seen = isset($overviewRows[0]) && !empty($overviewRows[0]->seen);
+
+            $insertStmt->execute([
+                $uidl,
+                $parsed['message_id'] !== '' ? $parsed['message_id'] : null,
+                $threadKey,
+                $parsed['from_name'] !== '' ? $parsed['from_name'] : null,
+                $parsed['from_email'] !== '' ? $parsed['from_email'] : null,
+                $parsed['to_text'],
+                $parsed['cc_text'],
+                $parsed['subject'],
+                $parsed['body_text'],
+                $parsed['body_html'] !== '' ? $parsed['body_html'] : null,
+                $parsed['raw_headers'],
+                (int)$parsed['has_attachments'],
+                $seen ? 'read' : 'unread',
+                $parsed['linked_inquiry_id'],
+                $parsed['received_at'] ?: date('Y-m-d H:i:s'),
+            ]);
+
+            admin_mail_upsert_contact($pdo, $parsed['from_email'], $parsed['from_name'], $userId);
+            $inserted++;
+        }
+    } finally {
+        if ($imap) {
+            @imap_close($imap);
         }
     }
 

@@ -456,8 +456,11 @@ function accounting_division_label($division) {
     }
 }
 
-function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $year, $month, $subject, $details, $note, $division, $dealId = null, $projectId = null) {
+function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $year, $month, $subject, $details, $note, $division, $dealId = null, $projectId = null, $talentId = null) {
     $amount = 0.0;
+    $talentId = trim((string)$talentId);
+    $talentId = $talentId !== '' ? $talentId : null;
+
     foreach ($details as $detail) {
         $amount += (float)$detail['amount'];
     }
@@ -473,10 +476,11 @@ function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $ye
             INSERT INTO accounting_invoices
                 (invoice_no, talent_id, client_id, close_year, close_month, subject, amount_jpy, fx_rate, status, note, division, deal_id, project_id, created_by, updated_by, created_at, updated_at)
             VALUES
-                (?, NULL, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ');
         $stmt->execute([
             $invoiceNo,
+            $talentId,
             $clientId ?: null,
             (int)$year,
             (int)$month,
@@ -497,9 +501,9 @@ function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $ye
             $itemStmt->execute([$invoiceId, $idx + 1, $item['desc'], $item['amount']]);
         }
 
-        $stmt = $pdo->prepare('INSERT INTO accounting_journal_entries (`date`, kind, category, amount, description, talent_id, invoice_id, source, evidence_path, created_by, updated_by, created_at, updated_at) VALUES (CURDATE(), ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, NOW(), NOW())');
+        $stmt = $pdo->prepare('INSERT INTO accounting_journal_entries (`date`, kind, category, amount, description, talent_id, invoice_id, source, evidence_path, created_by, updated_by, created_at, updated_at) VALUES (CURDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())');
         $categoryLabel = $division === 'business' ? '企業案件収入' : 'その他収入';
-        $stmt->execute(['income', $categoryLabel, $amount, '請求書 ' . $invoiceNo . '｜' . $subject, $invoiceId, 'invoice_auto', '', $userId ?: null, $userId ?: null]);
+        $stmt->execute(['income', $categoryLabel, $amount, '請求書 ' . $invoiceNo . '｜' . $subject, $talentId, $invoiceId, 'invoice_auto', '', $userId ?: null, $userId ?: null]);
 
         $pdo->commit();
     } catch (Exception $e) {
