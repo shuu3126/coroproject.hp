@@ -59,7 +59,7 @@ require __DIR__ . '/_header.php';
             <td>
               <?php if ($row['evidence_path']): ?>
                 <a class="portal-btn portal-btn-outline portal-btn-sm"
-                   href="/<?= portal_h(ltrim($row['evidence_path'], '/')) ?>"
+                   href="<?= portal_h($portalBase) ?>/download.php?type=evidence&id=<?= (int)$row['id'] ?>"
                    target="_blank" rel="noopener">確認</a>
               <?php else: ?>
                 <span style="color:var(--muted);font-size:12px;">なし</span>

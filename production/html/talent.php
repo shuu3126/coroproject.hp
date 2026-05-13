@@ -256,8 +256,9 @@ if (!empty($talent['long_bio_json'])) {
             <?php if ($platforms): ?>
               <ul class="talent-link-list">
                 <?php foreach ($platforms as $p): ?>
+                  <?php $platformUrl = production_safe_external_url($p['url'] ?? ''); if ($platformUrl === '') continue; ?>
                   <li>
-                    <a href="<?= esc($p['url']) ?>" target="_blank" rel="noopener">
+                    <a href="<?= esc($platformUrl) ?>" target="_blank" rel="noopener">
                       <?= esc($p['name']) ?>
                     </a>
                   </li>
@@ -274,8 +275,9 @@ if (!empty($talent['long_bio_json'])) {
             <?php if ($links): ?>
               <ul class="talent-link-list">
                 <?php foreach ($links as $ln): ?>
+                  <?php $linkUrl = production_safe_external_url($ln['url'] ?? ''); if ($linkUrl === '') continue; ?>
                   <li>
-                    <a href="<?= esc($ln['url']) ?>" target="_blank" rel="noopener">
+                    <a href="<?= esc($linkUrl) ?>" target="_blank" rel="noopener">
                       <?= esc($ln['label']) ?>
                     </a>
                   </li>

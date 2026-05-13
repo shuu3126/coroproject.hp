@@ -376,7 +376,7 @@ function portal_upload_public_profile_image($file, $talent_id) {
 
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);
-        file_put_contents($dir . '/.htaccess', "Options -Indexes\n<Files ~ \"\\.(php|phtml|php3|php4|php5|phps|phar)$\">\n  Deny from all\n</Files>\n");
+        file_put_contents($dir . '/.htaccess', "Options -Indexes\n<IfModule mod_authz_core.c>\n  Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n  Deny from all\n</IfModule>\n");
     }
 
     $filename = sprintf(
@@ -536,7 +536,7 @@ function portal_upload_evidence($file, $talent_id, $year, $month) {
     $dir = PORTAL_UPLOAD_DIR . '/' . $ym;
     if (!is_dir($dir)) {
         mkdir($dir, 0755, true);
-        file_put_contents($dir . '/.htaccess', "Options -Indexes\n<Files ~ \"\\.(php|phtml|php3|php4|php5|phps|phar)$\">\n  Deny from all\n</Files>\n");
+        file_put_contents($dir . '/.htaccess', "Options -Indexes\n<IfModule mod_authz_core.c>\n  Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n  Deny from all\n</IfModule>\n");
     }
 
     $filename = sprintf('%s_%04d%02d_%s.%s',

@@ -1047,6 +1047,13 @@ function accounting_portal_account_for_talent($pdo, $talentId) {
 
 function accounting_portal_account_create($pdo, $talentId, $loginId, $password, $userId, $isActive = 1) {
     if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return ['error' => 'テーブルが存在しません。'];
+    $loginId = trim((string)$loginId);
+    if ($loginId === '' || mb_strlen($loginId) > 100) {
+        return ['error' => 'ログインIDは1〜100文字で入力してください。'];
+    }
+    if (strlen((string)$password) < 8) {
+        return ['error' => 'パスワードは8文字以上で入力してください。'];
+    }
     try {
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $hasPasswordChangedAt = admin_table_has_column($pdo, 'talent_portal_accounts', 'password_changed_at');
@@ -1056,14 +1063,14 @@ function accounting_portal_account_create($pdo, $talentId, $loginId, $password, 
             $pdo->prepare("
                 INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active, created_by{$passwordColumn})
                 VALUES (?, ?, ?, ?, ?{$passwordValue})
-            ")->execute([$talentId, trim($loginId), $hash, (int)$isActive, $userId]);
+            ")->execute([$talentId, $loginId, $hash, (int)$isActive, $userId]);
         } else {
             $passwordColumn = $hasPasswordChangedAt ? ', password_changed_at' : '';
             $passwordValue  = $hasPasswordChangedAt ? ', NOW()' : '';
             $pdo->prepare("
                 INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active{$passwordColumn})
                 VALUES (?, ?, ?, ?{$passwordValue})
-            ")->execute([$talentId, trim($loginId), $hash, (int)$isActive]);
+            ")->execute([$talentId, $loginId, $hash, (int)$isActive]);
         }
         return ['success' => true];
     } catch (Exception $e) {
@@ -1077,10 +1084,17 @@ function accounting_portal_account_update($pdo, $id, $data, $userId) {
         $sets = [];
         $params = [];
         if (isset($data['login_id'])) {
+            $loginId = trim((string)$data['login_id']);
+            if ($loginId === '' || mb_strlen($loginId) > 100) {
+                return ['error' => 'ログインIDは1〜100文字で入力してください。'];
+            }
             $sets[] = 'login_id = ?';
-            $params[] = trim($data['login_id']);
+            $params[] = $loginId;
         }
         if (isset($data['password']) && $data['password'] !== '') {
+            if (strlen((string)$data['password']) < 8) {
+                return ['error' => 'パスワードは8文字以上で入力してください。'];
+            }
             $sets[] = 'password_hash = ?';
             $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
             if (admin_table_has_column($pdo, 'talent_portal_accounts', 'password_changed_at')) {

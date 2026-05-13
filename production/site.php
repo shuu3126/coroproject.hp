@@ -37,3 +37,16 @@ function production_public_url($path) {
 
     return rtrim(production_project_base_url(), '/') . '/' . $path;
 }
+
+function production_safe_external_url($url) {
+    $url = trim((string)$url);
+    if ($url === '') {
+        return '';
+    }
+
+    if (filter_var($url, FILTER_VALIDATE_URL) && preg_match('#^https?://#i', $url)) {
+        return $url;
+    }
+
+    return '';
+}

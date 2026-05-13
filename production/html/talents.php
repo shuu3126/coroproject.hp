@@ -1,7 +1,6 @@
 <?php
-// デバッグ用：一旦エラー内容を画面に出す
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+ini_set('display_errors', 0);
+error_reporting(0);
 
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../site.php';

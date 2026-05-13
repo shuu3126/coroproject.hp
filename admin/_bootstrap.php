@@ -127,3 +127,19 @@ require_once __DIR__ . '/_pdf.php';
 require_once __DIR__ . '/_accounting.php';
 require_once __DIR__ . '/_mail.php';
 require_once __DIR__ . '/_data_transfer.php';
+
+$_adminScriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+$_adminCsrfExempt = substr($_adminScriptName, -strlen('/admin/system/session_touch.php')) === '/admin/system/session_touch.php';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && current_admin_user() && !$_adminCsrfExempt) {
+    $token = $_POST['_csrf'] ?? '';
+    if (!admin_verify_csrf($token)) {
+        set_flash('error', '不正なリクエストです。ページを再読み込みして再試行してください。');
+        $fallback = $baseUrl . '/index.php';
+        $referer = (string)($_SERVER['HTTP_REFERER'] ?? '');
+        $refererHost = $referer !== '' ? parse_url($referer, PHP_URL_HOST) : '';
+        if ($refererHost !== '' && hash_equals((string)($_SERVER['HTTP_HOST'] ?? ''), (string)$refererHost)) {
+            $fallback = $referer;
+        }
+        redirect_to($fallback);
+    }
+}

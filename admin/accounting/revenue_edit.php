@@ -46,7 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_FILES['evidence_file'] ?? [],
             $config['uploads']['accounting_root'] . '/revenues',
             $config['uploads']['accounting_prefix'] . '/revenues',
-            $data['talent_id'] . '-' . $data['year'] . '-' . $data['month']
+            $data['talent_id'] . '-' . $data['year'] . '-' . $data['month'],
+            ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf']
         );
         if ($upload) {
             $data['evidence_path'] = $upload['path'];

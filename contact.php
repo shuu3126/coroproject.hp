@@ -10,6 +10,10 @@ $pdo = coro_public_settings_db();
 $submitted = $_SERVER['REQUEST_METHOD'] === 'POST';
 $error = '';
 
+if (empty($_SESSION['contact_csrf'])) {
+    $_SESSION['contact_csrf'] = bin2hex(random_bytes(32));
+}
+
 // SMTP設定を読み込む
 $smtpConfig = [
     'host' => 's221.myssl.jp',
@@ -50,6 +54,17 @@ try {
 
 if ($submitted) {
     try {
+        if (!hash_equals((string)($_SESSION['contact_csrf'] ?? ''), (string)($_POST['_csrf'] ?? ''))) {
+            throw new Exception('不正なリクエストです。ページを再読み込みして再送信してください。');
+        }
+        if (trim((string)($_POST['website'] ?? '')) !== '') {
+            throw new Exception('送信できませんでした。');
+        }
+        $lastSubmitAt = (int)($_SESSION['contact_last_submit_at'] ?? 0);
+        if ($lastSubmitAt > 0 && time() - $lastSubmitAt < 30) {
+            throw new Exception('連続送信はできません。少し時間をおいて再送信してください。');
+        }
+
         // バリデーション
         $topic = trim($_POST['topic'] ?? '');
         $company = trim($_POST['company'] ?? '');
@@ -201,6 +216,8 @@ if ($submitted) {
         $_SESSION['contact_name'] = $name;
         $_SESSION['contact_email'] = $email;
         $_SESSION['contact_message'] = $message;
+        $_SESSION['contact_last_submit_at'] = time();
+        $_SESSION['contact_csrf'] = bin2hex(random_bytes(32));
 
         // thanks.php へリダイレクト
         $homeUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
@@ -315,6 +332,11 @@ render_header('contact');
           </div>
         <?php endif; ?>
         <form method="post" class="contact-form">
+          <input type="hidden" name="_csrf" value="<?= h($_SESSION['contact_csrf']) ?>">
+          <label style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+            <span>Website</span>
+            <input type="text" name="website" tabindex="-1" autocomplete="off">
+          </label>
           <label>
             <span>お問い合わせ種別</span>
             <select name="topic" required>

@@ -167,7 +167,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         }
 
         $activeCount = (int)$pdo->query('SELECT COUNT(*) FROM admin_users WHERE is_active = 1')->fetchColumn();
-        $targetActive = (int)$pdo->query("SELECT is_active FROM admin_users WHERE id = $targetId")->fetchColumn();
+        $stmt = $pdo->prepare('SELECT is_active FROM admin_users WHERE id = ?');
+        $stmt->execute([$targetId]);
+        $targetActive = (int)$stmt->fetchColumn();
         if ($activeCount <= 1 && $targetActive) {
             set_flash('error', '有効なユーザーが1人しかいないため削除できません。');
             redirect_to($baseUrl . '/system/settings.php#settings-admin-users');
@@ -261,7 +263,10 @@ start_page('設定', '各部門共通の設定をまとめて管理します。'
       </label>
       <div class="form-grid two">
         <label><span>SMTPユーザー名</span><input type="text" name="smtp_user" value="<?= h($settings['smtp_user']) ?>" placeholder="例: m12974-info"></label>
-        <label><span>SMTPパスワード</span><input type="password" name="smtp_pass" value="<?= h($settings['smtp_pass']) ?>"></label>
+        <label>
+          <span>SMTPパスワード<?= !empty($settings['smtp_pass']) ? '（保存済み。変更時だけ入力）' : '' ?></span>
+          <input type="password" name="smtp_pass" value="" autocomplete="new-password">
+        </label>
       </div>
       <div class="form-grid two">
         <label><span>送信元メールアドレス</span><input type="email" name="smtp_from_email" value="<?= h($settings['smtp_from_email']) ?>"></label>

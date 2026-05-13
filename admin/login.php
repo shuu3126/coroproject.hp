@@ -6,6 +6,13 @@ if (current_admin_user()) {
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $lockedUntil = (int)($_SESSION['admin_login_locked_until'] ?? 0);
+    if ($lockedUntil > time()) {
+        $remaining = (int)ceil(($lockedUntil - time()) / 60);
+        set_flash('error', 'ログイン試行回数が上限に達しました。' . $remaining . '分後に再試行してください。');
+        redirect_to($baseUrl . '/login.php');
+    }
+
     $loginId = trim(isset($_POST['login_id']) ? $_POST['login_id'] : '');
     $password = isset($_POST['password']) ? $_POST['password'] : '';
 
@@ -15,6 +22,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     if ($user && password_verify($password, $user['password_hash'])) {
         session_regenerate_id(true);
+        unset($_SESSION['admin_login_attempts'], $_SESSION['admin_login_locked_until']);
 
         $_SESSION['admin_user'] = [
             'id' => (int)$user['id'],
@@ -28,6 +36,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         write_admin_log($pdo, (int)$user['id'], 'login', 'admin_user', (int)$user['id'], 'ログインしました');
 
         redirect_to($baseUrl . '/index.php');
+    }
+
+    $_SESSION['admin_login_attempts'] = (int)($_SESSION['admin_login_attempts'] ?? 0) + 1;
+    if ((int)$_SESSION['admin_login_attempts'] >= 5) {
+        $_SESSION['admin_login_attempts'] = 0;
+        $_SESSION['admin_login_locked_until'] = time() + 15 * 60;
     }
 
     set_flash('error', 'ログイン情報が正しくありません。');

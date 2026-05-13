@@ -12,6 +12,72 @@ function admin_profile_request_payload($request) {
     return is_array($payload) ? $payload : [];
 }
 
+function admin_profile_publish_avatar($path, $talentId) {
+    global $config;
+
+    $path = trim(str_replace('\\', '/', (string)$path));
+    if ($path === '') {
+        return '';
+    }
+
+    if (preg_match('#^(https?:)?//#i', $path) || strpos($path, "\0") !== false) {
+        throw new RuntimeException('プロフィール画像のパスが不正です。');
+    }
+    if (preg_match('#(^|/)\.\.(/|$)#', $path)) {
+        throw new RuntimeException('プロフィール画像のパスが不正です。');
+    }
+
+    $publicPrefix = trim((string)($config['uploads']['talent_public_prefix'] ?? 'production/images/talents'), '/');
+    if (strpos(ltrim($path, '/'), $publicPrefix . '/') === 0) {
+        return ltrim($path, '/');
+    }
+
+    if (strpos(ltrim($path, '/'), 'portal/uploads/profile/') !== 0) {
+        return ltrim($path, '/');
+    }
+
+    $projectRoot = realpath($config['paths']['project_root'] ?? dirname(dirname(__DIR__)));
+    $source = realpath($projectRoot . DIRECTORY_SEPARATOR . ltrim($path, '/'));
+    if (!$projectRoot || !$source || !is_file($source)) {
+        throw new RuntimeException('プロフィール画像ファイルが見つかりません。');
+    }
+
+    $projectRootPrefix = rtrim($projectRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    if (strpos($source, $projectRootPrefix) !== 0) {
+        throw new RuntimeException('プロフィール画像の参照先が不正です。');
+    }
+
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/gif'  => 'gif',
+        'image/webp' => 'webp',
+    ];
+    $mime = '';
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = (string)$finfo->file($source);
+    }
+    if (!isset($allowed[$mime])) {
+        throw new RuntimeException('プロフィール画像の形式が不正です。');
+    }
+
+    $destDir = $config['uploads']['talent_public_dir'] ?? ($projectRoot . '/production/images/talents');
+    ensure_dir_path($destDir);
+
+    $safeTalentId = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$talentId);
+    if ($safeTalentId === '') {
+        $safeTalentId = 'talent';
+    }
+    $filename = $safeTalentId . '-profile-' . date('YmdHis') . '-' . bin2hex(random_bytes(4)) . '.' . $allowed[$mime];
+    $dest = rtrim($destDir, '/\\') . DIRECTORY_SEPARATOR . $filename;
+    if (!copy($source, $dest)) {
+        throw new RuntimeException('プロフィール画像を公開用フォルダへ保存できませんでした。');
+    }
+
+    return trim($publicPrefix, '/') . '/' . $filename;
+}
+
 function admin_profile_request_label($status) {
     if ($status === 'pending') return ['確認待ち', 'warning'];
     if ($status === 'approved') return ['承認済', 'success'];
@@ -53,6 +119,7 @@ function admin_profile_apply_request($pdo, $request, $userId, $note = '') {
     $linksJson = json_encode($links, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $tags = array_values(array_filter(array_map('trim', preg_split('/[,、]/u', (string)($payload['tags_text'] ?? '')))));
     $tagsJson = json_encode($tags, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $avatar = admin_profile_publish_avatar($payload['avatar'] ?? '', $talentId);
 
     $pdo->beginTransaction();
     try {
@@ -68,7 +135,7 @@ function admin_profile_apply_request($pdo, $request, $userId, $note = '') {
             trim((string)($payload['kana'] ?? '')),
             trim((string)($payload['talent_group'] ?? '')),
             trim((string)($payload['debut'] ?? '')) ?: null,
-            trim((string)($payload['avatar'] ?? '')),
+            $avatar,
             trim((string)($payload['bio'] ?? '')),
             $longBioJson,
             $platformsJson,

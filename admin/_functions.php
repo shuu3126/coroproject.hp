@@ -18,6 +18,17 @@ function redirect_to($path) {
     exit;
 }
 
+function admin_csrf_token() {
+    if (empty($_SESSION['admin_csrf'])) {
+        $_SESSION['admin_csrf'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['admin_csrf'];
+}
+
+function admin_verify_csrf($token) {
+    return isset($_SESSION['admin_csrf']) && hash_equals($_SESSION['admin_csrf'], (string)$token);
+}
+
 function checked($condition) {
     return $condition ? 'checked' : '';
 }

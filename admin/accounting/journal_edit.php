@@ -60,7 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_FILES['evidence_file'] ?? [],
                 $config['uploads']['accounting_root'] . '/journal',
                 $config['uploads']['accounting_prefix'] . '/journal',
-                'journal-' . $date
+                'journal-' . $date,
+                ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf']
             );
             if ($upload) {
                 $evidence = $upload['path'];

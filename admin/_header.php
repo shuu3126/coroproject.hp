@@ -69,6 +69,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
         'touchUrl' => rtrim($adminRoot, '/') . '/system/session_touch.php',
         'logoutUrl' => rtrim($adminRoot, '/') . '/logout.php?reason=timeout',
     ], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+    window.CORO_ADMIN_CSRF = <?= json_encode(admin_csrf_token(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
   </script>
   <script defer src="<?= h($adminRoot) ?>/assets/js/admin.js?v=20260430-1"></script>
 </head>
@@ -264,5 +265,33 @@ if (isset($pdo) && $pdo instanceof PDO) {
       banner.addEventListener('transitionend', function () { banner.remove(); }, { once: true });
     }, 3500);
   });
+})();
+(function () {
+  var token = window.CORO_ADMIN_CSRF || '';
+  if (!token || !window.HTMLFormElement) return;
+
+  function addCsrf(form) {
+    if (!form || String(form.method || '').toLowerCase() !== 'post') return;
+    var field = form.querySelector('input[name="_csrf"]');
+    if (!field) {
+      field = document.createElement('input');
+      field.type = 'hidden';
+      field.name = '_csrf';
+      form.appendChild(field);
+    }
+    field.value = token;
+  }
+
+  document.addEventListener('submit', function (event) {
+    addCsrf(event.target);
+  }, true);
+
+  var nativeSubmit = window.HTMLFormElement.prototype.submit;
+  window.HTMLFormElement.prototype.submit = function () {
+    addCsrf(this);
+    return nativeSubmit.call(this);
+  };
+
+  document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(addCsrf);
 })();
 </script>

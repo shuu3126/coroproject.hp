@@ -63,6 +63,7 @@ foreach ($connectionCandidates as $candidate) {
 }
 
 if (!isset($pdo) || !($pdo instanceof PDO)) {
-    $message = $lastError ? $lastError->getMessage() : 'unknown error';
-    exit('DB接続エラー: ' . $message);
+    error_log('CORO DB connection failed: ' . ($lastError ? $lastError->getMessage() : 'unknown error'));
+    http_response_code(500);
+    exit('DB接続エラーが発生しました。時間をおいて再度お試しください。');
 }

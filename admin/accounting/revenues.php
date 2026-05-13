@@ -171,7 +171,7 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
               <td>
                 <?php if (!empty($row['evidence_path'])): ?>
                   <a class="ghost-btn"
-                     href="/<?= h(ltrim((string)$row['evidence_path'], '/')) ?>"
+                     href="<?= h($baseUrl) ?>/download.php?kind=revenue_evidence&id=<?= (int)$row['id'] ?>"
                      target="_blank" rel="noopener"
                      style="font-size:11px;padding:4px 8px;">証拠</a>
                 <?php endif; ?>

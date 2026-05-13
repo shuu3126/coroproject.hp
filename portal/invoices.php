@@ -55,7 +55,7 @@ require __DIR__ . '/_header.php';
             <td>
               <?php if ($inv['invoice_pdf_path']): ?>
                 <a class="portal-btn portal-btn-outline portal-btn-sm"
-                   href="/<?= portal_h(ltrim($inv['invoice_pdf_path'], '/')) ?>"
+                   href="<?= portal_h($portalBase) ?>/download.php?type=invoice&id=<?= (int)$inv['id'] ?>"
                    target="_blank" rel="noopener" download>
                   DL
                 </a>
@@ -66,7 +66,7 @@ require __DIR__ . '/_header.php';
             <td>
               <?php if ($inv['receipt_pdf_path']): ?>
                 <a class="portal-btn portal-btn-primary portal-btn-sm"
-                   href="/<?= portal_h(ltrim($inv['receipt_pdf_path'], '/')) ?>"
+                   href="<?= portal_h($portalBase) ?>/download.php?type=receipt&id=<?= (int)$inv['id'] ?>"
                    target="_blank" rel="noopener" download>
                   DL
                 </a>
