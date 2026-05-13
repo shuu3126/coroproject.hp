@@ -19,6 +19,40 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         redirect_to($baseUrl . '/mail/settings.php');
     }
 
+    if ($action === 'save_account') {
+        $accountId = (int)($_POST['account_id'] ?? 0);
+        $result = admin_mail_save_account($pdo, $_POST, (int)$user['id'], $accountId ?: null);
+        if (!empty($result['success'])) {
+            set_flash('success', 'メールアカウントを保存しました。');
+            write_admin_log($pdo, (int)$user['id'], 'edit', 'mail_account', $accountId ? (string)$accountId : null, 'メールアカウントを保存しました');
+        } else {
+            set_flash('error', $result['error'] ?? 'メールアカウントの保存に失敗しました。');
+        }
+        redirect_to($baseUrl . '/mail/settings.php');
+    }
+
+    if ($action === 'delete_account') {
+        $accountId = (int)($_POST['account_id'] ?? 0);
+        if ($accountId > 0) {
+            admin_mail_delete_account($pdo, $accountId);
+            write_admin_log($pdo, (int)$user['id'], 'delete', 'mail_account', (string)$accountId, 'メールアカウントを削除しました');
+            set_flash('success', 'メールアカウントを削除しました。');
+        }
+        redirect_to($baseUrl . '/mail/settings.php');
+    }
+
+    if ($action === 'test_account') {
+        $accountId = (int)($_POST['account_id'] ?? 0);
+        try {
+            $accountSettings = admin_mail_account_settings_by_id($pdo, $accountId, $settings);
+            admin_mail_test_receive_connection($accountSettings);
+            set_flash('success', '選択したメールアカウントの受信接続に成功しました。');
+        } catch (Exception $e) {
+            set_flash('error', '選択したメールアカウントの受信接続に失敗しました: ' . $e->getMessage());
+        }
+        redirect_to($baseUrl . '/mail/settings.php');
+    }
+
     // テンプレート設定の保存
     if ($action === 'save_template') {
         $templateMap = [
@@ -90,6 +124,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 $settings = load_app_settings($pdo, $config);
 
 $receiveProtocol = admin_mail_receive_protocol($settings);
+$mailAccounts = admin_mail_accounts_list($pdo, false);
 
 start_page('メール設定', 'ミニムのSMTP/IMAP情報を設定します');
 ?>
@@ -103,6 +138,181 @@ start_page('メール設定', 'ミニムのSMTP/IMAP情報を設定します');
       <a class="ghost-btn" href="<?= h($baseUrl) ?>/mail.php">メール管理</a>
       <a class="ghost-btn" href="<?= h($baseUrl) ?>/mail_compose.php">新規作成</a>
     </div>
+  </section>
+
+  <section class="card form-card">
+    <h2 class="section-heading">複数メールアカウント</h2>
+    <p class="muted">
+      ミニムサーバ側で発行済みのメールアドレスをここに登録すると、同じ受信トレイにまとめて受信します。
+      返信時は、元メールを受信したアカウントから送信します。新規作成時は「既定」のアカウントを使います。
+    </p>
+
+    <?php if ($mailAccounts): ?>
+      <div class="table-wrap" style="margin:14px 0 22px;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>表示名</th>
+              <th>メールアドレス</th>
+              <th>受信</th>
+              <th>送信</th>
+              <th>状態</th>
+              <th>最終同期</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($mailAccounts as $account): ?>
+              <tr>
+                <td><?= h($account['label']) ?></td>
+                <td><?= h($account['email']) ?></td>
+                <td><?= h(strtoupper($account['receive_protocol'])) ?> / <?= h($account['receive_host']) ?>:<?= h($account['receive_port']) ?></td>
+                <td><?= h($account['smtp_host']) ?>:<?= h($account['smtp_port']) ?></td>
+                <td>
+                  <?php if ($account['is_default']): ?><span class="status-badge success">既定</span><?php endif; ?>
+                  <?php if ($account['is_active']): ?><span class="status-badge info">有効</span><?php else: ?><span class="status-badge muted">停止</span><?php endif; ?>
+                </td>
+                <td><?= h($account['last_sync_at'] ? format_datetime($account['last_sync_at']) : '-') ?></td>
+                <td>
+                  <div class="actions-inline">
+                    <form method="post" style="margin:0;">
+                      <input type="hidden" name="action" value="test_account">
+                      <input type="hidden" name="account_id" value="<?= (int)$account['id'] ?>">
+                      <button class="ghost-btn" type="submit">接続確認</button>
+                    </form>
+                    <form method="post" style="margin:0;" data-confirm="このメールアカウントを削除しますか？過去のメール履歴は残ります。">
+                      <input type="hidden" name="action" value="delete_account">
+                      <input type="hidden" name="account_id" value="<?= (int)$account['id'] ?>">
+                      <button class="danger-btn" type="submit">削除</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7">
+                  <details>
+                    <summary style="cursor:pointer;font-weight:700;color:var(--primary);">このアカウントを編集</summary>
+                    <form method="post" class="form-stack" style="margin-top:14px;">
+                      <input type="hidden" name="action" value="save_account">
+                      <input type="hidden" name="account_id" value="<?= (int)$account['id'] ?>">
+                      <div class="form-grid two">
+                        <label><span>表示名</span><input type="text" name="label" value="<?= h($account['label']) ?>" required></label>
+                        <label><span>メールアドレス</span><input type="email" name="email" value="<?= h($account['email']) ?>" required></label>
+                      </div>
+                      <div class="form-grid two">
+                        <label><span>SMTPホスト</span><input type="text" name="smtp_host" value="<?= h($account['smtp_host']) ?>" required></label>
+                        <label><span>SMTPポート</span><input type="number" name="smtp_port" value="<?= h($account['smtp_port']) ?>" required></label>
+                      </div>
+                      <div class="form-grid two">
+                        <label><span>SMTP暗号化</span>
+                          <select name="smtp_secure">
+                            <option value="none" <?= selected($account['smtp_secure'], 'none') ?>>なし</option>
+                            <option value="ssl" <?= selected($account['smtp_secure'], 'ssl') ?>>SSL / SMTPS</option>
+                            <option value="tls" <?= selected($account['smtp_secure'], 'tls') ?>>STARTTLS</option>
+                          </select>
+                        </label>
+                        <label><span>SMTPユーザー名</span><input type="text" name="smtp_user" value="<?= h($account['smtp_user']) ?>"></label>
+                      </div>
+                      <label><span>SMTPパスワード（変更時だけ入力）</span><input type="password" name="smtp_pass" value="" autocomplete="new-password"></label>
+
+                      <div class="form-grid two">
+                        <label><span>受信方式</span>
+                          <select name="receive_protocol">
+                            <option value="imap" <?= selected($account['receive_protocol'], 'imap') ?>>IMAP</option>
+                            <option value="pop3" <?= selected($account['receive_protocol'], 'pop3') ?>>POP3</option>
+                          </select>
+                        </label>
+                        <label><span>受信ホスト</span><input type="text" name="receive_host" value="<?= h($account['receive_host']) ?>" required></label>
+                      </div>
+                      <div class="form-grid two">
+                        <label><span>受信ポート</span><input type="number" name="receive_port" value="<?= h($account['receive_port']) ?>" required></label>
+                        <label><span>受信暗号化</span>
+                          <select name="receive_encryption">
+                            <option value="ssl" <?= selected($account['receive_encryption'], 'ssl') ?>>SSL</option>
+                            <option value="tls" <?= selected($account['receive_encryption'], 'tls') ?>>STARTTLS</option>
+                            <option value="none" <?= selected($account['receive_encryption'], 'none') ?>>なし</option>
+                          </select>
+                        </label>
+                      </div>
+                      <div class="form-grid two">
+                        <label><span>受信ユーザー名</span><input type="text" name="receive_user" value="<?= h($account['receive_user']) ?>" required></label>
+                        <label><span>受信パスワード（変更時だけ入力）</span><input type="password" name="receive_pass" value="" autocomplete="new-password"></label>
+                      </div>
+                      <div class="form-grid two">
+                        <label class="check-label"><input type="checkbox" name="is_default" value="1" <?= $account['is_default'] ? 'checked' : '' ?>> <span>新規送信の既定にする</span></label>
+                        <label class="check-label"><input type="checkbox" name="is_active" value="1" <?= $account['is_active'] ? 'checked' : '' ?>> <span>受信同期を有効にする</span></label>
+                      </div>
+                      <div class="actions-inline">
+                        <button class="primary-btn" type="submit">このアカウントを保存</button>
+                      </div>
+                    </form>
+                  </details>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    <?php endif; ?>
+
+    <details <?= $mailAccounts ? '' : 'open' ?>>
+      <summary style="cursor:pointer;font-weight:800;color:var(--primary);">メールアカウントを追加</summary>
+      <form method="post" class="form-stack" style="margin-top:16px;">
+        <input type="hidden" name="action" value="save_account">
+        <div class="form-grid two">
+          <label><span>表示名</span><input type="text" name="label" value="CORO PROJECT" required></label>
+          <label><span>メールアドレス</span><input type="email" name="email" value="" placeholder="info@coroproject.jp" required></label>
+        </div>
+        <div class="form-grid two">
+          <label><span>SMTPホスト</span><input type="text" name="smtp_host" value="localhost" required></label>
+          <label><span>SMTPポート</span><input type="number" name="smtp_port" value="25" required></label>
+        </div>
+        <div class="form-grid two">
+          <label><span>SMTP暗号化</span>
+            <select name="smtp_secure">
+              <option value="none" selected>なし</option>
+              <option value="ssl">SSL / SMTPS</option>
+              <option value="tls">STARTTLS</option>
+            </select>
+          </label>
+          <label><span>SMTPユーザー名</span><input type="text" name="smtp_user" value="" placeholder="m13017-info"></label>
+        </div>
+        <label><span>SMTPパスワード</span><input type="password" name="smtp_pass" value="" autocomplete="new-password"></label>
+        <div class="form-grid two">
+          <label><span>受信方式</span>
+            <select name="receive_protocol">
+              <option value="imap" selected>IMAP</option>
+              <option value="pop3">POP3</option>
+            </select>
+          </label>
+          <label><span>受信ホスト</span><input type="text" name="receive_host" value="s221.myssl.jp" required></label>
+        </div>
+        <div class="form-grid two">
+          <label><span>受信ポート</span><input type="number" name="receive_port" value="993" required></label>
+          <label><span>受信暗号化</span>
+            <select name="receive_encryption">
+              <option value="ssl" selected>SSL</option>
+              <option value="tls">STARTTLS</option>
+              <option value="none">なし</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-grid two">
+          <label><span>受信ユーザー名</span><input type="text" name="receive_user" value="" placeholder="m13017-info" required></label>
+          <label><span>受信パスワード</span><input type="password" name="receive_pass" value="" autocomplete="new-password"></label>
+        </div>
+        <div class="form-grid two">
+          <label class="check-label"><input type="checkbox" name="is_default" value="1" <?= !$mailAccounts ? 'checked' : '' ?>> <span>新規送信の既定にする</span></label>
+          <label class="check-label"><input type="checkbox" name="is_active" value="1" checked> <span>受信同期を有効にする</span></label>
+        </div>
+        <div class="alert-box alert-success" style="margin:0;">
+          メールアドレス自体の発行はミニムサーバ管理画面で行い、ここには発行後のユーザー名・パスワードを登録してください。
+        </div>
+        <div class="actions-inline">
+          <button class="primary-btn" type="submit">アカウントを追加</button>
+        </div>
+      </form>
+    </details>
   </section>
 
   <section class="card form-card">

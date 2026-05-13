@@ -5,7 +5,7 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 
 $settings = load_app_settings($pdo, $config);
-$receiveReady = admin_mail_receive_ready($settings);
+$receiveReady = admin_mail_receive_ready_for_app($pdo, $settings);
 
 $inserted = 0;
 if ($receiveReady) {

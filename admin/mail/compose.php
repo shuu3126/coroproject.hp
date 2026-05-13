@@ -78,9 +78,10 @@ try {
     }
 } catch (Exception $e) {}
 
-$smtpReady = admin_mail_setting($settings, 'smtp_host') !== ''
-    && admin_mail_setting($settings, 'smtp_user') !== ''
-    && admin_mail_setting($settings, 'smtp_pass') !== '';
+$smtpReady = (bool)admin_mail_accounts_list($pdo, true)
+    || (admin_mail_setting($settings, 'smtp_host') !== ''
+        && (admin_mail_setting($settings, 'smtp_host') === 'localhost'
+            || (admin_mail_setting($settings, 'smtp_user') !== '' && admin_mail_setting($settings, 'smtp_pass') !== '')));
 
 start_page('メール作成', '管理画面からメールを送信します');
 ?>

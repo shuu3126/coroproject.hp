@@ -56,6 +56,36 @@ function admin_mail_ensure_schema($pdo) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
     try { $pdo->exec("ALTER TABLE mail_messages ADD COLUMN linked_inquiry_id BIGINT UNSIGNED NULL DEFAULT NULL"); } catch (\Throwable $e) {}
+    try { $pdo->exec("ALTER TABLE mail_messages ADD COLUMN account_id BIGINT UNSIGNED NULL AFTER id"); } catch (\Throwable $e) {}
+    try { $pdo->exec("ALTER TABLE mail_messages ADD COLUMN account_email VARCHAR(191) NULL AFTER account_id"); } catch (\Throwable $e) {}
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS mail_accounts (
+          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+          label VARCHAR(120) NOT NULL,
+          email VARCHAR(191) NOT NULL,
+          smtp_host VARCHAR(191) NOT NULL DEFAULT 'localhost',
+          smtp_port INT NOT NULL DEFAULT 25,
+          smtp_secure VARCHAR(20) NOT NULL DEFAULT 'none',
+          smtp_user VARCHAR(191) NULL,
+          smtp_pass VARCHAR(255) NULL,
+          receive_protocol VARCHAR(20) NOT NULL DEFAULT 'imap',
+          receive_host VARCHAR(191) NOT NULL DEFAULT 's221.myssl.jp',
+          receive_port INT NOT NULL DEFAULT 993,
+          receive_encryption VARCHAR(20) NOT NULL DEFAULT 'ssl',
+          receive_user VARCHAR(191) NULL,
+          receive_pass VARCHAR(255) NULL,
+          is_default TINYINT(1) NOT NULL DEFAULT 0,
+          is_active TINYINT(1) NOT NULL DEFAULT 1,
+          last_sync_at DATETIME NULL,
+          created_by BIGINT UNSIGNED NULL,
+          updated_by BIGINT UNSIGNED NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY uq_mail_accounts_email (email),
+          INDEX idx_mail_accounts_active (is_active, is_default)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
 
     // 完全削除したメールのUIDLを記録して再受信を防ぐ
     $pdo->exec("
@@ -72,6 +102,165 @@ function admin_mail_setting($settings, $key, $fallback = '') {
     return $value !== '' ? $value : $fallback;
 }
 
+function admin_mail_account_settings_from_row($row) {
+    return [
+        'mail_account_id' => (int)$row['id'],
+        'mail_account_email' => (string)$row['email'],
+        'smtp_host' => (string)$row['smtp_host'],
+        'smtp_port' => (string)$row['smtp_port'],
+        'smtp_secure' => (string)$row['smtp_secure'],
+        'smtp_user' => (string)($row['smtp_user'] ?? ''),
+        'smtp_pass' => (string)($row['smtp_pass'] ?? ''),
+        'smtp_from_email' => (string)$row['email'],
+        'smtp_from_name' => (string)($row['label'] ?: 'CORO PROJECT'),
+        'mail_receive_protocol' => (string)$row['receive_protocol'],
+        'mail_pop_host' => (string)$row['receive_host'],
+        'mail_pop_port' => (string)$row['receive_port'],
+        'mail_pop_encryption' => (string)$row['receive_encryption'],
+        'mail_pop_user' => (string)($row['receive_user'] ?? ''),
+        'mail_pop_pass' => (string)($row['receive_pass'] ?? ''),
+        'mail_sync_limit' => '50',
+    ];
+}
+
+function admin_mail_accounts_list($pdo, $activeOnly = false) {
+    admin_mail_ensure_schema($pdo);
+    $sql = 'SELECT * FROM mail_accounts';
+    if ($activeOnly) {
+        $sql .= ' WHERE is_active = 1';
+    }
+    $sql .= ' ORDER BY is_default DESC, id ASC';
+    return $pdo->query($sql)->fetchAll();
+}
+
+function admin_mail_default_account($pdo, $settings) {
+    $accounts = admin_mail_accounts_list($pdo, true);
+    if ($accounts) {
+        return array_merge($settings, admin_mail_account_settings_from_row($accounts[0]));
+    }
+    return $settings;
+}
+
+function admin_mail_account_settings_by_id($pdo, $accountId, $settings) {
+    $accountId = (int)$accountId;
+    if ($accountId <= 0) {
+        return $settings;
+    }
+    admin_mail_ensure_schema($pdo);
+    $stmt = $pdo->prepare('SELECT * FROM mail_accounts WHERE id = ? AND is_active = 1 LIMIT 1');
+    $stmt->execute([$accountId]);
+    $row = $stmt->fetch();
+    if (!$row) {
+        return $settings;
+    }
+    return array_merge($settings, admin_mail_account_settings_from_row($row));
+}
+
+function admin_mail_save_account($pdo, $data, $userId, $id = null) {
+    admin_mail_ensure_schema($pdo);
+    $label = trim((string)($data['label'] ?? ''));
+    $email = trim((string)($data['email'] ?? ''));
+    if ($label === '' || $email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return ['error' => '表示名とメールアドレスを正しく入力してください。'];
+    }
+
+    $isDefault = !empty($data['is_default']) ? 1 : 0;
+    if (!$id) {
+        try {
+            $existingCount = (int)$pdo->query('SELECT COUNT(*) FROM mail_accounts')->fetchColumn();
+            if ($existingCount === 0) {
+                $isDefault = 1;
+            }
+        } catch (Exception $e) {
+        }
+    }
+    if ($isDefault) {
+        $pdo->exec('UPDATE mail_accounts SET is_default = 0');
+    }
+
+    $fields = [
+        'label' => $label,
+        'email' => $email,
+        'smtp_host' => trim((string)($data['smtp_host'] ?? 'localhost')),
+        'smtp_port' => (int)($data['smtp_port'] ?? 25),
+        'smtp_secure' => trim((string)($data['smtp_secure'] ?? 'none')),
+        'smtp_user' => trim((string)($data['smtp_user'] ?? '')),
+        'smtp_pass' => trim((string)($data['smtp_pass'] ?? '')),
+        'receive_protocol' => trim((string)($data['receive_protocol'] ?? 'imap')),
+        'receive_host' => trim((string)($data['receive_host'] ?? 's221.myssl.jp')),
+        'receive_port' => (int)($data['receive_port'] ?? 993),
+        'receive_encryption' => trim((string)($data['receive_encryption'] ?? 'ssl')),
+        'receive_user' => trim((string)($data['receive_user'] ?? '')),
+        'receive_pass' => trim((string)($data['receive_pass'] ?? '')),
+        'is_default' => $isDefault,
+        'is_active' => !empty($data['is_active']) ? 1 : 0,
+    ];
+    if (!in_array($fields['smtp_secure'], ['ssl', 'tls', 'none'], true)) $fields['smtp_secure'] = 'none';
+    if (!in_array($fields['receive_protocol'], ['imap', 'pop3'], true)) $fields['receive_protocol'] = 'imap';
+    if (!in_array($fields['receive_encryption'], ['ssl', 'tls', 'none'], true)) $fields['receive_encryption'] = 'ssl';
+    if ($fields['smtp_port'] <= 0) $fields['smtp_port'] = 25;
+    if ($fields['receive_port'] <= 0) $fields['receive_port'] = $fields['receive_protocol'] === 'imap' ? 993 : 995;
+
+    try {
+        if ($id) {
+            $existing = $pdo->prepare('SELECT smtp_pass, receive_pass FROM mail_accounts WHERE id = ? LIMIT 1');
+            $existing->execute([(int)$id]);
+            $old = $existing->fetch() ?: [];
+            if ($fields['smtp_pass'] === '') $fields['smtp_pass'] = (string)($old['smtp_pass'] ?? '');
+            if ($fields['receive_pass'] === '') $fields['receive_pass'] = (string)($old['receive_pass'] ?? '');
+            $stmt = $pdo->prepare('
+                UPDATE mail_accounts
+                SET label=?, email=?, smtp_host=?, smtp_port=?, smtp_secure=?, smtp_user=?, smtp_pass=?,
+                    receive_protocol=?, receive_host=?, receive_port=?, receive_encryption=?, receive_user=?, receive_pass=?,
+                    is_default=?, is_active=?, updated_by=?, updated_at=NOW()
+                WHERE id=?
+            ');
+            $stmt->execute([
+                $fields['label'], $fields['email'], $fields['smtp_host'], $fields['smtp_port'], $fields['smtp_secure'],
+                $fields['smtp_user'], $fields['smtp_pass'], $fields['receive_protocol'], $fields['receive_host'],
+                $fields['receive_port'], $fields['receive_encryption'], $fields['receive_user'], $fields['receive_pass'],
+                $fields['is_default'], $fields['is_active'], $userId ?: null, (int)$id,
+            ]);
+        } else {
+            $stmt = $pdo->prepare('
+                INSERT INTO mail_accounts
+                    (label, email, smtp_host, smtp_port, smtp_secure, smtp_user, smtp_pass,
+                     receive_protocol, receive_host, receive_port, receive_encryption, receive_user, receive_pass,
+                     is_default, is_active, created_by, updated_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ');
+            $stmt->execute([
+                $fields['label'], $fields['email'], $fields['smtp_host'], $fields['smtp_port'], $fields['smtp_secure'],
+                $fields['smtp_user'], $fields['smtp_pass'], $fields['receive_protocol'], $fields['receive_host'],
+                $fields['receive_port'], $fields['receive_encryption'], $fields['receive_user'], $fields['receive_pass'],
+                $fields['is_default'], $fields['is_active'], $userId ?: null, $userId ?: null,
+            ]);
+        }
+        return ['success' => true];
+    } catch (Exception $e) {
+        return ['error' => 'メールアカウントの保存に失敗しました。同じメールアドレスが既に登録されている可能性があります。'];
+    }
+}
+
+function admin_mail_delete_account($pdo, $id) {
+    admin_mail_ensure_schema($pdo);
+    $pdo->prepare('DELETE FROM mail_accounts WHERE id = ?')->execute([(int)$id]);
+    return ['success' => true];
+}
+
+function admin_mail_attach_account_to_message($pdo, $messageId, $settings) {
+    $accountId = (int)admin_mail_setting($settings, 'mail_account_id', '0');
+    $accountEmail = admin_mail_setting($settings, 'mail_account_email', admin_mail_setting($settings, 'smtp_from_email', ''));
+    if ($messageId <= 0 || (!admin_table_has_column($pdo, 'mail_messages', 'account_id') && !admin_table_has_column($pdo, 'mail_messages', 'account_email'))) {
+        return;
+    }
+    try {
+        $pdo->prepare('UPDATE mail_messages SET account_id = ?, account_email = ? WHERE id = ?')
+            ->execute([$accountId ?: null, $accountEmail !== '' ? $accountEmail : null, (int)$messageId]);
+    } catch (Exception $e) {
+    }
+}
+
 function admin_mail_receive_protocol($settings) {
     $protocol = strtolower(admin_mail_setting($settings, 'mail_receive_protocol', 'pop3'));
     return in_array($protocol, ['imap', 'pop3'], true) ? $protocol : 'pop3';
@@ -83,7 +272,33 @@ function admin_mail_receive_ready($settings) {
         && admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass')) !== '';
 }
 
+function admin_mail_receive_ready_for_app($pdo, $settings) {
+    try {
+        if (admin_mail_accounts_list($pdo, true)) {
+            return true;
+        }
+    } catch (Exception $e) {
+    }
+    return admin_mail_receive_ready($settings);
+}
+
 function admin_mail_sync_receive($pdo, $settings, $userId = null) {
+    $accounts = admin_mail_accounts_list($pdo, true);
+    if ($accounts) {
+        $inserted = 0;
+        $skipped = 0;
+        foreach ($accounts as $account) {
+            $accountSettings = array_merge($settings, admin_mail_account_settings_from_row($account));
+            $result = admin_mail_receive_protocol($accountSettings) === 'imap'
+                ? admin_mail_sync_imap($pdo, $accountSettings, $userId)
+                : admin_mail_sync_pop3($pdo, $accountSettings, $userId);
+            $inserted += (int)($result['inserted'] ?? 0);
+            $skipped += (int)($result['skipped'] ?? 0);
+            $pdo->prepare('UPDATE mail_accounts SET last_sync_at = NOW() WHERE id = ?')->execute([(int)$account['id']]);
+        }
+        return ['inserted' => $inserted, 'skipped' => $skipped];
+    }
+
     return admin_mail_receive_protocol($settings) === 'imap'
         ? admin_mail_sync_imap($pdo, $settings, $userId)
         : admin_mail_sync_pop3($pdo, $settings, $userId);
@@ -500,6 +715,11 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
     $fp = admin_mail_pop3_connect($settings);
     $inserted = 0;
     $skipped = 0;
+    $host = admin_mail_setting($settings, 'mail_pop_host', 's221.myssl.jp');
+    $user = admin_mail_setting($settings, 'mail_pop_user', admin_mail_setting($settings, 'smtp_user', ''));
+    $uidPrefix = admin_mail_setting($settings, 'mail_account_id', '') !== ''
+        ? 'pop3:' . $host . ':' . $user . ':INBOX:'
+        : '';
 
     try {
         $uidlLines = admin_mail_pop3_multiline($fp, 'UIDL');
@@ -527,10 +747,19 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
         ");
 
         foreach ($items as $num => $uidl) {
+            $rawUidl = (string)$uidl;
+            $uidl = $uidPrefix . $rawUidl;
             $existsStmt->execute([$uidl, $uidl]);
             if ($existsStmt->fetch()) {
                 $skipped++;
                 continue;
+            }
+            if ($uidPrefix !== '') {
+                $existsStmt->execute([$rawUidl, $rawUidl]);
+                if ($existsStmt->fetch()) {
+                    $skipped++;
+                    continue;
+                }
             }
 
             $raw = implode("\r\n", admin_mail_pop3_multiline($fp, 'RETR ' . (int)$num));
@@ -681,6 +910,8 @@ function admin_mail_sync_imap($pdo, $settings, $userId = null) {
                 $parsed['received_at'] ?: date('Y-m-d H:i:s'),
             ]);
 
+            admin_mail_attach_account_to_message($pdo, (int)$pdo->lastInsertId(), $settings);
+            admin_mail_attach_account_to_message($pdo, (int)$pdo->lastInsertId(), $settings);
             admin_mail_upsert_contact($pdo, $parsed['from_email'], $parsed['from_name'], $userId);
             $inserted++;
         }
@@ -708,6 +939,23 @@ function admin_mail_require_phpmailer() {
 function admin_mail_send_message($pdo, $settings, $userId, $toText, $subject, $body, $ccText = '', $bccText = '', $replyToMailId = null) {
     admin_mail_ensure_schema($pdo);
     admin_mail_require_phpmailer();
+
+    if ($replyToMailId) {
+        try {
+            $replyAccount = $pdo->prepare('SELECT account_id FROM mail_messages WHERE id = ? LIMIT 1');
+            $replyAccount->execute([(int)$replyToMailId]);
+            $accountId = (int)$replyAccount->fetchColumn();
+            if ($accountId > 0) {
+                $settings = admin_mail_account_settings_by_id($pdo, $accountId, $settings);
+            } else {
+                $settings = admin_mail_default_account($pdo, $settings);
+            }
+        } catch (Exception $e) {
+            $settings = admin_mail_default_account($pdo, $settings);
+        }
+    } else {
+        $settings = admin_mail_default_account($pdo, $settings);
+    }
 
     $to = admin_mail_parse_recipients($toText);
     $cc = admin_mail_parse_recipients($ccText);
@@ -815,6 +1063,7 @@ function admin_mail_send_message($pdo, $settings, $userId, $toText, $subject, $b
         $error,
     ]);
     $insertId = (int)$pdo->lastInsertId();
+    admin_mail_attach_account_to_message($pdo, $insertId, $settings);
 
     foreach (array_merge($to, $cc, $bcc) as $recipient) {
         admin_mail_upsert_contact($pdo, $recipient['email'], $recipient['name'], $userId);

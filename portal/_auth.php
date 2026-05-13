@@ -73,6 +73,7 @@ function portal_login($pdo, $loginId, $password) {
         'login_id'    => $account['login_id'],
     ];
     $_SESSION['portal_last_activity'] = time();
+    portal_write_activity($pdo, $account['talent_id'], (int)$account['id'], 'login', 'ポータルにログイン');
 
     return ['success' => true];
 }

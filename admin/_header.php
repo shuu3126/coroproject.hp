@@ -106,6 +106,8 @@ if (isset($pdo) && $pdo instanceof PDO) {
           <a href="<?= h($adminRoot) ?>/production/profile_requests.php" class="<?= _nav_is_active('production/profile_requests.php', $adminRoot) ? 'active' : '' ?>">
             HP掲載情報申請<?= $_nav_profile_request_pending > 0 ? '（' . h((string)$_nav_profile_request_pending) . '）' : '' ?>
           </a>
+          <a href="<?= h($adminRoot) ?>/production/twitch_reports.php" class="<?= _nav_is_active('production/twitch_reports.php', $adminRoot) ? 'active' : '' ?>">Twitch CSV解析</a>
+          <a href="<?= h($adminRoot) ?>/production/portal_activity.php" class="<?= _nav_is_active('production/portal_activity.php', $adminRoot) ? 'active' : '' ?>">ポータル操作ログ</a>
           <a href="<?= h($adminRoot) ?>/production/talent_portal.php" class="<?= _nav_is_active('production/talent_portal.php', $adminRoot) ? 'active' : '' ?>">ポータルアカウント</a>
           <a href="<?= h($adminRoot) ?>/production/notices.php" class="<?= _nav_is_active('production/notices.php', $adminRoot) ? 'active' : '' ?>">ポータルお知らせ</a>
         </div>

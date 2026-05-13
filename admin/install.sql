@@ -448,3 +448,59 @@ CREATE TABLE IF NOT EXISTS talent_profile_change_requests (
   INDEX idx_talent_profile_requests_talent (talent_id),
   INDEX idx_talent_profile_requests_status (status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS talent_portal_activity_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  talent_id VARCHAR(191) NOT NULL,
+  account_id BIGINT UNSIGNED NULL,
+  action VARCHAR(80) NOT NULL,
+  detail TEXT NULL,
+  ip VARCHAR(64) NULL,
+  user_agent VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_portal_activity_talent (talent_id, created_at),
+  INDEX idx_portal_activity_action (action, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS talent_twitch_csv_reports (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  talent_id VARCHAR(191) NOT NULL,
+  report_year INT NOT NULL,
+  report_month INT NOT NULL,
+  original_filename VARCHAR(255) NULL,
+  file_path VARCHAR(500) NULL,
+  row_count INT NOT NULL DEFAULT 0,
+  total_streams INT NOT NULL DEFAULT 0,
+  total_minutes DECIMAL(12,2) NOT NULL DEFAULT 0,
+  total_views INT NOT NULL DEFAULT 0,
+  avg_viewers DECIMAL(12,2) NOT NULL DEFAULT 0,
+  peak_viewers INT NOT NULL DEFAULT 0,
+  followers_gained INT NOT NULL DEFAULT 0,
+  chat_messages INT NOT NULL DEFAULT 0,
+  estimated_revenue DECIMAL(12,2) NOT NULL DEFAULT 0,
+  currency VARCHAR(12) NOT NULL DEFAULT 'JPY',
+  summary_json LONGTEXT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'submitted',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_twitch_reports_talent_month (talent_id, report_year, report_month),
+  INDEX idx_twitch_reports_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS talent_twitch_csv_rows (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  report_id BIGINT UNSIGNED NOT NULL,
+  stream_date DATETIME NULL,
+  title VARCHAR(255) NULL,
+  duration_minutes DECIMAL(10,2) NOT NULL DEFAULT 0,
+  views INT NOT NULL DEFAULT 0,
+  avg_viewers DECIMAL(10,2) NOT NULL DEFAULT 0,
+  peak_viewers INT NOT NULL DEFAULT 0,
+  followers_gained INT NOT NULL DEFAULT 0,
+  chat_messages INT NOT NULL DEFAULT 0,
+  estimated_revenue DECIMAL(12,2) NOT NULL DEFAULT 0,
+  raw_json LONGTEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_twitch_rows_report (report_id),
+  INDEX idx_twitch_rows_date (stream_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

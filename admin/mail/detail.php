@@ -126,6 +126,7 @@ start_page('メール詳細', (string)$message['subject']);
         <tr><th>宛先</th><td><?= h($message['to_text']) ?></td></tr>
         <?php if (!empty($message['cc_text'])): ?><tr><th>Cc</th><td><?= h($message['cc_text']) ?></td></tr><?php endif; ?>
         <?php if (!empty($message['bcc_text'])): ?><tr><th>Bcc</th><td><?= h($message['bcc_text']) ?></td></tr><?php endif; ?>
+        <?php if (!empty($message['account_email'])): ?><tr><th>管理アカウント</th><td><?= h($message['account_email']) ?></td></tr><?php endif; ?>
         <tr><th>日時</th><td><?= h(format_datetime($message['received_at'] ?: ($message['sent_at'] ?: $message['created_at']))) ?></td></tr>
       </tbody>
     </table>
@@ -149,6 +150,9 @@ start_page('メール詳細', (string)$message['subject']);
     <h2 class="section-heading">返信</h2>
     <form method="post" class="form-stack">
       <input type="hidden" name="action" value="reply">
+      <?php if (!empty($message['account_email'])): ?>
+        <div class="alert-box alert-success" style="margin:0;">返信元: <strong><?= h($message['account_email']) ?></strong></div>
+      <?php endif; ?>
       <label><span>送信先</span><input type="text" name="to" value="<?= h($replyTo) ?>" required></label>
       <label><span>件名</span><input type="text" name="subject" value="<?= h($replySubject) ?>" required></label>
       <label><span>本文</span><textarea name="body" rows="10" required><?= h($quoted) ?></textarea></label>

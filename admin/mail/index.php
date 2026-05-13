@@ -70,22 +70,23 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $mailSent = false;
                 try {
                     admin_mail_require_phpmailer();
-                    $fromEmail = admin_mail_setting($settings, 'smtp_from_email', 'info@coroproject.jp');
-                    $fromName  = admin_mail_setting($settings, 'smtp_from_name',  'CORO PROJECT');
+                    $sendSettings = admin_mail_default_account($pdo, $settings);
+                    $fromEmail = admin_mail_setting($sendSettings, 'smtp_from_email', 'info@coroproject.jp');
+                    $fromName  = admin_mail_setting($sendSettings, 'smtp_from_name',  'CORO PROJECT');
                     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
                     $mail->CharSet  = 'UTF-8';
                     $mail->Encoding = 'base64';
-                    $smtpHost = admin_mail_setting($settings, 'smtp_host');
+                    $smtpHost = admin_mail_setting($sendSettings, 'smtp_host');
                     if (in_array($smtpHost, ['', 'localhost', '127.0.0.1'], true)) {
                         $mail->isMail();
                     } else {
                         $mail->isSMTP();
                         $mail->Host     = $smtpHost;
                         $mail->SMTPAuth = true;
-                        $mail->Username = admin_mail_setting($settings, 'smtp_user');
-                        $mail->Password = admin_mail_setting($settings, 'smtp_pass');
-                        $mail->Port     = (int)admin_mail_setting($settings, 'smtp_port', '465');
-                        $smtpSecure     = admin_mail_setting($settings, 'smtp_secure', 'ssl');
+                        $mail->Username = admin_mail_setting($sendSettings, 'smtp_user');
+                        $mail->Password = admin_mail_setting($sendSettings, 'smtp_pass');
+                        $mail->Port     = (int)admin_mail_setting($sendSettings, 'smtp_port', '465');
+                        $smtpSecure     = admin_mail_setting($sendSettings, 'smtp_secure', 'ssl');
                         if ($smtpSecure === 'ssl') {
                             $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
                         } elseif ($smtpSecure === 'tls') {
@@ -248,7 +249,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 }
 
 // 受信設定が揃っているか確認（自動受信・表示両方で使用）
-$receiveReady = admin_mail_receive_ready($settings);
+$receiveReady = admin_mail_receive_ready_for_app($pdo, $settings);
 
 // 受信トレイを開いたとき自動受信
 if ($mailbox === 'inbox' && $receiveReady && $_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -378,9 +379,10 @@ if (admin_table_has_column($pdo, 'inquiries', 'status')) {
 
 $unreadMail = admin_mail_unread_count($pdo);
 
-$smtpReady = admin_mail_setting($settings, 'smtp_host') !== ''
-    && admin_mail_setting($settings, 'smtp_user') !== ''
-    && admin_mail_setting($settings, 'smtp_pass') !== '';
+$smtpReady = (bool)admin_mail_accounts_list($pdo, true)
+    || (admin_mail_setting($settings, 'smtp_host') !== ''
+        && (admin_mail_setting($settings, 'smtp_host') === 'localhost'
+            || (admin_mail_setting($settings, 'smtp_user') !== '' && admin_mail_setting($settings, 'smtp_pass') !== '')));
 
 // 名簿データ構築（mail_contacts + cre_creators のメールアドレス）
 $_contactsRaw = $pdo->query(
@@ -655,6 +657,9 @@ document.addEventListener('DOMContentLoaded', function() {
               <?php if ($isInquiryMode && $statusLabel !== ''): ?>
                 <span class="status-badge <?= h($statusClass) ?>" style="font-size:10px;"><?= h($statusLabel) ?></span>
               <?php endif; ?>
+              <?php if (!$isInquiryMode && !empty($msg['account_email'])): ?>
+                <span class="status-badge muted" style="font-size:10px;"><?= h(mb_strimwidth($msg['account_email'], 0, 22, '…')) ?></span>
+              <?php endif; ?>
               <?php if (!$isInquiryMode && !empty($msg['has_attachments'])): ?><span>📎</span><?php endif; ?>
               <div class="mail-row-time"><?= h($when) ?></div>
             </div>
@@ -833,6 +838,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <?php if (!empty($selectedMessage['cc_text'])): ?>
               <div><strong>Cc:</strong> <?= h($selectedMessage['cc_text']) ?></div>
             <?php endif; ?>
+            <?php if (!empty($selectedMessage['account_email'])): ?>
+              <div><strong>管理アカウント:</strong> <?= h($selectedMessage['account_email']) ?></div>
+            <?php endif; ?>
             <div><strong>日時:</strong> <?= h(format_datetime($selectedMessage['received_at'] ?: ($selectedMessage['sent_at'] ?: $selectedMessage['created_at']))) ?></div>
           </div>
           <div class="mail-detail-actions">
@@ -893,6 +901,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <form method="post" class="form-stack">
               <input type="hidden" name="action" value="send">
               <input type="hidden" name="reply_to" value="<?= (int)$selectedId ?>">
+              <?php if (!empty($selectedMessage['account_email'])): ?>
+                <div style="font-size:12px;color:var(--sub);margin-bottom:4px;">
+                  返信元: <strong><?= h($selectedMessage['account_email']) ?></strong>
+                </div>
+              <?php endif; ?>
               <label><span>宛先</span><input type="text" name="to" value="<?= h($replyTo) ?>" list="reply-contact-list" required></label>
               <label><span>件名</span><input type="text" name="subject" value="<?= h($replySubject) ?>" required></label>
               <label><span>本文</span><textarea name="body" required><?= h($replyBody) ?></textarea></label>

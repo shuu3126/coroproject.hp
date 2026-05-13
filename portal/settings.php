@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'profile_note'      => $_POST['profile_note'] ?? '',
             ]);
             if (isset($result['success'])) {
+                portal_write_activity($pdo, $talent['talent_id'], (int)$talent['id'], 'settings_update', '連絡先・精算情報を更新');
                 portal_flash_set('success', '設定を保存しました。');
                 portal_redirect($portalBase . '/settings.php');
             }
@@ -40,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_POST['new_password_confirm'] ?? ''
             );
             if (isset($result['success'])) {
+                portal_write_activity($pdo, $talent['talent_id'], (int)$talent['id'], 'password_change', 'パスワードを変更');
                 portal_flash_set('success', 'パスワードを変更しました。次回から新しいパスワードでログインしてください。');
                 portal_redirect($portalBase . '/settings.php');
             }
@@ -69,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'tags_text'      => $_POST['tags_text'] ?? '',
                 ]);
                 if (isset($result['success'])) {
+                    portal_write_activity($pdo, $talent['talent_id'], (int)$talent['id'], 'public_profile_request', 'HP掲載情報の変更申請を送信');
                     portal_flash_set('success', 'HP掲載情報の変更申請を送信しました。管理者の承認後にHPへ反映されます。');
                     portal_redirect($portalBase . '/settings.php');
                 }

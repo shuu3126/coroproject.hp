@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($errors)) {
             $result = portal_submit_revenue($pdo, $talent['talent_id'], $year, $month, $data, $evidence_path);
             if (isset($result['success'])) {
+                portal_write_activity($pdo, $talent['talent_id'], (int)$talent['id'], 'revenue_submit', sprintf('%d年%d月分の収益報告を送信', $year, $month));
                 portal_flash_set('success', sprintf('%d年%d月分の収益報告を送信しました。管理者の確認をお待ちください。', $year, $month));
                 portal_redirect($portalBase . '/history.php');
             } else {

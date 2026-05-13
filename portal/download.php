@@ -64,6 +64,7 @@ if ($type === '' || $id <= 0) {
 }
 
 $path = null;
+$detail = '';
 switch ($type) {
     case 'evidence':
         $stmt = $pdo->prepare('
@@ -74,6 +75,7 @@ switch ($type) {
         ');
         $stmt->execute([$id, $talent['talent_id']]);
         $path = $stmt->fetchColumn();
+        $detail = '証憑ファイルを確認';
         break;
 
     case 'invoice':
@@ -85,6 +87,7 @@ switch ($type) {
         ');
         $stmt->execute([$id, $talent['talent_id']]);
         $path = $stmt->fetchColumn();
+        $detail = '請求書PDFをダウンロード';
         break;
 
     case 'receipt':
@@ -97,10 +100,12 @@ switch ($type) {
         ');
         $stmt->execute([$id, $talent['talent_id']]);
         $path = $stmt->fetchColumn();
+        $detail = '領収書PDFをダウンロード';
         break;
 
     default:
         portal_download_fail();
 }
 
+portal_write_activity($pdo, $talent['talent_id'], (int)$talent['id'], 'file_download', $detail);
 portal_download_send_file($path, $type === 'evidence' ? 'inline' : 'attachment');
