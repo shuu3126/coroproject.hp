@@ -188,9 +188,16 @@ const input = document.getElementById('evidenceInput');
 const label = document.getElementById('uploadLabel');
 const box   = document.getElementById('uploadBox');
 
+function setUploadFileName(fileName) {
+  label.textContent = '';
+  const strong = document.createElement('strong');
+  strong.textContent = fileName;
+  label.appendChild(strong);
+}
+
 input.addEventListener('change', () => {
   if (input.files[0]) {
-    label.innerHTML = '<strong>' + input.files[0].name + '</strong>';
+    setUploadFileName(input.files[0].name);
   }
 });
 
@@ -203,7 +210,7 @@ box.addEventListener('drop', (e) => {
     const dt = new DataTransfer();
     dt.items.add(e.dataTransfer.files[0]);
     input.files = dt.files;
-    label.innerHTML = '<strong>' + e.dataTransfer.files[0].name + '</strong>';
+    setUploadFileName(e.dataTransfer.files[0].name);
   }
 });
 </script>

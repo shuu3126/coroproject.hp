@@ -238,8 +238,21 @@ function accounting_period_label($months) {
     );
 }
 
+function accounting_revenue_has_portal_status($pdo) {
+    return admin_table_has_column($pdo, 'accounting_revenues', 'status');
+}
+
+function accounting_revenue_confirmed_where($pdo, $alias = 'r') {
+    if (!accounting_revenue_has_portal_status($pdo)) {
+        return '';
+    }
+    $prefix = $alias !== '' ? $alias . '.' : '';
+    return " AND COALESCE({$prefix}status, 'confirmed') = 'confirmed'";
+}
+
 function accounting_get_uninvoiced_months_upto($pdo, $talentId, $year, $month) {
-    $stmt = $pdo->prepare('
+    $statusWhere = accounting_revenue_confirmed_where($pdo, 'r');
+    $stmt = $pdo->prepare("
         SELECT r.year, r.month
         FROM accounting_revenues r
         LEFT JOIN accounting_invoiced_months im
@@ -249,20 +262,23 @@ function accounting_get_uninvoiced_months_upto($pdo, $talentId, $year, $month) {
         WHERE r.talent_id = ?
           AND im.id IS NULL
           AND (r.year < ? OR (r.year = ? AND r.month <= ?))
+          {$statusWhere}
         GROUP BY r.year, r.month
         ORDER BY r.year, r.month
-    ');
+    ");
     $stmt->execute([(string)$talentId, (int)$year, (int)$year, (int)$month]);
     return $stmt->fetchAll() ?: [];
 }
 
 function accounting_calc_office_share_jpy_for_month($pdo, $talentId, $year, $month, $fxRate) {
-    $stmt = $pdo->prepare('
+    $statusWhere = accounting_revenue_confirmed_where($pdo, '');
+    $stmt = $pdo->prepare("
         SELECT currency, SUM(amount_streaming + amount_goods + amount_sponsor) AS total_amount
         FROM accounting_revenues
         WHERE talent_id = ? AND year = ? AND month = ?
+        {$statusWhere}
         GROUP BY currency
-    ');
+    ");
     $stmt->execute([(string)$talentId, (int)$year, (int)$month]);
     $rows = $stmt->fetchAll();
 
@@ -324,6 +340,7 @@ function accounting_save_revenue($pdo, $userId, $id, $data) {
             $userId ?: null,
             (int)$id,
         ]);
+        accounting_mark_revenue_admin_confirmed($pdo, (int)$id, $userId);
         return (int)$id;
     }
 
@@ -346,12 +363,30 @@ function accounting_save_revenue($pdo, $userId, $id, $data) {
         $userId ?: null,
         $userId ?: null,
     ]);
-    return (int)$pdo->lastInsertId();
+    $savedId = (int)$pdo->lastInsertId();
+    accounting_mark_revenue_admin_confirmed($pdo, $savedId, $userId);
+    return $savedId;
 }
 
 function accounting_delete_revenue($pdo, $id) {
     $stmt = $pdo->prepare('DELETE FROM accounting_revenues WHERE id = ?');
     $stmt->execute([(int)$id]);
+}
+
+function accounting_mark_revenue_admin_confirmed($pdo, $id, $userId = null) {
+    if (!accounting_revenue_has_portal_status($pdo) || $id <= 0) {
+        return;
+    }
+
+    $sets = ["status = 'confirmed'"];
+    if (admin_table_has_column($pdo, 'accounting_revenues', 'submitted_by')) {
+        $sets[] = "submitted_by = 'admin'";
+    }
+    $sets[] = 'updated_by = ?';
+    $sets[] = 'updated_at = NOW()';
+
+    $sql = 'UPDATE accounting_revenues SET ' . implode(', ', $sets) . ' WHERE id = ?';
+    $pdo->prepare($sql)->execute([$userId ?: null, (int)$id]);
 }
 
 function accounting_fetch_invoice($pdo, $id) {
@@ -863,7 +898,8 @@ function accounting_fetch_all_revenues_with_status($pdo, $q = '') {
 }
 
 function accounting_get_pending_summaries($pdo, $fxRate) {
-    $stmt = $pdo->query('
+    $statusWhere = accounting_revenue_confirmed_where($pdo, 'r');
+    $stmt = $pdo->query("
         SELECT r.talent_id, r.year, r.month, r.currency,
                (r.amount_streaming + r.amount_goods + r.amount_sponsor) AS month_total,
                COALESCE(ts.invoice_name, t.name) AS invoice_name,
@@ -876,8 +912,9 @@ function accounting_get_pending_summaries($pdo, $fxRate) {
             AND im.year = r.year
             AND im.month = r.month
         WHERE im.id IS NULL
+          {$statusWhere}
         ORDER BY r.talent_id, r.year, r.month
-    ');
+    ");
     $rows = $stmt->fetchAll();
 
     $byTalent = [];
@@ -965,14 +1002,32 @@ function accounting_portal_accounts_list($pdo) {
     } catch (Exception $e) { return []; }
 }
 
-function accounting_portal_account_create($pdo, $talentId, $loginId, $password, $userId) {
+function accounting_portal_account_for_talent($pdo, $talentId) {
+    if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return null;
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM talent_portal_accounts WHERE talent_id = ? LIMIT 1");
+        $stmt->execute([(string)$talentId]);
+        return $stmt->fetch() ?: null;
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
+function accounting_portal_account_create($pdo, $talentId, $loginId, $password, $userId, $isActive = 1) {
     if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) return ['error' => 'テーブルが存在しません。'];
     try {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $pdo->prepare("
-            INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, created_by)
-            VALUES (?, ?, ?, ?)
-        ")->execute([$talentId, trim($loginId), $hash, $userId]);
+        if (admin_table_has_column($pdo, 'talent_portal_accounts', 'created_by')) {
+            $pdo->prepare("
+                INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active, created_by)
+                VALUES (?, ?, ?, ?, ?)
+            ")->execute([$talentId, trim($loginId), $hash, (int)$isActive, $userId]);
+        } else {
+            $pdo->prepare("
+                INSERT INTO talent_portal_accounts (talent_id, login_id, password_hash, is_active)
+                VALUES (?, ?, ?, ?)
+            ")->execute([$talentId, trim($loginId), $hash, (int)$isActive]);
+        }
         return ['success' => true];
     } catch (Exception $e) {
         return ['error' => 'アカウント作成に失敗しました。'];
@@ -996,8 +1051,13 @@ function accounting_portal_account_update($pdo, $id, $data, $userId) {
             $sets[] = 'is_active = ?';
             $params[] = (int)$data['is_active'];
         }
-        $sets[] = 'updated_by = ?';
-        $params[] = $userId;
+        if (admin_table_has_column($pdo, 'talent_portal_accounts', 'updated_by')) {
+            $sets[] = 'updated_by = ?';
+            $params[] = $userId;
+        }
+        if (!$sets) {
+            return ['success' => true];
+        }
         $params[] = (int)$id;
         $pdo->prepare("UPDATE talent_portal_accounts SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = ?")
             ->execute($params);
@@ -1015,6 +1075,43 @@ function accounting_portal_account_delete($pdo, $id) {
     } catch (Exception $e) {
         return ['error' => 'アカウント削除に失敗しました。'];
     }
+}
+
+function accounting_portal_account_save_for_talent($pdo, $talentId, $data, $userId) {
+    $loginId  = trim((string)($data['login_id'] ?? ''));
+    $password = (string)($data['password'] ?? '');
+    $isActive = !empty($data['is_active']) ? 1 : 0;
+
+    if (!admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) {
+        if ($loginId !== '' || $password !== '') {
+            return ['error' => 'タレントポータルのテーブルが存在しません。admin/portal_migrate.sql を実行してください。'];
+        }
+        return ['skipped' => true];
+    }
+
+    $existing = accounting_portal_account_for_talent($pdo, $talentId);
+    if ($existing) {
+        if ($loginId === '') {
+            return ['error' => '既存のポータルアカウントはログインIDを空にできません。'];
+        }
+        $payload = [
+            'login_id'  => $loginId,
+            'is_active' => $isActive,
+        ];
+        if ($password !== '') {
+            $payload['password'] = $password;
+        }
+        return accounting_portal_account_update($pdo, (int)$existing['id'], $payload, $userId);
+    }
+
+    if ($loginId === '' && $password === '') {
+        return ['skipped' => true];
+    }
+    if ($loginId === '' || $password === '') {
+        return ['error' => '新規ポータルアカウントを作成する場合は、ログインIDと初期パスワードの両方を入力してください。'];
+    }
+
+    return accounting_portal_account_create($pdo, $talentId, $loginId, $password, $userId, $isActive);
 }
 
 // ── Portal notices functions ──────────────────────────────────

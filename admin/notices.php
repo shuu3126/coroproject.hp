@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__) . '/_bootstrap.php';
+require_once __DIR__ . '/_bootstrap.php';
 require_admin_login();
 $user = current_admin_user();
 
@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data = [];
         if (isset($_POST['title'])) $data['title'] = trim($_POST['title']);
         if (isset($_POST['body'])) $data['body'] = trim($_POST['body']);
-        if (isset($_POST['is_published'])) $data['is_published'] = isset($_POST['is_published']) ? 1 : 0;
+        $data['is_published'] = isset($_POST['is_published']) ? 1 : 0;
         if ($id > 0 && $data) {
             $result = accounting_portal_notice_update($pdo, $id, $data, (int)$user['id']);
             if (isset($result['success'])) {
@@ -93,7 +93,8 @@ start_page('お知らせ管理', 'タレントポータルのお知らせを管�
               <td style="font-size:12px;"><?= $n['published_at'] ? h(substr($n['published_at'], 0, 10)) : '-' ?></td>
               <td style="font-size:12px;"><?= h(substr($n['created_at'], 0, 10)) ?></td>
               <td class="actions-inline">
-                <button class="ghost-btn" type="button" onclick="showEditModal(<?= (int)$n['id'] ?>, '<?= h(addslashes($n['title'])) ?>', '<?= h(addslashes($n['body'])) ?>', <?= (int)$n['is_published'] ?>)">編集</button>
+                <button class="ghost-btn" type="button"
+                        onclick='showEditModal(<?= (int)$n['id'] ?>, <?= h(json_encode($n['title'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)) ?>, <?= h(json_encode($n['body'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)) ?>, <?= (int)$n['is_published'] ?>)'>編集</button>
                 <form method="post" data-confirm="このお知らせを削除しますか？">
                   <input type="hidden" name="action" value="delete">
                   <input type="hidden" name="id" value="<?= h((string)$n['id']) ?>">

@@ -144,11 +144,15 @@ CREATE TABLE IF NOT EXISTS accounting_revenues (
   amount_sponsor DECIMAL(12,2) NOT NULL DEFAULT 0,
   evidence_path VARCHAR(500) NULL,
   memo TEXT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'confirmed',
+  submitted_by VARCHAR(20) NOT NULL DEFAULT 'admin',
+  portal_note TEXT NULL,
   created_by BIGINT UNSIGNED NULL,
   updated_by BIGINT UNSIGNED NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_accounting_revenues_talent_month (talent_id, year, month),
+  INDEX idx_accounting_revenues_status (status),
   INDEX idx_accounting_revenues_year_month (year, month)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -405,6 +409,8 @@ CREATE TABLE IF NOT EXISTS talent_portal_accounts (
   last_login_at DATETIME NULL,
   login_attempts INT NOT NULL DEFAULT 0,
   locked_until DATETIME NULL,
+  created_by BIGINT UNSIGNED NULL,
+  updated_by BIGINT UNSIGNED NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_talent_portal_accounts_talent (talent_id)
@@ -417,6 +423,7 @@ CREATE TABLE IF NOT EXISTS talent_portal_notices (
   is_published TINYINT(1) NOT NULL DEFAULT 1,
   published_at DATETIME NULL,
   created_by BIGINT UNSIGNED NULL,
+  updated_by BIGINT UNSIGNED NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_talent_portal_notices_published (is_published, published_at)

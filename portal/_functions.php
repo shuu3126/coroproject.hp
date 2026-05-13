@@ -57,13 +57,15 @@ function portal_get_talent_info($pdo, $talent_id) {
 }
 
 function portal_fetch_revenue_history($pdo, $talent_id) {
-    $hasStatus = _portal_table_has_column($pdo, 'accounting_revenues', 'status');
-    $statusSel = $hasStatus ? 'COALESCE(r.status, "confirmed") AS status' : '"confirmed" AS status';
+    $hasStatus     = _portal_table_has_column($pdo, 'accounting_revenues', 'status');
+    $hasPortalNote = _portal_table_has_column($pdo, 'accounting_revenues', 'portal_note');
+    $statusSel     = $hasStatus ? 'COALESCE(r.status, "confirmed") AS status' : '"confirmed" AS status';
+    $noteSel       = $hasPortalNote ? 'r.portal_note' : 'NULL AS portal_note';
 
     $stmt = $pdo->prepare("
         SELECT r.id, r.year, r.month, r.currency,
                r.amount_streaming, r.amount_goods, r.amount_sponsor,
-               r.evidence_path, r.portal_note, r.updated_at,
+               r.evidence_path, {$noteSel}, r.updated_at,
                {$statusSel},
                CASE WHEN im.id IS NOT NULL THEN 1 ELSE 0 END AS is_invoiced
         FROM accounting_revenues r
@@ -109,6 +111,12 @@ function portal_fetch_notices($pdo) {
 }
 
 function portal_submit_revenue($pdo, $talent_id, $year, $month, $data, $evidence_path = null) {
+    if (!_portal_table_has_column($pdo, 'accounting_revenues', 'status')
+        || !_portal_table_has_column($pdo, 'accounting_revenues', 'submitted_by')
+        || !_portal_table_has_column($pdo, 'accounting_revenues', 'portal_note')) {
+        return ['error' => 'タレントポータル用のDB更新が未実行です。運営に連絡してください。'];
+    }
+
     $year  = (int)$year;
     $month = (int)$month;
 

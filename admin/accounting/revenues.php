@@ -128,12 +128,13 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
             <th class="text-right">合計</th>
             <th>状態</th>
             <th>ポータル</th>
+            <th>提出情報</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
           <?php if (!$rows): ?>
-            <tr><td colspan="10" class="empty-state">まだ収益データがありません。</td></tr>
+            <tr><td colspan="11" class="empty-state">まだ収益データがありません。</td></tr>
           <?php endif; ?>
           <?php foreach ($rows as $row):
             $sum = (float)$row['amount_streaming'] + (float)$row['amount_goods'] + (float)$row['amount_sponsor'];
@@ -167,6 +168,20 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
                 }
                 ?>
               </td>
+              <td>
+                <?php if (!empty($row['evidence_path'])): ?>
+                  <a class="ghost-btn"
+                     href="/<?= h(ltrim((string)$row['evidence_path'], '/')) ?>"
+                     target="_blank" rel="noopener"
+                     style="font-size:11px;padding:4px 8px;">証拠</a>
+                <?php endif; ?>
+                <?php if (!empty($row['portal_note'])): ?>
+                  <span class="status-badge muted" title="<?= h($row['portal_note']) ?>">コメントあり</span>
+                <?php endif; ?>
+                <?php if (empty($row['evidence_path']) && empty($row['portal_note'])): ?>
+                  <span style="color:var(--text-dim);font-size:12px;">-</span>
+                <?php endif; ?>
+              </td>
               <td class="actions-inline">
                 <?php if (($row['status'] ?? 'confirmed') === 'pending'): ?>
                   <form method="post" style="display:inline;">
@@ -175,7 +190,7 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
                     <button class="primary-btn" type="submit" style="font-size:11px;padding:4px 8px;">承認</button>
                   </form>
                   <button class="danger-btn" type="button" style="font-size:11px;padding:4px 8px;"
-                          onclick="rejectRevenue(<?= (int)$row['id'] ?>, '<?= h($row['invoice_name']) ?>')">却下</button>
+                          onclick='rejectRevenue(<?= (int)$row['id'] ?>, <?= h(json_encode($row['invoice_name'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)) ?>)'>却下</button>
                 <?php endif; ?>
                 <a class="ghost-btn"
                    href="<?= h($baseUrl) ?>/accounting/revenue_edit.php?id=<?= urlencode((string)$row['id']) ?>">編集</a>
@@ -200,11 +215,16 @@ function rejectRevenue(id, name) {
     if (note !== null) {
         const form = document.createElement('form');
         form.method = 'post';
-        form.innerHTML = `
-            <input type="hidden" name="action" value="reject">
-            <input type="hidden" name="id" value="${id}">
-            <input type="hidden" name="reject_note" value="${note.replace(/"/g, '&quot;')}">
-        `;
+        const addHidden = (fieldName, value) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = fieldName;
+            input.value = value;
+            form.appendChild(input);
+        };
+        addHidden('action', 'reject');
+        addHidden('id', id);
+        addHidden('reject_note', note);
         document.body.appendChild(form);
         form.submit();
     }
