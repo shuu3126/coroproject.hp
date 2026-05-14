@@ -22,7 +22,7 @@ $_portalScript = basename($_SERVER['SCRIPT_NAME']);
   <title><?= portal_h($_portalPageTitle) ?></title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="<?= portal_h($portalBase) ?>/../images/logo.png">
-  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260514-notifications">
+  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260514-desktop-compact">
 </head>
 <body>
 
@@ -31,10 +31,10 @@ $_portalScript = basename($_SERVER['SCRIPT_NAME']);
   <header class="portal-header">
     <div class="portal-header-inner">
       <a class="portal-brand" href="<?= portal_h($portalBase) ?>/dashboard.php">
-        <span class="portal-brand-mark" aria-hidden="true"></span>
+        <img class="portal-brand-logo" src="<?= portal_h($portalBase) ?>/../images/logo.png" alt="" aria-hidden="true">
         <span>
-          <span class="portal-brand-name">TALENT</span>
-          <span class="portal-brand-sub">PORTAL</span>
+          <span class="portal-brand-name">ころぷろじぇくと</span>
+          <span class="portal-brand-sub">タレントポータル</span>
         </span>
       </a>
       <?php if ($_portalTalent): ?>

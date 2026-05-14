@@ -23,7 +23,7 @@ require __DIR__ . '/_header.php';
     <div class="portal-table-empty">まだ提出履歴がありません。</div>
   <?php else: ?>
   <div class="portal-table-wrap">
-    <table class="portal-table">
+    <table class="portal-table portal-history-table">
       <thead>
         <tr>
           <th>年月</th>
@@ -44,13 +44,13 @@ require __DIR__ . '/_header.php';
           $canEdit = !$row['is_invoiced'] && in_array($row['status'], ['pending', 'rejected']);
         ?>
           <tr>
-            <td><?= portal_h(sprintf('%04d年%d月', $row['year'], $row['month'])) ?></td>
-            <td><?= portal_h($row['currency']) ?></td>
-            <td class="text-right"><?= portal_h(portal_format_money($row['amount_streaming'])) ?></td>
-            <td class="text-right"><?= portal_h(portal_format_money($row['amount_goods'])) ?></td>
-            <td class="text-right"><?= portal_h(portal_format_money($row['amount_sponsor'])) ?></td>
-            <td class="text-right"><strong><?= portal_h(portal_format_money($sum)) ?></strong></td>
-            <td>
+            <td data-label="年月"><?= portal_h(sprintf('%04d年%d月', $row['year'], $row['month'])) ?></td>
+            <td data-label="通貨"><?= portal_h($row['currency']) ?></td>
+            <td data-label="配信" class="text-right"><?= portal_h(portal_format_money($row['amount_streaming'])) ?></td>
+            <td data-label="グッズ" class="text-right"><?= portal_h(portal_format_money($row['amount_goods'])) ?></td>
+            <td data-label="スポンサー" class="text-right"><?= portal_h(portal_format_money($row['amount_sponsor'])) ?></td>
+            <td data-label="合計" class="text-right"><strong><?= portal_h(portal_format_money($sum)) ?></strong></td>
+            <td data-label="状態" class="portal-history-status">
               <span class="badge <?= portal_h($st['class']) ?>"><?= portal_h($st['label']) ?></span>
               <?php if ($row['is_invoiced']): ?>
                 <span class="badge badge-info" style="margin-left:4px;">請求済</span>
@@ -59,7 +59,7 @@ require __DIR__ . '/_header.php';
                 <div class="portal-reject-note">理由: <?= portal_h($row['portal_note']) ?></div>
               <?php endif; ?>
             </td>
-            <td>
+            <td data-label="エビデンス">
               <?php if ($row['evidence_path']): ?>
                 <a class="portal-btn portal-btn-outline portal-btn-sm"
                    href="<?= portal_h($portalBase) ?>/download.php?type=evidence&id=<?= (int)$row['id'] ?>"
@@ -68,7 +68,7 @@ require __DIR__ . '/_header.php';
                 <span style="color:var(--muted);font-size:12px;">なし</span>
               <?php endif; ?>
             </td>
-            <td>
+            <td data-label="操作">
               <?php if ($canEdit): ?>
                 <a class="portal-btn portal-btn-outline portal-btn-sm"
                    href="<?= portal_h($portalBase) ?>/submit.php?year=<?= (int)$row['year'] ?>&month=<?= (int)$row['month'] ?>">
