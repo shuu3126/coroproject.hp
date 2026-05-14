@@ -942,11 +942,14 @@ function admin_mail_require_phpmailer() {
     require_once dirname(__DIR__) . '/production/lib/PHPMailer/SMTP.php';
 }
 
-function admin_mail_send_message($pdo, $settings, $userId, $toText, $subject, $body, $ccText = '', $bccText = '', $replyToMailId = null) {
+function admin_mail_send_message($pdo, $settings, $userId, $toText, $subject, $body, $ccText = '', $bccText = '', $replyToMailId = null, $sendAccountId = null) {
     admin_mail_ensure_schema($pdo);
     admin_mail_require_phpmailer();
 
-    if ($replyToMailId) {
+    $sendAccountId = (int)$sendAccountId;
+    if ($sendAccountId > 0) {
+        $settings = admin_mail_account_settings_by_id($pdo, $sendAccountId, $settings);
+    } elseif ($replyToMailId) {
         try {
             $replyAccount = $pdo->prepare('SELECT account_id FROM mail_messages WHERE id = ? LIMIT 1');
             $replyAccount->execute([(int)$replyToMailId]);

@@ -13,6 +13,14 @@ if ($replyToId > 0) {
     $stmt->execute([$replyToId]);
     $replyMessage = $stmt->fetch();
 }
+$mailAccounts = admin_mail_accounts_list($pdo, true);
+$selectedSendAccountId = (int)($_GET['account_id'] ?? ($_POST['send_account_id'] ?? 0));
+if ($selectedSendAccountId <= 0 && $replyMessage && !empty($replyMessage['account_id'])) {
+    $selectedSendAccountId = (int)$replyMessage['account_id'];
+}
+if ($selectedSendAccountId <= 0 && $mailAccounts) {
+    $selectedSendAccountId = (int)$mailAccounts[0]['id'];
+}
 
 $to = trim($_GET['to'] ?? '');
 $cc = '';
@@ -36,6 +44,7 @@ if ($replyMessage) {
 }
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $selectedSendAccountId = (int)($_POST['send_account_id'] ?? 0);
     $to      = trim($_POST['to']      ?? '');
     $cc      = trim($_POST['cc']      ?? '');
     $bcc     = trim($_POST['bcc']     ?? '');
@@ -43,7 +52,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $body    = trim($_POST['body']    ?? '');
 
     try {
-        $sentId = admin_mail_send_message($pdo, $settings, (int)$user['id'], $to, $subject, $body, $cc, $bcc, $replyToId ?: null);
+        $sentId = admin_mail_send_message($pdo, $settings, (int)$user['id'], $to, $subject, $body, $cc, $bcc, $replyToId ?: null, $selectedSendAccountId ?: null);
         write_admin_log($pdo, (int)$user['id'], 'send', 'mail', (string)$sentId, 'メールを送信しました');
         set_flash('success', 'メールを送信しました。');
         redirect_to($baseUrl . '/mail/detail.php?id=' . $sentId . '&back=sent');
@@ -78,7 +87,7 @@ try {
     }
 } catch (Exception $e) {}
 
-$smtpReady = (bool)admin_mail_accounts_list($pdo, true)
+$smtpReady = (bool)$mailAccounts
     || (admin_mail_setting($settings, 'smtp_host') !== ''
         && (admin_mail_setting($settings, 'smtp_host') === 'localhost'
             || (admin_mail_setting($settings, 'smtp_user') !== '' && admin_mail_setting($settings, 'smtp_pass') !== '')));
@@ -109,6 +118,19 @@ window._MAIL_CONTACTS = <?= json_encode($pickerContacts, JSON_UNESCAPED_UNICODE 
   <section class="card form-card">
     <form method="post" class="form-stack" id="compose-form">
       <input type="hidden" name="reply_to" value="<?= (int)$replyToId ?>">
+
+      <?php if ($mailAccounts): ?>
+        <label>
+          <span>送信元</span>
+          <select name="send_account_id">
+            <?php foreach ($mailAccounts as $account): ?>
+              <option value="<?= (int)$account['id'] ?>" <?= selected((string)$selectedSendAccountId, (string)$account['id']) ?>>
+                <?= h(($account['label'] ? $account['label'] . ' / ' : '') . $account['email']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </label>
+      <?php endif; ?>
 
       <div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">

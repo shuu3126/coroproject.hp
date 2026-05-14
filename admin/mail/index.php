@@ -51,8 +51,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $subject   = trim($_POST['subject']  ?? '');
         $body      = trim($_POST['body']     ?? '');
         $replyToId = (int)($_POST['reply_to'] ?? 0);
+        $sendAccountId = (int)($_POST['send_account_id'] ?? 0);
         try {
-            $sentId = admin_mail_send_message($pdo, $settings, (int)$user['id'], $toText, $subject, $body, $ccText, $bccText, $replyToId ?: null);
+            $sentId = admin_mail_send_message($pdo, $settings, (int)$user['id'], $toText, $subject, $body, $ccText, $bccText, $replyToId ?: null, $sendAccountId ?: null);
             write_admin_log($pdo, (int)$user['id'], 'send', 'mail', (string)$sentId, 'メールを送信しました');
             set_flash('success', '送信しました。');
             redirect_to($baseUrl . '/mail/index.php?mailbox=' . ($replyToId > 0 ? $mailbox . '&id=' . $replyToId : 'sent&id=' . $sentId));
@@ -383,7 +384,10 @@ if (admin_table_has_column($pdo, 'inquiries', 'status')) {
 
 $unreadMail = admin_mail_unread_count($pdo);
 
-$smtpReady = (bool)admin_mail_accounts_list($pdo, true)
+$mailAccounts = admin_mail_accounts_list($pdo, true);
+$defaultSendAccountId = $mailAccounts ? (int)$mailAccounts[0]['id'] : 0;
+
+$smtpReady = (bool)$mailAccounts
     || (admin_mail_setting($settings, 'smtp_host') !== ''
         && (admin_mail_setting($settings, 'smtp_host') === 'localhost'
             || (admin_mail_setting($settings, 'smtp_user') !== '' && admin_mail_setting($settings, 'smtp_pass') !== '')));
@@ -943,6 +947,19 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
   <form method="post" class="mail-compose-modal-body" id="compose-form">
     <input type="hidden" name="action" value="send">
+
+    <?php if ($mailAccounts): ?>
+      <label>
+        <span>送信元</span>
+        <select name="send_account_id">
+          <?php foreach ($mailAccounts as $account): ?>
+            <option value="<?= (int)$account['id'] ?>" <?= selected((string)$defaultSendAccountId, (string)$account['id']) ?>>
+              <?= h(($account['label'] ? $account['label'] . ' / ' : '') . $account['email']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+    <?php endif; ?>
 
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
