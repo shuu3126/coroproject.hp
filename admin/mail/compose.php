@@ -14,11 +14,16 @@ if ($replyToId > 0) {
     $replyMessage = $stmt->fetch();
 }
 $mailAccounts = admin_mail_accounts_list($pdo, true);
-$selectedSendAccountId = (int)($_GET['account_id'] ?? ($_POST['send_account_id'] ?? 0));
-if ($selectedSendAccountId <= 0 && $replyMessage && !empty($replyMessage['account_id'])) {
+$legacySendReady = admin_mail_legacy_send_ready($settings);
+$selectedSendAccountRaw = $_GET['account_id'] ?? ($_POST['send_account_id'] ?? null);
+$selectedSendAccountId = $selectedSendAccountRaw !== null ? (int)$selectedSendAccountRaw : 0;
+if ($selectedSendAccountRaw === null && $replyMessage && !empty($replyMessage['account_id'])) {
     $selectedSendAccountId = (int)$replyMessage['account_id'];
 }
-if ($selectedSendAccountId <= 0 && $mailAccounts) {
+if ($selectedSendAccountRaw === null && $selectedSendAccountId <= 0 && $legacySendReady) {
+    $selectedSendAccountId = -1;
+}
+if ($selectedSendAccountRaw === null && $selectedSendAccountId <= 0 && $mailAccounts) {
     $selectedSendAccountId = (int)$mailAccounts[0]['id'];
 }
 
@@ -87,10 +92,9 @@ try {
     }
 } catch (Exception $e) {}
 
-$smtpReady = (bool)$mailAccounts
-    || (admin_mail_setting($settings, 'smtp_host') !== ''
-        && (admin_mail_setting($settings, 'smtp_host') === 'localhost'
-            || (admin_mail_setting($settings, 'smtp_user') !== '' && admin_mail_setting($settings, 'smtp_pass') !== '')));
+$smtpReady = (bool)$mailAccounts || $legacySendReady;
+$legacyFromEmail = admin_mail_setting($settings, 'smtp_from_email', admin_mail_setting($settings, 'office_email', 'info@coroproject.jp'));
+$legacyFromName = admin_mail_setting($settings, 'smtp_from_name', admin_mail_setting($settings, 'office_name', 'CORO PROJECT'));
 
 start_page('メール作成', '管理画面からメールを送信します');
 ?>
@@ -119,10 +123,15 @@ window._MAIL_CONTACTS = <?= json_encode($pickerContacts, JSON_UNESCAPED_UNICODE 
     <form method="post" class="form-stack" id="compose-form">
       <input type="hidden" name="reply_to" value="<?= (int)$replyToId ?>">
 
-      <?php if ($mailAccounts): ?>
+      <?php if ($mailAccounts || $legacySendReady): ?>
         <label>
           <span>送信元</span>
           <select name="send_account_id">
+            <?php if ($legacySendReady): ?>
+              <option value="-1" <?= selected((string)$selectedSendAccountId, '-1') ?>>
+                <?= h(($legacyFromName ? $legacyFromName . ' / ' : '基本設定 / ') . $legacyFromEmail) ?>
+              </option>
+            <?php endif; ?>
             <?php foreach ($mailAccounts as $account): ?>
               <option value="<?= (int)$account['id'] ?>" <?= selected((string)$selectedSendAccountId, (string)$account['id']) ?>>
                 <?= h(($account['label'] ? $account['label'] . ' / ' : '') . $account['email']) ?>

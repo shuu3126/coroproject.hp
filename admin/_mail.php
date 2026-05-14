@@ -272,6 +272,16 @@ function admin_mail_receive_ready($settings) {
         && admin_mail_setting($settings, 'mail_pop_pass', admin_mail_setting($settings, 'smtp_pass')) !== '';
 }
 
+function admin_mail_legacy_send_ready($settings) {
+    $smtpHost = admin_mail_setting($settings, 'smtp_host', '');
+    $fromEmail = admin_mail_setting($settings, 'smtp_from_email', admin_mail_setting($settings, 'office_email', ''));
+    if ($smtpHost === '' || !filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+    return in_array($smtpHost, ['localhost', '127.0.0.1'], true)
+        || (admin_mail_setting($settings, 'smtp_user') !== '' && admin_mail_setting($settings, 'smtp_pass') !== '');
+}
+
 function admin_mail_receive_ready_for_app($pdo, $settings) {
     try {
         if (admin_mail_accounts_list($pdo, true)) {
@@ -947,7 +957,9 @@ function admin_mail_send_message($pdo, $settings, $userId, $toText, $subject, $b
     admin_mail_require_phpmailer();
 
     $sendAccountId = (int)$sendAccountId;
-    if ($sendAccountId > 0) {
+    if ($sendAccountId === -1) {
+        // Use the legacy/base SMTP settings from app settings.
+    } elseif ($sendAccountId > 0) {
         $settings = admin_mail_account_settings_by_id($pdo, $sendAccountId, $settings);
     } elseif ($replyToMailId) {
         try {

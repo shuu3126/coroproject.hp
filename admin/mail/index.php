@@ -385,12 +385,12 @@ if (admin_table_has_column($pdo, 'inquiries', 'status')) {
 $unreadMail = admin_mail_unread_count($pdo);
 
 $mailAccounts = admin_mail_accounts_list($pdo, true);
-$defaultSendAccountId = $mailAccounts ? (int)$mailAccounts[0]['id'] : 0;
+$legacySendReady = admin_mail_legacy_send_ready($settings);
+$defaultSendAccountId = $legacySendReady ? -1 : ($mailAccounts ? (int)$mailAccounts[0]['id'] : 0);
+$legacyFromEmail = admin_mail_setting($settings, 'smtp_from_email', admin_mail_setting($settings, 'office_email', 'info@coroproject.jp'));
+$legacyFromName = admin_mail_setting($settings, 'smtp_from_name', admin_mail_setting($settings, 'office_name', 'CORO PROJECT'));
 
-$smtpReady = (bool)$mailAccounts
-    || (admin_mail_setting($settings, 'smtp_host') !== ''
-        && (admin_mail_setting($settings, 'smtp_host') === 'localhost'
-            || (admin_mail_setting($settings, 'smtp_user') !== '' && admin_mail_setting($settings, 'smtp_pass') !== '')));
+$smtpReady = (bool)$mailAccounts || $legacySendReady;
 
 // 名簿データ構築（mail_contacts + cre_creators のメールアドレス）
 $_contactsRaw = $pdo->query(
@@ -948,10 +948,15 @@ document.addEventListener('DOMContentLoaded', function() {
   <form method="post" class="mail-compose-modal-body" id="compose-form">
     <input type="hidden" name="action" value="send">
 
-    <?php if ($mailAccounts): ?>
+    <?php if ($mailAccounts || $legacySendReady): ?>
       <label>
         <span>送信元</span>
         <select name="send_account_id">
+          <?php if ($legacySendReady): ?>
+            <option value="-1" <?= selected((string)$defaultSendAccountId, '-1') ?>>
+              <?= h(($legacyFromName ? $legacyFromName . ' / ' : '基本設定 / ') . $legacyFromEmail) ?>
+            </option>
+          <?php endif; ?>
           <?php foreach ($mailAccounts as $account): ?>
             <option value="<?= (int)$account['id'] ?>" <?= selected((string)$defaultSendAccountId, (string)$account['id']) ?>>
               <?= h(($account['label'] ? $account['label'] . ' / ' : '') . $account['email']) ?>
