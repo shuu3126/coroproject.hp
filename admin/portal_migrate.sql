@@ -170,6 +170,144 @@ CREATE TABLE IF NOT EXISTS mail_accounts (
   INDEX idx_mail_accounts_active (is_active, is_default)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS creative_portal_accounts (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  creator_id VARCHAR(191) NOT NULL UNIQUE,
+  login_id VARCHAR(100) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  last_login_at DATETIME NULL,
+  login_attempts INT NOT NULL DEFAULT 0,
+  locked_until DATETIME NULL,
+  password_changed_at DATETIME NULL,
+  created_by BIGINT UNSIGNED NULL,
+  updated_by BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_creative_portal_accounts_creator (creator_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS creative_portal_notices (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  body TEXT NOT NULL,
+  is_published TINYINT(1) NOT NULL DEFAULT 1,
+  published_at DATETIME NULL,
+  created_by BIGINT UNSIGNED NULL,
+  updated_by BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_creative_portal_notices_published (is_published, published_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS creative_portal_activity_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  creator_id VARCHAR(191) NOT NULL,
+  account_id BIGINT UNSIGNED NULL,
+  action VARCHAR(80) NOT NULL,
+  detail TEXT NULL,
+  ip VARCHAR(64) NULL,
+  user_agent VARCHAR(255) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_creative_portal_activity_creator (creator_id, created_at),
+  INDEX idx_creative_portal_activity_action (action, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS creative_project_submissions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  project_id VARCHAR(191) NOT NULL,
+  creator_id VARCHAR(191) NOT NULL,
+  account_id BIGINT UNSIGNED NULL,
+  submission_type VARCHAR(30) NOT NULL DEFAULT 'draft',
+  title VARCHAR(255) NULL,
+  comment TEXT NULL,
+  file_path VARCHAR(500) NULL,
+  original_filename VARCHAR(255) NULL,
+  external_url VARCHAR(500) NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'submitted',
+  admin_note TEXT NULL,
+  reviewed_by BIGINT UNSIGNED NULL,
+  reviewed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_creative_submissions_project (project_id, created_at),
+  INDEX idx_creative_submissions_creator (creator_id, created_at),
+  INDEX idx_creative_submissions_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS creative_project_comments (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  project_id VARCHAR(191) NOT NULL,
+  creator_id VARCHAR(191) NOT NULL,
+  sender_type VARCHAR(20) NOT NULL DEFAULT 'admin',
+  account_id BIGINT UNSIGNED NULL,
+  admin_user_id BIGINT UNSIGNED NULL,
+  body TEXT NOT NULL,
+  is_internal TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_creative_comments_project (project_id, created_at),
+  INDEX idx_creative_comments_creator (creator_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS creative_project_invoices (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  creator_id VARCHAR(191) NOT NULL,
+  project_id VARCHAR(191) NULL,
+  account_id BIGINT UNSIGNED NULL,
+  invoice_no VARCHAR(100) NULL,
+  invoice_date DATE NULL,
+  amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  tax_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  withholding_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  currency VARCHAR(12) NOT NULL DEFAULT 'JPY',
+  invoice_file_path VARCHAR(500) NULL,
+  invoice_original_name VARCHAR(255) NULL,
+  receipt_file_path VARCHAR(500) NULL,
+  receipt_original_name VARCHAR(255) NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  admin_note TEXT NULL,
+  reviewed_by BIGINT UNSIGNED NULL,
+  reviewed_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_creative_invoices_creator (creator_id, created_at),
+  INDEX idx_creative_invoices_project (project_id, created_at),
+  INDEX idx_creative_invoices_status (status, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS creative_payment_statements (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  creator_id VARCHAR(191) NOT NULL,
+  project_id VARCHAR(191) NULL,
+  statement_no VARCHAR(100) NULL,
+  statement_month VARCHAR(7) NULL,
+  subject VARCHAR(255) NOT NULL,
+  amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  tax_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  withholding_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  adjustment_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  net_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  currency VARCHAR(12) NOT NULL DEFAULT 'JPY',
+  scheduled_at DATE NULL,
+  paid_at DATE NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'scheduled',
+  statement_file_path VARCHAR(500) NULL,
+  statement_original_name VARCHAR(255) NULL,
+  receipt_file_path VARCHAR(500) NULL,
+  receipt_original_name VARCHAR(255) NULL,
+  items_json LONGTEXT NULL,
+  admin_note TEXT NULL,
+  portal_note TEXT NULL,
+  created_by BIGINT UNSIGNED NULL,
+  updated_by BIGINT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_creative_statements_creator (creator_id, created_at),
+  INDEX idx_creative_statements_project (project_id, created_at),
+  INDEX idx_creative_statements_status (status, scheduled_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DROP PROCEDURE IF EXISTS coro_add_column_if_missing;
 
 DELIMITER //
@@ -289,6 +427,102 @@ CALL coro_add_column_if_missing(
   'mail_messages',
   'account_email',
   'VARCHAR(191) NULL AFTER `account_id`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'email',
+  'VARCHAR(191) NULL AFTER `contact`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'discord_name',
+  'VARCHAR(191) NULL AFTER `email`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'real_name',
+  'VARCHAR(255) NULL AFTER `name`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'display_name',
+  'VARCHAR(255) NULL AFTER `real_name`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'postal_code',
+  'VARCHAR(20) NULL AFTER `discord_name`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'address',
+  'TEXT NULL AFTER `postal_code`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'bank_info',
+  'TEXT NULL AFTER `address`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'invoice_registration_no',
+  'VARCHAR(100) NULL AFTER `bank_info`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'withholding_type',
+  'VARCHAR(30) NOT NULL DEFAULT ''individual'' AFTER `invoice_registration_no`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'availability_status',
+  'VARCHAR(30) NOT NULL DEFAULT ''available'' AFTER `withholding_type`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_creators',
+  'available_note',
+  'TEXT NULL AFTER `availability_status`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_projects',
+  'portal_visible',
+  'TINYINT(1) NOT NULL DEFAULT 0 AFTER `memo`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_projects',
+  'portal_summary',
+  'TEXT NULL AFTER `portal_visible`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_projects',
+  'portal_reference_url',
+  'VARCHAR(500) NULL AFTER `portal_summary`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_projects',
+  'portal_terms_note',
+  'TEXT NULL AFTER `portal_reference_url`'
+);
+
+CALL coro_add_column_if_missing(
+  'cre_projects',
+  'portal_status_note',
+  'TEXT NULL AFTER `portal_terms_note`'
 );
 
 DROP PROCEDURE IF EXISTS coro_add_column_if_missing;

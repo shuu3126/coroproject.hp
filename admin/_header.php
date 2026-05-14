@@ -12,6 +12,14 @@ $_navPortalPaths = [
     'production/talent_portal.php',
     'production/notices.php',
 ];
+$_navCreativePortalPaths = [
+    'creative/portal.php',
+    'creative/portal_accounts.php',
+    'creative/portal_submissions.php',
+    'creative/portal_billing.php',
+    'creative/portal_notices.php',
+    'creative/portal_activity.php',
+];
 
 $_script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $_scriptBasename = basename($_script);
@@ -59,6 +67,7 @@ if (!function_exists('_nav_is_any_active')) {
 $_nav_mail_unread = 0;
 $_nav_profile_request_pending = 0;
 $_nav_portal_pending = 0;
+$_nav_creative_portal_pending = 0;
 if (isset($pdo) && $pdo instanceof PDO) {
     try {
         if (admin_table_has_column($pdo, 'mail_messages', 'status')) {
@@ -73,6 +82,9 @@ if (isset($pdo) && $pdo instanceof PDO) {
         $_nav_portal_pending = $_nav_profile_request_pending;
         if (function_exists('accounting_portal_pending_count')) {
             $_nav_portal_pending += accounting_portal_pending_count($pdo);
+        }
+        if (function_exists('creative_portal_pending_count')) {
+            $_nav_creative_portal_pending = creative_portal_pending_count($pdo);
         }
     } catch (Exception $e) {}
 }
@@ -161,6 +173,9 @@ if (isset($pdo) && $pdo instanceof PDO) {
         <div class="nav-section-items <?= $_navSection === 'creative' ? 'open' : '' ?>">
           <a href="<?= h($adminRoot) ?>/creative/projects.php" class="<?= _nav_is_active('creative/projects.php', $adminRoot) ? 'active' : '' ?>">制作案件管理</a>
           <a href="<?= h($adminRoot) ?>/creative/creators.php" class="<?= _nav_is_active('creative/creators.php', $adminRoot) ? 'active' : '' ?>">クリエイターリスト</a>
+          <a href="<?= h($adminRoot) ?>/creative/portal.php" class="<?= _nav_is_any_active($_navCreativePortalPaths, $adminRoot) ? 'active' : '' ?>">
+            Creativeポータル<?= $_nav_creative_portal_pending > 0 ? '（' . h((string)$_nav_creative_portal_pending) . '）' : '' ?>
+          </a>
           <a href="<?= h($adminRoot) ?>/crm/clients.php" class="<?= _nav_is_active('crm/clients.php', $adminRoot) ? 'active' : '' ?>">クライアント管理</a>
           <a href="<?= h($adminRoot) ?>/content/news.php" class="<?= _nav_is_active('content/news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
         </div>

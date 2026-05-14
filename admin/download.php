@@ -94,6 +94,36 @@ switch ($kind) {
         $path = $stmt->fetchColumn();
         break;
 
+    case 'creative_submission':
+        $stmt = $pdo->prepare('SELECT file_path FROM creative_project_submissions WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $path = $stmt->fetchColumn();
+        break;
+
+    case 'creative_invoice':
+        $stmt = $pdo->prepare('SELECT invoice_file_path FROM creative_project_invoices WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $path = $stmt->fetchColumn();
+        break;
+
+    case 'creative_invoice_receipt':
+        $stmt = $pdo->prepare('SELECT receipt_file_path FROM creative_project_invoices WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $path = $stmt->fetchColumn();
+        break;
+
+    case 'creative_statement':
+        $stmt = $pdo->prepare('SELECT statement_file_path FROM creative_payment_statements WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $path = $stmt->fetchColumn();
+        break;
+
+    case 'creative_statement_receipt':
+        $stmt = $pdo->prepare('SELECT receipt_file_path FROM creative_payment_statements WHERE id = ? LIMIT 1');
+        $stmt->execute([$id]);
+        $path = $stmt->fetchColumn();
+        break;
+
     default:
         admin_download_fail();
 }

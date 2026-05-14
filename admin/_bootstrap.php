@@ -127,6 +127,7 @@ require_once __DIR__ . '/_pdf.php';
 require_once __DIR__ . '/_accounting.php';
 require_once __DIR__ . '/_mail.php';
 require_once __DIR__ . '/_data_transfer.php';
+require_once __DIR__ . '/_creative_portal.php';
 
 $_adminScriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $_adminCsrfExempt = substr($_adminScriptName, -strlen('/admin/system/session_touch.php')) === '/admin/system/session_touch.php';

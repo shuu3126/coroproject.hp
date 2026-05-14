@@ -34,7 +34,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll();
 
-$statuses   = ['受付', '企画・ラフ', '制作中', '確認中', '納品', '完了'];
+$statuses   = ['受付', '企画・ラフ', '制作中', '確認中', '修正依頼', '納品', '完了'];
 $categories = ['illustration' => 'イラスト', 'live2d' => 'Live2D', 'single_art' => '一枚絵', 'music' => '音楽', 'video' => '動画', 'other' => 'その他'];
 
 start_page('制作案件管理', '');
@@ -42,7 +42,10 @@ start_page('制作案件管理', '');
 <main class="page-container">
   <section class="page-header-block with-actions">
     <h1>制作案件管理</h1>
-    <a class="primary-btn" href="<?= h($baseUrl) ?>/creative/project_edit.php">+ 新規案件</a>
+    <div class="actions-inline">
+      <a class="ghost-btn" href="<?= h($baseUrl) ?>/creative/portal.php">Creativeポータル</a>
+      <a class="primary-btn" href="<?= h($baseUrl) ?>/creative/project_edit.php">+ 新規案件</a>
+    </div>
   </section>
 
   <form method="get" class="card form-card" style="padding:12px 16px;">
@@ -139,6 +142,7 @@ function cre_project_badge($status) {
     switch ($status) {
         case '完了':   return 'success';
         case '納品':
+        case '修正依頼':
         case '確認中': return 'warning';
         case '制作中': return 'info';
         default:       return 'muted';

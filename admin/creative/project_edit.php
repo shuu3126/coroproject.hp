@@ -5,11 +5,16 @@ $user = current_admin_user();
 
 $id     = trim($_GET['id'] ?? '');
 $isEdit = $id !== '';
-$row    = ['id' => '', 'client_id' => '', 'title' => '', 'category' => 'illustration', 'status' => '受付', 'creator_id' => '', 'deadline' => '', 'deliverable_url' => '', 'client_amount' => '', 'creator_amount' => '', 'memo' => '', 'source' => 'manual', 'inquiry_id' => null];
+$row    = ['id' => '', 'client_id' => '', 'title' => '', 'category' => 'illustration', 'status' => '受付', 'creator_id' => '', 'deadline' => '', 'deliverable_url' => '', 'client_amount' => '', 'creator_amount' => '', 'memo' => '', 'portal_visible' => 0, 'portal_summary' => '', 'portal_reference_url' => '', 'portal_terms_note' => '', 'portal_status_note' => '', 'source' => 'manual', 'inquiry_id' => null];
 $inquiryId      = 0;
 $inqClientName  = '';
 $inqClientEmail = '';
 try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN inquiry_id INT NULL DEFAULT NULL"); } catch (Exception $e) {}
+try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN portal_visible TINYINT(1) NOT NULL DEFAULT 0"); } catch (Exception $e) {}
+try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN portal_summary TEXT NULL"); } catch (Exception $e) {}
+try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN portal_reference_url VARCHAR(500) NULL"); } catch (Exception $e) {}
+try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN portal_terms_note TEXT NULL"); } catch (Exception $e) {}
+try { $pdo->exec("ALTER TABLE cre_projects ADD COLUMN portal_status_note TEXT NULL"); } catch (Exception $e) {}
 
 if ($isEdit) {
     $stmt = $pdo->prepare('SELECT * FROM cre_projects WHERE id = ? LIMIT 1');
@@ -41,6 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $clientAmount   = $_POST['client_amount'] !== '' ? (float)$_POST['client_amount'] : null;
     $creatorAmount  = $_POST['creator_amount'] !== '' ? (float)$_POST['creator_amount'] : null;
     $memo           = trim($_POST['memo'] ?? '');
+    $portalVisible  = isset($_POST['portal_visible']) ? 1 : 0;
+    $portalSummary  = trim($_POST['portal_summary'] ?? '');
+    $portalReferenceUrl = trim($_POST['portal_reference_url'] ?? '');
+    $portalTermsNote = trim($_POST['portal_terms_note'] ?? '');
+    $portalStatusNote = trim($_POST['portal_status_note'] ?? '');
     $inquiryIdPost  = ((int)($_POST['inquiry_id'] ?? 0)) ?: null;
     $source         = $inquiryIdPost ? 'inquiry' : ($row['source'] ?? 'manual');
 
@@ -48,13 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($isEdit) {
-            $pdo->prepare('UPDATE cre_projects SET client_id=?,title=?,category=?,status=?,creator_id=?,deadline=?,deliverable_url=?,client_amount=?,creator_amount=?,memo=?,inquiry_id=?,updated_by=? WHERE id=?')
-                ->execute([$clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, $inquiryIdPost, (int)$user['id'], $id]);
+            $pdo->prepare('UPDATE cre_projects SET client_id=?,title=?,category=?,status=?,creator_id=?,deadline=?,deliverable_url=?,client_amount=?,creator_amount=?,memo=?,portal_visible=?,portal_summary=?,portal_reference_url=?,portal_terms_note=?,portal_status_note=?,inquiry_id=?,updated_by=? WHERE id=?')
+                ->execute([$clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, $portalVisible, $portalSummary, $portalReferenceUrl, $portalTermsNote, $portalStatusNote, $inquiryIdPost, (int)$user['id'], $id]);
             write_admin_log($pdo, (int)$user['id'], 'edit', 'cre_project', $id, '制作案件を更新しました');
         } else {
             $saveId = normalize_file_stem('cre-' . date('Ymd-His'), 'project');
-            $pdo->prepare('INSERT INTO cre_projects (id,client_id,title,category,status,creator_id,deadline,deliverable_url,client_amount,creator_amount,memo,source,inquiry_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-                ->execute([$saveId, $clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, $source, $inquiryIdPost, (int)$user['id']]);
+            $pdo->prepare('INSERT INTO cre_projects (id,client_id,title,category,status,creator_id,deadline,deliverable_url,client_amount,creator_amount,memo,portal_visible,portal_summary,portal_reference_url,portal_terms_note,portal_status_note,source,inquiry_id,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+                ->execute([$saveId, $clientId, $title, $category, $status, $creatorId, $deadline, $deliverableUrl, $clientAmount, $creatorAmount, $memo, $portalVisible, $portalSummary, $portalReferenceUrl, $portalTermsNote, $portalStatusNote, $source, $inquiryIdPost, (int)$user['id']]);
             write_admin_log($pdo, (int)$user['id'], 'create', 'cre_project', $saveId, '制作案件を作成しました');
         }
         set_flash('success', '保存しました。');
@@ -67,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $clients    = $pdo->query("SELECT id, name FROM clients ORDER BY name ASC")->fetchAll();
 $creators   = $pdo->query("SELECT id, name, type FROM cre_creators WHERE is_active = 1 ORDER BY name ASC")->fetchAll();
-$statuses   = ['受付', '企画・ラフ', '制作中', '確認中', '納品', '完了'];
+$statuses   = ['受付', '企画・ラフ', '制作中', '確認中', '修正依頼', '納品', '完了'];
 $categories = ['illustration' => 'イラスト', 'live2d' => 'Live2D', 'single_art' => '一枚絵', 'music' => '音楽', 'video' => '動画', 'other' => 'その他'];
 
 $ca  = (float)($row['client_amount']  ?? 0);
@@ -151,6 +161,28 @@ start_page($isEdit ? '制作案件を編集' : '制作案件を追加', '');
     </label>
 
     <label><span>メモ</span><textarea name="memo" rows="3" placeholder="内部共有メモ。クライアントには見えません。"><?= h($row['memo'] ?? '') ?></textarea></label>
+
+    <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;">
+      <h2 class="section-heading">Creativeポータル共有</h2>
+      <label class="checkbox-row">
+        <input type="checkbox" name="portal_visible" value="1" <?= checked(!empty($row['portal_visible'])) ?>>
+        <span>この案件をデザイナーのCreativeポータルに表示する</span>
+      </label>
+      <label><span>ポータル表示用の概要</span>
+        <textarea name="portal_summary" rows="4" placeholder="デザイナーに共有する依頼内容・制作範囲・確認事項"><?= h($row['portal_summary'] ?? '') ?></textarea>
+      </label>
+      <div class="form-grid two">
+        <label><span>資料URL</span>
+          <input type="text" name="portal_reference_url" value="<?= h($row['portal_reference_url'] ?? '') ?>" placeholder="Google Drive / Notion / 仕様書など">
+        </label>
+        <label><span>進行メモ</span>
+          <input type="text" name="portal_status_note" value="<?= h($row['portal_status_note'] ?? '') ?>" placeholder="例：初稿確認中 / 追加資料待ち">
+        </label>
+      </div>
+      <label><span>条件・注意事項</span>
+        <textarea name="portal_terms_note" rows="3" placeholder="修正回数、納品形式、権利・利用範囲、注意事項など"><?= h($row['portal_terms_note'] ?? '') ?></textarea>
+      </label>
+    </div>
 
     <div class="actions-inline">
       <button class="primary-btn" type="submit">保存する</button>
