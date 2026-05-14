@@ -1,9 +1,9 @@
 <?php
 require_once __DIR__ . '/includes/layout.php';
 
-$pageTitle = $siteName . ' | VTuber・案件仲介・クリエイティブ支援の総合ポータル';
-$pageDescription = 'CORO PROJECTの総合ポータル。VTuber事務所、企業向け案件仲介、クリエイティブ支援を一体で案内し、活動設計・案件提案・制作進行の相談窓口へつなぎます。';
-$ogDescription = 'VTuber事務所、企業向け案件仲介、クリエイティブ支援を一体で案内するCORO PROJECTの総合ポータル。';
+$pageTitle = $siteName . ' | Production / Business Matching / Creative Support';
+$pageDescription = 'CORO PROJECTの総合ポータル。Production、Business Matching、Creative Supportを一体で案内し、活動設計・案件提案・制作進行の相談窓口へつなぎます。';
+$ogDescription = 'Production、Business Matching、Creative Supportを一体で案内するCORO PROJECTの総合ポータル。';
 $homeUrl = 'https://coroproject.jp/';
 $ogImage = 'https://coroproject.jp/images/ogp.png';
 $homeJsonLd = [
@@ -91,8 +91,8 @@ render_header('', false);
             <span>つなぎ、可能性を拡張する。</span>
           </h1>
           <p class="hero-lead">
-            CORO PROJECTは、VTuber事務所運営を軸に、<br class="hide-mobile">
-            活動設計、企業案件の接続、制作進行までを一つの導線で支える総合支援ブランドです。
+            CORO PROJECTは、Productionを軸に、<br class="hide-mobile">
+            Business Matching、Creative Supportまでを一つの導線で支える総合支援ブランドです。
           </p>
         </div>
 

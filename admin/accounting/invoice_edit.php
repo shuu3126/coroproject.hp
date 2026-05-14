@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $divLabels = ['production' => 'Production', 'business' => 'Business', 'creative' => 'Creative'];
 $pageTitle = $division !== 'production'
     ? ($divLabels[$division] ?? $division) . ' 請求書を作成'
-    : ($mode === 'manual' ? 'Production スポット請求書を作る' : '収益から請求書を作る');
+    : ($mode === 'manual' ? 'Production 個別請求書を作る' : '収益から請求書を作る');
 start_page($pageTitle, '請求書を作成します。');
 ?>
 <main class="page-container narrow">
@@ -268,7 +268,7 @@ start_page($pageTitle, '請求書を作成します。');
         <label><span>請求種別</span>
           <select name="mode" onchange="this.form.submit()">
             <option value="revenue" <?= selected($mode, 'revenue') ?>>収益から自動作成</option>
-            <option value="manual" <?= selected($mode, 'manual') ?>>スポット請求（グッズ制作費など）</option>
+            <option value="manual" <?= selected($mode, 'manual') ?>>個別請求（グッズ制作費など）</option>
           </select>
         </label>
       <?php else: ?>
