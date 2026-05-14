@@ -484,7 +484,7 @@ function accounting_division_label($division) {
     }
 }
 
-function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $year, $month, $subject, $details, $note, $division, $dealId = null, $projectId = null, $talentId = null) {
+function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $year, $month, $subject, $details, $note, $division, $dealId = null, $projectId = null, $talentId = null, $dueDate = '', $paymentBankInfo = '') {
     $amount = 0.0;
     $talentId = trim((string)$talentId);
     $talentId = $talentId !== '' ? $talentId : null;
@@ -523,6 +523,7 @@ function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $ye
             $userId ?: null,
         ]);
         $invoiceId = (int)$pdo->lastInsertId();
+        accounting_update_invoice_payment_fields($pdo, $invoiceId, $dueDate, $paymentBankInfo);
 
         $itemStmt = $pdo->prepare('INSERT INTO accounting_invoice_items (invoice_id, sort_order, description, amount_jpy, created_at) VALUES (?, ?, ?, ?, NOW())');
         foreach ($details as $idx => $item) {
@@ -591,6 +592,7 @@ function accounting_regenerate_invoice_pdf($pdo, $config, $invoiceId) {
         'talent_real_name' => $invoice['invoice_name'],
         'talent_display_name' => !empty($invoice['talent_name']) ? $invoice['talent_name'] : $invoice['invoice_name'],
         'issue_date' => date('Y-m-d'),
+        'due_date' => $invoice['due_date'] ?? '',
         'subject' => $invoice['subject'],
         'amount_jpy' => $invoice['amount_jpy'],
         'items' => array_map(function ($row) {
@@ -600,6 +602,7 @@ function accounting_regenerate_invoice_pdf($pdo, $config, $invoiceId) {
             ];
         }, $invoice['items']),
         'note' => $invoice['note'],
+        'payment_bank_info' => $invoice['payment_bank_info'] ?? ($settings['office_bank_info'] ?? ''),
         'period_label' => $periodLabel,
     ];
 
@@ -688,7 +691,7 @@ function accounting_delete_invoice($pdo, $invoiceId) {
     return $invoice;
 }
 
-function accounting_create_revenue_invoice($pdo, $config, $userId, $talentId, $year, $month, $fxRate, $note) {
+function accounting_create_revenue_invoice($pdo, $config, $userId, $talentId, $year, $month, $fxRate, $note, $dueDate = '', $paymentBankInfo = '') {
     $months = accounting_get_uninvoiced_months_upto($pdo, $talentId, $year, $month);
     if (!$months) {
         throw new RuntimeException('指定した締め月までの未請求月がありません。');
@@ -738,6 +741,7 @@ function accounting_create_revenue_invoice($pdo, $config, $userId, $talentId, $y
         ]);
 
         $invoiceId = (int)$pdo->lastInsertId();
+        accounting_update_invoice_payment_fields($pdo, $invoiceId, $dueDate, $paymentBankInfo);
 
         $itemStmt = $pdo->prepare('
             INSERT INTO accounting_invoice_items (invoice_id, sort_order, description, amount_jpy, created_at)
@@ -766,7 +770,7 @@ function accounting_create_revenue_invoice($pdo, $config, $userId, $talentId, $y
     return $invoiceId;
 }
 
-function accounting_create_manual_invoice($pdo, $config, $userId, $talentId, $year, $month, $subject, $details, $note, $journalCategory = 'その他収入') {
+function accounting_create_manual_invoice($pdo, $config, $userId, $talentId, $year, $month, $subject, $details, $note, $journalCategory = 'その他収入', $dueDate = '', $paymentBankInfo = '') {
     $amount = 0.0;
     foreach ($details as $detail) {
         $amount += (float)$detail['amount'];
@@ -800,6 +804,7 @@ function accounting_create_manual_invoice($pdo, $config, $userId, $talentId, $ye
         ]);
 
         $invoiceId = (int)$pdo->lastInsertId();
+        accounting_update_invoice_payment_fields($pdo, $invoiceId, $dueDate, $paymentBankInfo);
 
         $itemStmt = $pdo->prepare('
             INSERT INTO accounting_invoice_items (invoice_id, sort_order, description, amount_jpy, created_at)
@@ -1065,6 +1070,33 @@ function accounting_portal_reject_revenue($pdo, $id, $userId, $note = '') {
         if (isset($startedTransaction) && $startedTransaction && $pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
         return false;
     }
+}
+
+function accounting_update_invoice_payment_fields($pdo, $invoiceId, $dueDate = '', $paymentBankInfo = '') {
+    $sets = [];
+    $params = [];
+
+    $dueDate = trim((string)$dueDate);
+    if ($dueDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dueDate)) {
+        throw new RuntimeException('請求期日を正しい日付で入力してください。');
+    }
+
+    if (admin_table_has_column($pdo, 'accounting_invoices', 'due_date')) {
+        $sets[] = 'due_date = ?';
+        $params[] = $dueDate !== '' ? $dueDate : null;
+    }
+    if (admin_table_has_column($pdo, 'accounting_invoices', 'payment_bank_info')) {
+        $sets[] = 'payment_bank_info = ?';
+        $params[] = trim((string)$paymentBankInfo) !== '' ? trim((string)$paymentBankInfo) : null;
+    }
+
+    if (!$sets) {
+        return;
+    }
+
+    $params[] = (int)$invoiceId;
+    $stmt = $pdo->prepare('UPDATE accounting_invoices SET ' . implode(', ', $sets) . ', updated_at = NOW() WHERE id = ?');
+    $stmt->execute($params);
 }
 
 function accounting_portal_fetch_pending_list($pdo) {

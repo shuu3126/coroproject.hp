@@ -430,6 +430,18 @@ CALL coro_add_column_if_missing(
 );
 
 CALL coro_add_column_if_missing(
+  'accounting_invoices',
+  'due_date',
+  'DATE NULL AFTER `note`'
+);
+
+CALL coro_add_column_if_missing(
+  'accounting_invoices',
+  'payment_bank_info',
+  'TEXT NULL AFTER `due_date`'
+);
+
+CALL coro_add_column_if_missing(
   'cre_creators',
   'email',
   'VARCHAR(191) NULL AFTER `contact`'

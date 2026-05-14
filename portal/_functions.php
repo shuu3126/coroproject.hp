@@ -266,17 +266,55 @@ function portal_fetch_rejected_revenue_alerts($pdo, $talent_id, $limit = 5) {
 }
 
 function portal_notification_count($pdo, $talent_id) {
-    $count = count(portal_fetch_notices($pdo));
+    $lastReadAt = portal_last_notifications_read_at($pdo, $talent_id);
+    $count = 0;
+
+    foreach (portal_fetch_notices($pdo) as $notice) {
+        $noticeAt = (string)($notice['published_at'] ?: $notice['created_at'] ?: '');
+        if ($lastReadAt === null || ($noticeAt !== '' && strtotime($noticeAt) > strtotime($lastReadAt))) {
+            $count++;
+        }
+    }
+
     if (!_portal_table_has_column($pdo, 'accounting_revenues', 'status')) {
         return $count;
     }
     try {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounting_revenues WHERE talent_id = ? AND status = 'rejected'");
-        $stmt->execute([(string)$talent_id]);
+        if ($lastReadAt === null) {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounting_revenues WHERE talent_id = ? AND status = 'rejected'");
+            $stmt->execute([(string)$talent_id]);
+        } else {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounting_revenues WHERE talent_id = ? AND status = 'rejected' AND updated_at > ?");
+            $stmt->execute([(string)$talent_id, $lastReadAt]);
+        }
         $count += (int)$stmt->fetchColumn();
     } catch (Exception $e) {
     }
     return $count;
+}
+
+function portal_last_notifications_read_at($pdo, $talent_id) {
+    if (!portal_activity_ready($pdo)) {
+        return null;
+    }
+    try {
+        $stmt = $pdo->prepare("
+            SELECT created_at
+            FROM talent_portal_activity_logs
+            WHERE talent_id = ? AND action = 'notifications_viewed'
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        ");
+        $stmt->execute([(string)$talent_id]);
+        $value = $stmt->fetchColumn();
+        return $value ? (string)$value : null;
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
+function portal_mark_notifications_read($pdo, $talent_id, $account_id = null) {
+    portal_write_activity($pdo, $talent_id, $account_id, 'notifications_viewed', '通知を確認しました');
 }
 
 function portal_activity_ready($pdo) {
@@ -334,6 +372,9 @@ function portal_upload_twitch_csv($file, $talent_id, $year, $month) {
     if (!isset($file['tmp_name']) || (int)$file['error'] !== UPLOAD_ERR_OK) {
         return ['error' => 'CSVファイルのアップロードに失敗しました。'];
     }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        return ['error' => 'アップロードされたCSVファイルを確認できませんでした。'];
+    }
     if ((int)$file['size'] > 5 * 1024 * 1024) {
         return ['error' => 'CSVファイルは5MB以下にしてください。'];
     }
@@ -341,6 +382,14 @@ function portal_upload_twitch_csv($file, $talent_id, $year, $month) {
     $ext = strtolower(pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
     if ($ext !== 'csv') {
         return ['error' => 'CSVファイル（.csv）のみアップロードできます。'];
+    }
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($file['tmp_name']);
+        $allowedMimes = ['text/plain', 'text/csv', 'application/csv', 'application/vnd.ms-excel'];
+        if (is_string($mime) && !in_array($mime, $allowedMimes, true)) {
+            return ['error' => 'CSVファイルの中身を確認できませんでした。'];
+        }
     }
 
     $ym = sprintf('%04d%02d', (int)$year, (int)$month);
@@ -738,6 +787,9 @@ function portal_upload_public_profile_image($file, $talent_id) {
     if (!isset($file['tmp_name']) || (int)$file['error'] !== UPLOAD_ERR_OK) {
         return ['error' => '画像のアップロードに失敗しました。'];
     }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        return ['error' => 'アップロードされた画像を確認できませんでした。'];
+    }
 
     $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     $finfo = new finfo(FILEINFO_MIME_TYPE);
@@ -898,6 +950,9 @@ function portal_submit_revenue($pdo, $talent_id, $year, $month, $data, $evidence
 function portal_upload_evidence($file, $talent_id, $year, $month) {
     if (!isset($file['tmp_name']) || (int)$file['error'] !== UPLOAD_ERR_OK) {
         return ['error' => 'ファイルのアップロードに失敗しました。'];
+    }
+    if (!is_uploaded_file($file['tmp_name'])) {
+        return ['error' => 'アップロードされたファイルを確認できませんでした。'];
     }
 
     $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];

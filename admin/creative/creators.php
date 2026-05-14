@@ -17,7 +17,15 @@ $q    = trim($_GET['q'] ?? '');
 $type = trim($_GET['type'] ?? '');
 $sql  = 'SELECT * FROM cre_creators WHERE 1=1';
 $params = [];
-if ($q !== '')    { $sql .= ' AND (name LIKE ? OR contact LIKE ?)'; $params[] = "%$q%"; $params[] = "%$q%"; }
+if ($q !== '') {
+    if (admin_table_has_column($pdo, 'cre_creators', 'email')) {
+        $sql .= ' AND (name LIKE ? OR contact LIKE ? OR email LIKE ?)';
+        $params[] = "%$q%"; $params[] = "%$q%"; $params[] = "%$q%";
+    } else {
+        $sql .= ' AND (name LIKE ? OR contact LIKE ?)';
+        $params[] = "%$q%"; $params[] = "%$q%";
+    }
+}
 if ($type !== '') { $sql .= ' AND type = ?'; $params[] = $type; }
 $sql .= ' ORDER BY is_active DESC, name ASC';
 $stmt = $pdo->prepare($sql);
@@ -64,6 +72,7 @@ start_page('クリエイターリスト', '');
             <th>種別</th>
             <th>スキル</th>
             <th>連絡先</th>
+            <th>ポータル情報</th>
             <th>ポートフォリオ</th>
             <th>状態</th>
             <th style="width:100px;"></th>
@@ -71,7 +80,7 @@ start_page('クリエイターリスト', '');
         </thead>
         <tbody>
         <?php if (!$rows): ?>
-          <tr><td colspan="7" class="empty-state">クリエイターが登録されていません。</td></tr>
+          <tr><td colspan="8" class="empty-state">クリエイターが登録されていません。</td></tr>
         <?php endif; ?>
         <?php foreach ($rows as $r):
           $skills = json_decode($r['skill_tags_json'] ?? '[]', true);
@@ -91,6 +100,10 @@ start_page('クリエイターリスト', '');
               <?php endif; ?>
             </td>
             <td class="muted" style="font-size:.82em;"><?= h($r['contact'] ?? '—') ?></td>
+            <td class="muted" style="font-size:.82em;">
+              <?= h($r['email'] ?? '') ?><br>
+              <?= !empty($r['bank_info']) ? '<span class="status-badge success">振込先あり</span>' : '<span class="status-badge muted">振込先未登録</span>' ?>
+            </td>
             <td><?= $r['portfolio_url'] ? '<a href="' . h($r['portfolio_url']) . '" target="_blank" rel="noopener" style="color:var(--primary);">リンク</a>' : '<span class="muted">—</span>' ?></td>
             <td>
               <span class="status-badge <?= $r['is_active'] ? 'success' : 'muted' ?>">

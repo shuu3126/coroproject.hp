@@ -447,6 +447,26 @@ function cp_upload_file($file, $creatorId, $bucket, $allowedExts, $maxBytes = 52
         return ['error' => '許可されていないファイル形式です。'];
     }
 
+    if (class_exists('finfo')) {
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($file['tmp_name']);
+        $allowedMimes = [
+            'jpg'  => ['image/jpeg'],
+            'jpeg' => ['image/jpeg'],
+            'png'  => ['image/png'],
+            'gif'  => ['image/gif'],
+            'webp' => ['image/webp'],
+            'pdf'  => ['application/pdf', 'application/x-pdf'],
+            'zip'  => ['application/zip', 'application/x-zip-compressed'],
+            'psd'  => ['application/octet-stream', 'image/vnd.adobe.photoshop'],
+            'ai'   => ['application/pdf', 'application/postscript', 'application/octet-stream'],
+            'clip' => ['application/octet-stream'],
+        ];
+        if (is_string($mime) && isset($allowedMimes[$ext]) && !in_array($mime, $allowedMimes[$ext], true)) {
+            return ['error' => 'ファイルの中身と拡張子が一致しません。'];
+        }
+    }
+
     $ym = date('Ym');
     $bucket = preg_replace('/[^a-z0-9_\-]/', '', strtolower((string)$bucket));
     $dir = CREATIVE_PORTAL_UPLOAD_DIR . '/' . $bucket . '/' . $ym;

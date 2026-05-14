@@ -287,16 +287,22 @@ function admin_mail_sync_receive($pdo, $settings, $userId = null) {
     if ($accounts) {
         $inserted = 0;
         $skipped = 0;
+        $errors = [];
         foreach ($accounts as $account) {
             $accountSettings = array_merge($settings, admin_mail_account_settings_from_row($account));
-            $result = admin_mail_receive_protocol($accountSettings) === 'imap'
-                ? admin_mail_sync_imap($pdo, $accountSettings, $userId)
-                : admin_mail_sync_pop3($pdo, $accountSettings, $userId);
-            $inserted += (int)($result['inserted'] ?? 0);
-            $skipped += (int)($result['skipped'] ?? 0);
-            $pdo->prepare('UPDATE mail_accounts SET last_sync_at = NOW() WHERE id = ?')->execute([(int)$account['id']]);
+            try {
+                $result = admin_mail_receive_protocol($accountSettings) === 'imap'
+                    ? admin_mail_sync_imap($pdo, $accountSettings, $userId)
+                    : admin_mail_sync_pop3($pdo, $accountSettings, $userId);
+                $inserted += (int)($result['inserted'] ?? 0);
+                $skipped += (int)($result['skipped'] ?? 0);
+                $pdo->prepare('UPDATE mail_accounts SET last_sync_at = NOW() WHERE id = ?')->execute([(int)$account['id']]);
+            } catch (Exception $e) {
+                $errors[] = ($account['email'] ?: $account['label']) . ': ' . $e->getMessage();
+                continue;
+            }
         }
-        return ['inserted' => $inserted, 'skipped' => $skipped];
+        return ['inserted' => $inserted, 'skipped' => $skipped, 'errors' => $errors];
     }
 
     return admin_mail_receive_protocol($settings) === 'imap'

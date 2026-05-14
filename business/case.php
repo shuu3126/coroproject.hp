@@ -1,10 +1,10 @@
 <?php
 require __DIR__ . '/includes/layout.php';
-$siteTitle = 'Case | ころコネクト！ | CORO PROJECT';
+$siteTitle = 'Case | COROCONNECT | CORO PROJECT';
 render_header('case', $siteTitle, [
-  'page_name' => 'Case | ころコネクト！ | CORO PROJECT',
+  'page_name' => 'Case | COROCONNECT | CORO PROJECT',
   'canonical' => 'https://coroproject.jp/business/case.php',
-  'description' => 'ころコネクト！の案件対応事例。企業・ブランド向けに、VTuber起用やPR施策をどのように設計・実施しているかを紹介します。'
+  'description' => 'COROCONNECTの案件対応事例。企業・ブランド向けに、VTuber起用やPR施策をどのように設計・実施しているかを紹介します。'
 ]);
 ?>
 <section class="hero page-hero">

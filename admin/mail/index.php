@@ -32,7 +32,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         try {
             $result = admin_mail_sync_receive($pdo, $settings, (int)$user['id']);
             write_admin_log($pdo, (int)$user['id'], 'sync', 'mail', null, 'メールを受信同期しました');
-            set_flash('success', '受信完了 — 新着 ' . (int)$result['inserted'] . ' 件');
+            if (!empty($result['errors'])) {
+                set_flash('error', '一部のメールアカウントで受信失敗: ' . implode(' / ', $result['errors']) . '（成功分の新着 ' . (int)$result['inserted'] . ' 件）');
+            } else {
+                set_flash('success', '受信完了 — 新着 ' . (int)$result['inserted'] . ' 件');
+            }
         } catch (Exception $e) {
             set_flash('error', '受信失敗: ' . $e->getMessage());
         }

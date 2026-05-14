@@ -48,7 +48,7 @@ $_portalScript = basename($_SERVER['SCRIPT_NAME']);
       </nav>
       <div class="portal-user">
         <a class="portal-bell" href="<?= portal_h($portalBase) ?>/activity.php" aria-label="通知">
-          <span><?= (int)min(99, $_portalNoticeCount) ?></span>
+          <?php if ($_portalNoticeCount > 0): ?><span><?= (int)min(99, $_portalNoticeCount) ?></span><?php endif; ?>
         </a>
         <span class="portal-user-name"><?= portal_h($_portalTalent['talent_name']) ?></span>
         <a class="portal-avatar" href="<?= portal_h($portalBase) ?>/settings.php" aria-label="マイページ">

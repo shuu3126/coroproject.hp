@@ -134,6 +134,8 @@ $form = [
     'month'        => date('n'),
     'fx_rate'      => number_format($defaultFx, 4, '.', ''),
     'note'         => (string)$settings['office_invoice_note'],
+    'due_date'     => '',
+    'payment_bank_info' => (string)$settings['office_bank_info'],
     'details_text' => '',
     'subject'      => '',
     'journal_category' => 'その他収入',
@@ -159,6 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form['month']        = isset($_POST['month'])      ? (string)$_POST['month']      : date('n');
     $form['fx_rate']      = isset($_POST['fx_rate'])    ? (string)$_POST['fx_rate']    : number_format($defaultFx, 4, '.', '');
     $form['note']         = isset($_POST['note'])       ? (string)$_POST['note']       : '';
+    $form['due_date']     = isset($_POST['due_date'])   ? (string)$_POST['due_date']   : '';
+    $form['payment_bank_info'] = isset($_POST['payment_bank_info']) ? (string)$_POST['payment_bank_info'] : '';
     $form['details_text'] = isset($_POST['details_text']) ? (string)$_POST['details_text'] : '';
     $form['subject']      = isset($_POST['subject'])    ? (string)$_POST['subject']    : '';
     $form['journal_category'] = isset($_POST['journal_category']) ? (string)$_POST['journal_category'] : 'その他収入';
@@ -180,7 +184,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $year    = (int)$form['year'];
             $month   = (int)$form['month'];
             $note    = trim($form['note']);
+            $dueDate = trim($form['due_date']);
+            $paymentBankInfo = trim($form['payment_bank_info']);
             $subject = trim($form['subject']);
+            if ($dueDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dueDate)) {
+                throw new RuntimeException('請求期日を正しい日付で入力してください。');
+            }
 
             if ($division !== 'production') {
                 // Business / Creative: クライアント宛手動請求書
@@ -196,7 +205,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $clientId ?: null, $year, $month,
                     $subject, $details, $note,
                     $division, $dealId, $projectId,
-                    trim($form['talent_id']) ?: null
+                    trim($form['talent_id']) ?: null,
+                    $dueDate,
+                    $paymentBankInfo
                 );
             } else {
                 $talentId = trim($form['talent_id']);
@@ -206,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $details = parse_detail_lines($form['details_text']);
                     if ($subject === '') throw new RuntimeException('件名を入力してください。');
                     if (!$details)       throw new RuntimeException('明細を1行以上入力してください。');
-                    $invoiceId = accounting_create_manual_invoice($pdo, $config, $user['id'], $talentId, $year, $month, $subject, $details, $note, $form['journal_category']);
+                    $invoiceId = accounting_create_manual_invoice($pdo, $config, $user['id'], $talentId, $year, $month, $subject, $details, $note, $form['journal_category'], $dueDate, $paymentBankInfo);
                 } else {
                     if (!empty($form['use_latest_fx'])) {
                         $latestFxInfo = invoice_edit_fetch_latest_usd_jpy_rate($fxApiKey);
@@ -216,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $fxRate = (float)$form['fx_rate'];
                     }
                     if ($fxRate <= 0) throw new RuntimeException('為替レートを正しく入力してください。');
-                    $invoiceId = accounting_create_revenue_invoice($pdo, $config, $user['id'], $talentId, $year, $month, $fxRate, $note);
+                    $invoiceId = accounting_create_revenue_invoice($pdo, $config, $user['id'], $talentId, $year, $month, $fxRate, $note, $dueDate, $paymentBankInfo);
                 }
             }
 
@@ -410,6 +421,17 @@ start_page($pageTitle, '請求書を作成します。');
         <div id="rev-preview-error" style="display:none;font-size:12px;color:var(--danger);padding:4px 0;"></div>
       </div>
     <?php endif; ?>
+
+    <div class="form-grid two">
+      <label>
+        <span>請求期日</span>
+        <input type="date" name="due_date" value="<?= h($form['due_date']) ?>">
+      </label>
+      <label>
+        <span>振込先</span>
+        <textarea name="payment_bank_info" rows="4" placeholder="銀行名 / 支店 / 口座種別 / 口座番号 / 名義"><?= h($form['payment_bank_info']) ?></textarea>
+      </label>
+    </div>
 
     <label>
       <span>備考</span>

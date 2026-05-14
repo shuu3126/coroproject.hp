@@ -6,6 +6,7 @@ $talent = current_portal_talent();
 $logs = portal_fetch_activity_logs($pdo, $talent['talent_id'], 100);
 $notices = portal_fetch_notices($pdo);
 $revenueAlerts = portal_fetch_rejected_revenue_alerts($pdo, $talent['talent_id'], 20);
+portal_mark_notifications_read($pdo, $talent['talent_id'], $talent['id'] ?? null);
 
 $portalPageTitle = '通知';
 require __DIR__ . '/_header.php';
@@ -56,6 +57,9 @@ require __DIR__ . '/_header.php';
           <div>
             <strong><?= portal_h($notice['title']) ?></strong>
             <span><?= portal_h(substr($notice['published_at'] ?? $notice['created_at'], 0, 16)) ?></span>
+            <?php if (!empty($notice['body'])): ?>
+              <div class="portal-notice-body"><?= nl2br(portal_h($notice['body'])) ?></div>
+            <?php endif; ?>
           </div>
         </div>
       <?php endforeach; ?>

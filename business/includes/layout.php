@@ -8,7 +8,7 @@ function h(string $value): string {
 function render_header(string $currentPage, string $siteTitle, array $seo = []): void {
   global $navItems, $siteRoot, $contactUrl, $bmSite;
   $pageName = $seo['page_name'] ?? $siteTitle;
-  $description = $seo['description'] ?? 'ころコネクト！はCORO PROJECTの企業向けVTuber案件総合窓口。VTuber起用相談・候補提案・条件整理・進行支援まで一体で対応します。';
+  $description = $seo['description'] ?? 'COROCONNECTはCORO PROJECTの企業向けVTuber案件総合窓口。VTuber起用相談・候補提案・条件整理・進行支援まで一体で対応します。';
   $canonical = $seo['canonical'] ?? 'https://coroproject.jp/business/';
   $ogType = $seo['og_type'] ?? 'website';
   ?>
@@ -37,7 +37,8 @@ function render_header(string $currentPage, string $siteTitle, array $seo = []):
       "@graph": [
         {
           "@type": "Organization",
-          "name": "ころコネクト！",
+          "name": "COROCONNECT",
+          "alternateName": "ころコネクト！",
           "url": "https://coroproject.jp/business/",
           "parentOrganization": {
             "@type": "Organization",
@@ -48,11 +49,12 @@ function render_header(string $currentPage, string $siteTitle, array $seo = []):
         },
         {
           "@type": "Service",
-          "name": "ころコネクト！",
+          "name": "COROCONNECT",
+          "alternateName": "ころコネクト！",
           "serviceType": "VTuberビジネス窓口・企業向けキャスティング相談",
           "provider": {
             "@type": "Organization",
-            "name": "ころコネクト！"
+            "name": "COROCONNECT"
           },
           "areaServed": "JP",
           "url": "https://coroproject.jp/business/",

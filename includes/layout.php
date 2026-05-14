@@ -111,7 +111,7 @@ function render_footer(): void {
             <img src="images/toukalogo.png" alt="CORO PROJECT" class="brand-logo">
             <span class="brand-text">CORO PROJECT</span>
           </a>
-          <p>Productionを軸に、Business MatchingとCreative Supportを展開する総合支援ブランドです。</p>
+          <p>VTuber事務所運営を軸に、企業案件仲介とクリエイティブサポートを展開する総合支援ブランドです。</p>
           <div class="footer-socials">
             <?php coro_public_render_social_icons(); ?>
           </div>

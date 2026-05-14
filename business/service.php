@@ -1,10 +1,10 @@
 <?php
 require __DIR__ . '/includes/layout.php';
-$siteTitle = 'Service | ころコネクト！ | CORO PROJECT';
+$siteTitle = 'Service | COROCONNECT | CORO PROJECT';
 render_header('service', $siteTitle, [
-  'page_name' => 'Service | ころコネクト！ | CORO PROJECT',
+  'page_name' => 'Service | COROCONNECT | CORO PROJECT',
   'canonical' => 'https://coroproject.jp/business/service.php',
-  'description' => 'ころコネクト！の支援内容一覧。VTuberキャスティング・PR施策設計・進行管理など、企業向けVTuberビジネス窓口のサービス内容を紹介します。'
+  'description' => 'COROCONNECTの支援内容一覧。VTuberキャスティング・PR施策設計・進行管理など、企業向けVTuberビジネス窓口のサービス内容を紹介します。'
 ]);
 ?>
 <section class="hero page-hero">
@@ -14,7 +14,7 @@ render_header('service', $siteTitle, [
       <h1 class="hero-title page-title">
         <span class="line solid">企業とVTuberをつなぐ、</span><span class="line solid">3つの支援領域。</span><span class="line accent">相談から実行まで。</span>
       </h1>
-      <p class="hero-lead">ころコネクト！では、キャスティングの提案、PR施策の設計、進行管理の3軸で、案件を進めやすい形に整えます。</p>
+      <p class="hero-lead">COROCONNECTでは、キャスティングの提案、PR施策の設計、進行管理の3軸で、案件を進めやすい形に整えます。</p>
     </div>
     <aside class="hero-panel reveal delay-1">
       <div class="panel-frame">

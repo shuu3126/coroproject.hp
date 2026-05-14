@@ -11,13 +11,13 @@ $navItems = [
 ];
 
 $bmSite = [
-  'brand' => 'ころコネクト！',
+  'brand' => 'COROCONNECT',
   'hero' => [
     'kicker' => 'VTuber BUSINESS CONNECT',
     'lines' => [
       ['class' => 'solid', 'text' => '企業とVTuberを、'],
       ['class' => 'outline', 'text' => 'つなぐ窓口。'],
-      ['class' => 'accent', 'text' => 'ころコネクト！'],
+      ['class' => 'accent', 'text' => 'COROCONNECT'],
     ],
     'lead' => '企業・店舗・地方自治体・広告代理店に向けて、VTuber起用の相談から候補提案・条件整理・進行支援までを一体で担う総合窓口です。インフルエンサーマーケティング・事務所タイアップ依頼・プロモーション相談はこちら。',
   ],

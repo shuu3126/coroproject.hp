@@ -11,11 +11,11 @@ if ($_biz_pdo) {
     } catch (Throwable $e) {}
 }
 
-$siteTitle = 'ころコネクト！ | VTuber案件窓口・企業コラボ相談 | CORO PROJECT';
+$siteTitle = 'COROCONNECT | VTuber案件窓口・企業コラボ相談 | CORO PROJECT';
 render_header('', $siteTitle, [
-  'page_name' => 'ころコネクト！ | VTuber案件窓口・企業コラボ相談 | CORO PROJECT',
+  'page_name' => 'COROCONNECT | VTuber案件窓口・企業コラボ相談 | CORO PROJECT',
   'canonical' => 'https://coroproject.jp/business/',
-  'description' => 'ころコネクト！はCORO PROJECTの企業向けVTuber案件総合窓口。VTuber起用相談・候補提案・条件整理・進行支援まで一体で対応します。'
+  'description' => 'COROCONNECTはCORO PROJECTの企業向けVTuber案件総合窓口。VTuber起用相談・候補提案・条件整理・進行支援まで一体で対応します。'
 ]);
 global $bmSite, $contactUrl;
 ?>
@@ -65,7 +65,7 @@ global $bmSite, $contactUrl;
         <span>相談窓口と</span>
         <span class="nowrap-inline">実行支援。</span>
       </h2>
-      <p class="section-text">ころコネクト！は、企業・ブランド・イベントとVTuberをつなぎ、起用の相談受付から企画整理、候補提案、条件調整、実施進行までを一体で支える事業部です。案件をつなぐだけで終わらせず、実施しやすい形へ整えることを役割にしています。</p>
+      <p class="section-text">COROCONNECTは、企業・ブランド・イベントとVTuberをつなぎ、起用の相談受付から企画整理、候補提案、条件調整、実施進行までを一体で支える事業部です。案件をつなぐだけで終わらせず、実施しやすい形へ整えることを役割にしています。</p>
       <p class="section-text">VTuber業界に不慣れな企業でも相談しやすいように、何を目的に起用するべきか、どの規模の施策から始めるべきか、配信・SNS・イベントのどこが適しているか、といった入口から伴走します。</p>
     </div>
     <div class="info-stack reveal delay-1">

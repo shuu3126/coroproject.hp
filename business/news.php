@@ -20,16 +20,16 @@ if ($pdo) {
     } catch (Throwable $e) {}
 }
 
-render_header('news', 'お知らせ | ころコネクト！ | CORO PROJECT', [
+render_header('news', 'お知らせ | COROCONNECT | CORO PROJECT', [
     'canonical' => 'https://coroproject.jp/business/news.php',
-    'description' => 'ころコネクト！のお知らせ・最新情報。VTuberビジネス窓口に関する最新情報をお届けします。',
+    'description' => 'COROCONNECTのお知らせ・最新情報。VTuberビジネス窓口に関する最新情報をお届けします。',
 ]);
 ?>
 <section class="sub-hero">
   <div class="container">
     <div class="eyebrow"><span></span>NEWS</div>
     <h1 class="hero-title"><span class="line">お知らせ</span></h1>
-    <p class="hero-lead">ころコネクト！に関するお知らせ・最新情報を掲載しています。</p>
+    <p class="hero-lead">COROCONNECTに関するお知らせ・最新情報を掲載しています。</p>
   </div>
 </section>
 

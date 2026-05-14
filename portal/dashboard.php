@@ -120,7 +120,12 @@ require __DIR__ . '/_header.php';
           <span class="portal-dot"></span>
           <time><?= portal_h(str_replace('-', '/', substr($notice['published_at'] ?? $notice['created_at'], 0, 10))) ?></time>
           <span class="portal-pill">お知らせ</span>
-          <strong><?= portal_h($notice['title']) ?></strong>
+          <strong>
+            <?= portal_h($notice['title']) ?>
+            <?php if (!empty($notice['body'])): ?>
+              <span class="portal-notice-meta"><?= nl2br(portal_h($notice['body'])) ?></span>
+            <?php endif; ?>
+          </strong>
           <span class="portal-row-arrow">›</span>
         </div>
       <?php endforeach; ?>

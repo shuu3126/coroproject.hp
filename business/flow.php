@@ -1,10 +1,10 @@
 <?php
 require __DIR__ . '/includes/layout.php';
-$siteTitle = 'Flow | ころコネクト！ | CORO PROJECT';
+$siteTitle = 'Flow | COROCONNECT | CORO PROJECT';
 render_header('flow', $siteTitle, [
-  'page_name' => 'Flow | ころコネクト！ | CORO PROJECT',
+  'page_name' => 'Flow | COROCONNECT | CORO PROJECT',
   'canonical' => 'https://coroproject.jp/business/flow.php',
-  'description' => 'ころコネクト！の案件相談フロー。目的整理・候補提案・条件調整・進行管理まで、企業向けVTuber案件の進め方をわかりやすく案内します。'
+  'description' => 'COROCONNECTの案件相談フロー。目的整理・候補提案・条件調整・進行管理まで、企業向けVTuber案件の進め方をわかりやすく案内します。'
 ]);
 ?>
 <section class="hero page-hero">

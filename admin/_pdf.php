@@ -56,12 +56,15 @@ function pdf_output_as_html_document($title, $payload, $outputPath, $type) {
         . '</h1><div class="meta"><p>CORO PROJECT<br>Mail: info@coroproject.jp<br>No: '
         . pdf_html_escape($payload['invoice_no'] ?? '')
         . '<br>発行日: ' . pdf_html_escape($payload['issue_date'] ?? date('Y-m-d'))
+        . (!empty($payload['due_date']) ? '<br>請求期日: ' . pdf_html_escape($payload['due_date']) : '')
         . '</p></div><p>' . pdf_html_escape(($payload['talent_real_name'] ?? '') . ' 様')
         . '</p><p>' . pdf_html_escape($subject)
         . '</p><p class="total">¥' . number_format((float)($payload['amount_jpy'] ?? 0))
         . '</p><table><thead><tr><th>内容</th><th>金額</th></tr></thead><tbody>'
         . $rows
-        . '</tbody></table><h2>備考</h2><div class="note">'
+        . '</tbody></table>'
+        . (!empty($payload['payment_bank_info']) ? '<h2>振込先</h2><div class="note">' . nl2br(pdf_html_escape($payload['payment_bank_info']), false) . '</div>' : '')
+        . '<h2>備考</h2><div class="note">'
         . nl2br(pdf_html_escape($payload['note'] ?? ''), false)
         . '</div></body></html>';
 
@@ -139,6 +142,9 @@ function pdf_make_invoice($config, $settings, $payload, $outputPath) {
     pdf_draw_text($img, 13, 760, 230, $black, $fontPath, '代表取締役：貞方 集');
     pdf_draw_text($img, 13, 760, 265, $black, $fontPath, '請求日：' . ($payload['issue_date'] ?? date('Y-m-d')));
     pdf_draw_text($img, 13, 760, 300, $black, $fontPath, '請求書No：' . ($payload['invoice_no'] ?? ''));
+    if (!empty($payload['due_date'])) {
+        pdf_draw_text($img, 13, 760, 335, $black, $fontPath, '請求期日：' . $payload['due_date']);
+    }
 
     $stampPath = $settings['pdf_stamp_path'] ?? ($config['pdf']['stamp_path'] ?? '');
     if (is_file($stampPath)) {
@@ -186,11 +192,22 @@ function pdf_make_invoice($config, $settings, $payload, $outputPath) {
         $y += $rowHeight;
     }
 
-    pdf_draw_text($img, 14, 80, $y + 50, $black, $fontPath, '備考');
-    imagerectangle($img, 80, $y + 70, 1160, $y + 210, $line);
+    pdf_draw_text($img, 14, 80, $y + 50, $black, $fontPath, '振込先');
+    imagerectangle($img, 80, $y + 70, 1160, $y + 170, $line);
+
+    $bankLines = preg_split('/\R/u', (string)($payload['payment_bank_info'] ?? ''));
+    $bankY = $y + 100;
+    foreach ($bankLines as $lineText) {
+        pdf_draw_text($img, 12, 100, $bankY, $black, $fontPath, $lineText);
+        $bankY += 24;
+        if ($bankY > $y + 155) break;
+    }
+
+    pdf_draw_text($img, 14, 80, $y + 220, $black, $fontPath, '備考');
+    imagerectangle($img, 80, $y + 240, 1160, $y + 380, $line);
 
     $noteLines = preg_split('/\R/u', (string)($payload['note'] ?? ''));
-    $noteY = $y + 105;
+    $noteY = $y + 275;
     foreach ($noteLines as $lineText) {
         pdf_draw_text($img, 12, 100, $noteY, $black, $fontPath, $lineText);
         $noteY += 28;
