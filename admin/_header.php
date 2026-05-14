@@ -4,6 +4,14 @@ $currentUser = current_admin_user();
 $adminRoot = $baseUrl;
 $faviconUrl = rtrim(admin_project_base_url($adminRoot), '/') . '/images/logo.png';
 $_navCanManageUsers = admin_user_can_manage_users($currentUser);
+$_navPortalPaths = [
+    'production/portal.php',
+    'production/profile_requests.php',
+    'production/twitch_reports.php',
+    'production/portal_activity.php',
+    'production/talent_portal.php',
+    'production/notices.php',
+];
 
 $_script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $_scriptBasename = basename($_script);
@@ -20,6 +28,8 @@ elseif (strpos($_script, '/admin/crm') !== false)              $_navSection = 'b
 elseif (strpos($_script, '/admin/production') !== false)       $_navSection = 'production';
 elseif (strpos($_script, '/admin/content') !== false)          $_navSection = 'production';
 elseif (strpos($_script, '/admin/creative') !== false)         $_navSection = 'creative';
+elseif (strpos($_script, '/admin/accounting/revenues.php') !== false
+         || strpos($_script, '/admin/accounting/revenue_edit.php') !== false) $_navSection = 'production';
 elseif (strpos($_script, '/admin/accounting') !== false)       $_navSection = 'accounting';
 elseif (strpos($_script, '/admin/mail/') !== false
          || strpos($_script, '/admin/inquiries/') !== false
@@ -34,10 +44,21 @@ if (!function_exists('_nav_is_active')) {
         return $script === $full || $script === rtrim($full, '/');
     }
 }
+if (!function_exists('_nav_is_any_active')) {
+    function _nav_is_any_active($hrefs, $adminRoot) {
+        foreach ((array)$hrefs as $href) {
+            if (_nav_is_active($href, $adminRoot)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
 
 // 未読メール数（メール + お問い合わせ合算）
 $_nav_mail_unread = 0;
 $_nav_profile_request_pending = 0;
+$_nav_portal_pending = 0;
 if (isset($pdo) && $pdo instanceof PDO) {
     try {
         if (admin_table_has_column($pdo, 'mail_messages', 'status')) {
@@ -48,6 +69,10 @@ if (isset($pdo) && $pdo instanceof PDO) {
         }
         if (admin_table_has_column($pdo, 'talent_profile_change_requests', 'status')) {
             $_nav_profile_request_pending = (int)$pdo->query("SELECT COUNT(*) FROM talent_profile_change_requests WHERE status = 'pending'")->fetchColumn();
+        }
+        $_nav_portal_pending = $_nav_profile_request_pending;
+        if (function_exists('accounting_portal_pending_count')) {
+            $_nav_portal_pending += accounting_portal_pending_count($pdo);
         }
     } catch (Exception $e) {}
 }
@@ -62,7 +87,7 @@ if (isset($pdo) && $pdo instanceof PDO) {
   <link rel="icon" type="image/png" sizes="192x192" href="<?= h($faviconUrl) ?>">
   <link rel="apple-touch-icon" href="<?= h($faviconUrl) ?>">
   <link rel="shortcut icon" href="<?= h($faviconUrl) ?>">
-  <link rel="stylesheet" href="<?= h($adminRoot) ?>/assets/css/admin.css?v=20260512-1">
+  <link rel="stylesheet" href="<?= h($adminRoot) ?>/assets/css/admin.css?v=20260514-portal-fixes">
   <script>
     window.CORO_ADMIN_SESSION = <?= json_encode([
         'timeoutMs' => ((int)($adminSessionIdleTimeout ?? 3600)) * 1000,
@@ -102,14 +127,10 @@ if (isset($pdo) && $pdo instanceof PDO) {
         <div class="nav-section-items <?= $_navSection === 'production' ? 'open' : '' ?>">
           <a href="<?= h($adminRoot) ?>/production/talents.php" class="<?= _nav_is_active('production/talents.php', $adminRoot) ? 'active' : '' ?>">タレント管理</a>
           <a href="<?= h($adminRoot) ?>/content/news.php" class="<?= _nav_is_active('content/news.php', $adminRoot) ? 'active' : '' ?>">お知らせ管理</a>
-          <a href="<?= h($adminRoot) ?>/accounting/revenues.php" class="<?= _nav_is_active('accounting/revenues.php', $adminRoot) ? 'active' : '' ?>">収益入力</a>
-          <a href="<?= h($adminRoot) ?>/production/profile_requests.php" class="<?= _nav_is_active('production/profile_requests.php', $adminRoot) ? 'active' : '' ?>">
-            HP掲載情報申請<?= $_nav_profile_request_pending > 0 ? '（' . h((string)$_nav_profile_request_pending) . '）' : '' ?>
+          <a href="<?= h($adminRoot) ?>/accounting/revenues.php" class="<?= _nav_is_any_active(['accounting/revenues.php', 'accounting/revenue_edit.php'], $adminRoot) ? 'active' : '' ?>">収益入力</a>
+          <a href="<?= h($adminRoot) ?>/production/portal.php" class="<?= _nav_is_any_active($_navPortalPaths, $adminRoot) ? 'active' : '' ?>">
+            ポータル管理<?= $_nav_portal_pending > 0 ? '（' . h((string)$_nav_portal_pending) . '）' : '' ?>
           </a>
-          <a href="<?= h($adminRoot) ?>/production/twitch_reports.php" class="<?= _nav_is_active('production/twitch_reports.php', $adminRoot) ? 'active' : '' ?>">Twitch CSV解析</a>
-          <a href="<?= h($adminRoot) ?>/production/portal_activity.php" class="<?= _nav_is_active('production/portal_activity.php', $adminRoot) ? 'active' : '' ?>">ポータル操作ログ</a>
-          <a href="<?= h($adminRoot) ?>/production/talent_portal.php" class="<?= _nav_is_active('production/talent_portal.php', $adminRoot) ? 'active' : '' ?>">ポータルアカウント</a>
-          <a href="<?= h($adminRoot) ?>/production/notices.php" class="<?= _nav_is_active('production/notices.php', $adminRoot) ? 'active' : '' ?>">ポータルお知らせ</a>
         </div>
       </div>
 

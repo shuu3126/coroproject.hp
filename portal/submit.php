@@ -61,6 +61,8 @@ if ($editYear >= 2020 && $editMonth >= 1 && $editMonth <= 12) {
         $prefill = $stmt->fetch();
     } catch (Exception $e) {}
 }
+$isRejectedPrefill = $prefill && ($prefill['status'] ?? '') === 'rejected';
+$rejectNote = $isRejectedPrefill ? (string)($prefill['portal_note'] ?? '') : '';
 
 // 年月の選択肢（過去2年）
 $yearOptions = [];
@@ -80,6 +82,11 @@ require __DIR__ . '/_header.php';
   <?php foreach ($errors as $e): ?>
     <div class="portal-flash portal-flash--error"><?= portal_h($e) ?></div>
   <?php endforeach; ?>
+<?php endif; ?>
+<?php if ($isRejectedPrefill): ?>
+  <div class="portal-flash portal-flash--warning">
+    前回の報告は却下されました。修正して再送信してください。<?= $rejectNote !== '' ? '理由: ' . portal_h($rejectNote) : '' ?>
+  </div>
 <?php endif; ?>
 
 <form method="post" enctype="multipart/form-data">
@@ -167,7 +174,7 @@ require __DIR__ . '/_header.php';
     <div class="portal-card-title">コメント（任意）</div>
     <div class="portal-form-group" style="margin:0;">
       <textarea id="portal_note" name="portal_note" rows="3"
-                placeholder="特記事項があれば記入してください（例：〇月はグッズ売上が多い月でした、など）"><?= portal_h($prefill['portal_note'] ?? $_POST['portal_note'] ?? '') ?></textarea>
+                placeholder="特記事項があれば記入してください（例：〇月はグッズ売上が多い月でした、など）"><?= portal_h($_POST['portal_note'] ?? ($isRejectedPrefill ? '' : ($prefill['portal_note'] ?? ''))) ?></textarea>
     </div>
   </div>
 

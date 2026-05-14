@@ -10,7 +10,7 @@ if ($_portalTalent && isset($pdo) && $pdo instanceof PDO) {
 $_portalAvatar = $_portalInfo && !empty($_portalInfo['avatar']) ? '/' . ltrim((string)$_portalInfo['avatar'], '/') : '';
 $_portalNoticeCount = 0;
 if ($_portalTalent && isset($pdo) && $pdo instanceof PDO) {
-    $_portalNoticeCount = count(portal_fetch_notices($pdo));
+    $_portalNoticeCount = portal_notification_count($pdo, $_portalTalent['talent_id']);
 }
 $_portalScript = basename($_SERVER['SCRIPT_NAME']);
 ?>
@@ -22,7 +22,7 @@ $_portalScript = basename($_SERVER['SCRIPT_NAME']);
   <title><?= portal_h($_portalPageTitle) ?></title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="<?= portal_h($portalBase) ?>/../images/logo.png">
-  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260513-portal3">
+  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260514-notifications">
 </head>
 <body>
 
@@ -47,7 +47,7 @@ $_portalScript = basename($_SERVER['SCRIPT_NAME']);
         <a href="<?= portal_h($portalBase) ?>/settings.php"   class="<?= $_portalScript === 'settings.php'   ? 'active' : '' ?>">マイページ</a>
       </nav>
       <div class="portal-user">
-        <a class="portal-bell" href="<?= portal_h($portalBase) ?>/activity.php" aria-label="操作ログ">
+        <a class="portal-bell" href="<?= portal_h($portalBase) ?>/activity.php" aria-label="通知">
           <span><?= (int)min(99, $_portalNoticeCount) ?></span>
         </a>
         <span class="portal-user-name"><?= portal_h($_portalTalent['talent_name']) ?></span>
@@ -75,7 +75,7 @@ $_portalScript = basename($_SERVER['SCRIPT_NAME']);
     </a>
     <a href="<?= portal_h($portalBase) ?>/activity.php"   class="<?= $_portalScript === 'activity.php' ? 'active' : '' ?>">
       <span class="portal-bottom-icon notice" aria-hidden="true"></span>
-      <span>ログ</span>
+      <span>通知</span>
     </a>
     <a href="<?= portal_h($portalBase) ?>/settings.php"   class="<?= $_portalScript === 'settings.php'   ? 'active' : '' ?>">
       <span class="portal-bottom-icon my" aria-hidden="true"></span>

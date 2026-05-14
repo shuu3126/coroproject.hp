@@ -6,6 +6,7 @@ $talent  = current_portal_talent();
 $info    = portal_get_talent_info($pdo, $talent['talent_id']);
 $history = portal_fetch_revenue_history($pdo, $talent['talent_id']);
 $notices = portal_fetch_notices($pdo);
+$revenueAlerts = portal_fetch_rejected_revenue_alerts($pdo, $talent['talent_id'], 3);
 $twitchReports = portal_fetch_twitch_reports($pdo, $talent['talent_id'], 6);
 $latestPublicRequest = portal_fetch_latest_public_profile_request($pdo, $talent['talent_id']);
 
@@ -93,12 +94,27 @@ require __DIR__ . '/_header.php';
 <section class="portal-home-card portal-motion-card">
   <div class="portal-section-head inline">
     <h2><span class="portal-section-icon">!</span>事務所からのお知らせ</h2>
-    <a href="<?= portal_h($portalBase) ?>/activity.php">ログを見る</a>
+    <a href="<?= portal_h($portalBase) ?>/activity.php">通知を見る</a>
   </div>
-  <?php if (!$notices): ?>
+  <?php if (!$notices && !$revenueAlerts): ?>
     <div class="portal-empty-line">現在お知らせはありません。</div>
   <?php else: ?>
     <div class="portal-notice-list">
+      <?php foreach ($revenueAlerts as $alert): ?>
+        <a class="portal-notice-row portal-notice-row-alert"
+           href="<?= portal_h($portalBase) ?>/submit.php?year=<?= (int)$alert['year'] ?>&month=<?= (int)$alert['month'] ?>">
+          <span class="portal-dot"></span>
+          <time><?= portal_h(str_replace('-', '/', substr($alert['updated_at'], 0, 10))) ?></time>
+          <span class="portal-pill portal-pill-danger">要修正</span>
+          <strong>
+            <?= portal_h(sprintf('%04d年%d月分の収益報告が却下されました', $alert['year'], $alert['month'])) ?>
+            <?php if (!empty($alert['portal_note'])): ?>
+              <span class="portal-notice-meta">理由: <?= portal_h($alert['portal_note']) ?></span>
+            <?php endif; ?>
+          </strong>
+          <span class="portal-row-arrow">›</span>
+        </a>
+      <?php endforeach; ?>
       <?php foreach (array_slice($notices, 0, 3) as $notice): ?>
         <div class="portal-notice-row">
           <span class="portal-dot"></span>
@@ -161,7 +177,7 @@ require __DIR__ . '/_header.php';
   <a href="<?= portal_h($portalBase) ?>/history.php"><span class="q bars"></span><strong>収益明細</strong></a>
   <a href="<?= portal_h($portalBase) ?>/submit.php"><span class="q clip"></span><strong>収益報告</strong></a>
   <a href="<?= portal_h($portalBase) ?>/twitch.php"><span class="q twitch"></span><strong>Twitch CSV</strong></a>
-  <a href="<?= portal_h($portalBase) ?>/activity.php"><span class="q bell"></span><strong>操作ログ</strong></a>
+  <a href="<?= portal_h($portalBase) ?>/activity.php"><span class="q bell"></span><strong>通知</strong></a>
   <a href="<?= portal_h($portalBase) ?>/settings.php"><span class="q mail"></span><strong>マイページ</strong></a>
 </section>
 

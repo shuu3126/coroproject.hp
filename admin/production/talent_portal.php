@@ -204,6 +204,23 @@ function showEditModal(id, loginId, isActive) {
 function hideModal(id) {
     document.getElementById(id).style.display = 'none';
 }
+
+document.querySelectorAll('.modal').forEach(function (modal) {
+    modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+            hideModal(modal.id);
+        }
+    });
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll('.modal').forEach(function (modal) {
+        if (modal.style.display !== 'none') {
+            hideModal(modal.id);
+        }
+    });
+});
 </script>
 
 <?php end_page(); ?>

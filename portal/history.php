@@ -55,6 +55,9 @@ require __DIR__ . '/_header.php';
               <?php if ($row['is_invoiced']): ?>
                 <span class="badge badge-info" style="margin-left:4px;">請求済</span>
               <?php endif; ?>
+              <?php if (($row['status'] ?? '') === 'rejected' && !empty($row['portal_note'])): ?>
+                <div class="portal-reject-note">理由: <?= portal_h($row['portal_note']) ?></div>
+              <?php endif; ?>
             </td>
             <td>
               <?php if ($row['evidence_path']): ?>

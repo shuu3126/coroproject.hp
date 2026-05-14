@@ -242,6 +242,43 @@ function portal_fetch_notices($pdo) {
     }
 }
 
+function portal_fetch_rejected_revenue_alerts($pdo, $talent_id, $limit = 5) {
+    if (!_portal_table_has_column($pdo, 'accounting_revenues', 'status')) {
+        return [];
+    }
+    $limit = max(1, min(50, (int)$limit));
+    $noteSel = _portal_table_has_column($pdo, 'accounting_revenues', 'portal_note')
+        ? 'portal_note'
+        : 'NULL AS portal_note';
+    try {
+        $stmt = $pdo->prepare("
+            SELECT id, year, month, {$noteSel}, updated_at
+            FROM accounting_revenues
+            WHERE talent_id = ? AND status = 'rejected'
+            ORDER BY updated_at DESC, id DESC
+            LIMIT {$limit}
+        ");
+        $stmt->execute([(string)$talent_id]);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        return [];
+    }
+}
+
+function portal_notification_count($pdo, $talent_id) {
+    $count = count(portal_fetch_notices($pdo));
+    if (!_portal_table_has_column($pdo, 'accounting_revenues', 'status')) {
+        return $count;
+    }
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounting_revenues WHERE talent_id = ? AND status = 'rejected'");
+        $stmt->execute([(string)$talent_id]);
+        $count += (int)$stmt->fetchColumn();
+    } catch (Exception $e) {
+    }
+    return $count;
+}
+
 function portal_activity_ready($pdo) {
     return _portal_table_has_column($pdo, 'talent_portal_activity_logs', 'id');
 }

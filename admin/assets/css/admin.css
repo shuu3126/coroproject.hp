@@ -500,6 +500,33 @@ select {
   gap: 8px;
 }
 
+td.actions-inline {
+  display: table-cell;
+  white-space: nowrap;
+}
+
+td.actions-inline > * {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+td.actions-inline > *:last-child {
+  margin-right: 0;
+}
+
+td.actions-inline form {
+  display: inline-flex;
+  margin: 0;
+}
+
+td.actions-inline .primary-btn,
+td.actions-inline .ghost-btn,
+td.actions-inline .danger-btn,
+td.actions-inline .warning-btn {
+  min-height: 36px;
+  justify-content: center;
+}
+
 .primary-btn {
   display: inline-flex;
   align-items: center;
@@ -568,6 +595,76 @@ select {
 .danger-btn:disabled:hover {
   background: transparent;
   border-color: rgba(248,113,113,.3);
+}
+
+.menu-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.menu-card-head h3 {
+  margin: 0;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 450;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, .42);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  width: min(100%, 620px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .22);
+  padding: 20px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.modal-header button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--sub);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-header button:hover {
+  color: var(--text);
+  background: var(--surface-2);
 }
 
 .journal-actions {

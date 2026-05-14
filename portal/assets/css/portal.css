@@ -1526,7 +1526,39 @@ body {
     border-bottom: 0;
     border-radius: 12px 12px 6px 6px;
   }
-  .portal-bottom-icon.my::before {
+.portal-bottom-icon.my::before {
     border-radius: 50%;
   }
+}
+
+.portal-pill.portal-pill-danger {
+  color: var(--danger);
+  background: #fee2e2;
+}
+
+.portal-notice-row-alert .portal-dot,
+.portal-activity-dot.danger {
+  background: var(--danger);
+  box-shadow: 0 0 0 6px #fee2e2;
+}
+
+.portal-notice-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--sub);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.portal-activity-actions {
+  margin-top: 8px;
+}
+
+.portal-reject-note {
+  margin-top: 6px;
+  color: var(--danger);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: normal;
 }

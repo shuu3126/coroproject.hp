@@ -4,16 +4,18 @@ require_portal_login();
 
 $talent = current_portal_talent();
 $logs = portal_fetch_activity_logs($pdo, $talent['talent_id'], 100);
+$notices = portal_fetch_notices($pdo);
+$revenueAlerts = portal_fetch_rejected_revenue_alerts($pdo, $talent['talent_id'], 20);
 
-$portalPageTitle = '操作ログ';
+$portalPageTitle = '通知';
 require __DIR__ . '/_header.php';
 ?>
 
 <section class="portal-page-hero compact">
   <div>
-    <p class="portal-kicker">ACTIVITY LOG</p>
-    <h1>操作ログ</h1>
-    <p>ログイン、提出、設定変更、ファイル確認などの履歴を確認できます。</p>
+    <p class="portal-kicker">NOTIFICATIONS</p>
+    <h1>通知</h1>
+    <p>運営からのお知らせ、収益報告の差し戻し、操作履歴を確認できます。</p>
   </div>
   <div class="portal-hero-orbit" aria-hidden="true"></div>
 </section>
@@ -23,6 +25,46 @@ require __DIR__ . '/_header.php';
 <?php endif; ?>
 
 <div class="portal-card">
+  <div class="portal-card-title">重要なお知らせ</div>
+  <?php if (!$revenueAlerts && !$notices): ?>
+    <div class="portal-table-empty">現在通知はありません。</div>
+  <?php else: ?>
+    <div class="portal-activity-list">
+      <?php foreach ($revenueAlerts as $alert): ?>
+        <div class="portal-activity-item">
+          <div class="portal-activity-dot danger"></div>
+          <div>
+            <strong><?= portal_h(sprintf('%04d年%d月分の収益報告が却下されました', $alert['year'], $alert['month'])) ?></strong>
+            <span>
+              <?= portal_h(substr($alert['updated_at'], 0, 16)) ?>
+              <?php if (!empty($alert['portal_note'])): ?>
+                / 理由: <?= portal_h($alert['portal_note']) ?>
+              <?php endif; ?>
+            </span>
+            <div class="portal-activity-actions">
+              <a class="portal-btn portal-btn-outline portal-btn-sm"
+                 href="<?= portal_h($portalBase) ?>/submit.php?year=<?= (int)$alert['year'] ?>&month=<?= (int)$alert['month'] ?>">
+                修正して再送信
+              </a>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+      <?php foreach ($notices as $notice): ?>
+        <div class="portal-activity-item">
+          <div class="portal-activity-dot"></div>
+          <div>
+            <strong><?= portal_h($notice['title']) ?></strong>
+            <span><?= portal_h(substr($notice['published_at'] ?? $notice['created_at'], 0, 16)) ?></span>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+</div>
+
+<div class="portal-card">
+  <div class="portal-card-title">操作ログ</div>
   <?php if (!$logs): ?>
     <div class="portal-table-empty">まだ操作ログがありません。</div>
   <?php else: ?>

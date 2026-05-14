@@ -995,10 +995,70 @@ function accounting_portal_confirm_revenue($pdo, $id, $userId) {
 function accounting_portal_reject_revenue($pdo, $id, $userId, $note = '') {
     if (!admin_table_has_column($pdo, 'accounting_revenues', 'status')) return false;
     try {
+        $stmt = $pdo->prepare('
+            SELECT r.id, r.talent_id, r.year, r.month, COALESCE(ts.invoice_name, t.name) AS invoice_name
+            FROM accounting_revenues r
+            JOIN talents t ON t.id = r.talent_id
+            LEFT JOIN accounting_talent_settings ts ON ts.talent_id = t.id
+            WHERE r.id = ?
+            LIMIT 1
+        ');
+        $stmt->execute([(int)$id]);
+        $revenue = $stmt->fetch();
+        if (!$revenue) {
+            return false;
+        }
+
+        $cleanNote = mb_substr(trim((string)$note), 0, 1000);
+        $startedTransaction = !$pdo->inTransaction();
+        if ($startedTransaction) {
+            $pdo->beginTransaction();
+        }
         $pdo->prepare("UPDATE accounting_revenues SET status = 'rejected', portal_note = ?, updated_by = ?, updated_at = NOW() WHERE id = ?")
-            ->execute([mb_substr(trim($note), 0, 1000), $userId, (int)$id]);
+            ->execute([$cleanNote, $userId, (int)$id]);
+
+        if (admin_table_has_column($pdo, 'talent_portal_activity_logs', 'id')) {
+            $accountId = null;
+            if (admin_table_has_column($pdo, 'talent_portal_accounts', 'id')) {
+                $accountStmt = $pdo->prepare('SELECT id FROM talent_portal_accounts WHERE talent_id = ? LIMIT 1');
+                $accountStmt->execute([(string)$revenue['talent_id']]);
+                $accountId = $accountStmt->fetchColumn() ?: null;
+            }
+            $detail = sprintf(
+                '%04d年%02d月分の収益報告が却下されました。修正して再送信してください。',
+                (int)$revenue['year'],
+                (int)$revenue['month']
+            );
+            if ($cleanNote !== '') {
+                $detail .= ' 理由: ' . $cleanNote;
+            }
+            $ip = mb_substr((string)($_SERVER['REMOTE_ADDR'] ?? ''), 0, 64);
+            $ua = mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255);
+            if (admin_table_has_column($pdo, 'talent_portal_activity_logs', 'account_id')) {
+                $pdo->prepare('
+                    INSERT INTO talent_portal_activity_logs
+                        (talent_id, account_id, action, detail, ip, user_agent, created_at)
+                    VALUES
+                        (?, ?, "revenue_rejected", ?, ?, ?, NOW())
+                ')->execute([(string)$revenue['talent_id'], $accountId ? (int)$accountId : null, mb_substr($detail, 0, 2000), $ip, $ua]);
+            } else {
+                $pdo->prepare('
+                    INSERT INTO talent_portal_activity_logs
+                        (talent_id, action, detail, ip, user_agent, created_at)
+                    VALUES
+                        (?, "revenue_rejected", ?, ?, ?, NOW())
+                ')->execute([(string)$revenue['talent_id'], mb_substr($detail, 0, 2000), $ip, $ua]);
+            }
+        }
+
+        if ($startedTransaction) {
+            $pdo->commit();
+        }
         return true;
-    } catch (Exception $e) { return false; }
+    } catch (Exception $e) {
+        if (isset($startedTransaction) && $startedTransaction && $pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
+        return false;
+    }
 }
 
 function accounting_portal_fetch_pending_list($pdo) {
