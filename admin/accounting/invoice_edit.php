@@ -121,6 +121,7 @@ $clients  = $pdo->query("SELECT id, name FROM clients ORDER BY name ASC")->fetch
 $settings = load_app_settings($pdo, $config);
 $defaultFx = (float)$settings['fx_default_rate'];
 $fxApiKey = isset($settings['fx_api_key']) ? (string)$settings['fx_api_key'] : '';
+$incomeCategories = accounting_fetch_categories($pdo, 'income');
 
 $form = [
     'mode'         => $mode,
@@ -135,6 +136,7 @@ $form = [
     'note'         => (string)$settings['office_invoice_note'],
     'details_text' => '',
     'subject'      => '',
+    'journal_category' => 'その他収入',
     'use_latest_fx' => '1',
 ];
 
@@ -143,7 +145,7 @@ $pageError = '';
 $pageSuccess = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action   = isset($_POST['action'])   ? (string)$_POST['action']   : 'create';
+    $action   = isset($_POST['action'])   ? (string)$_POST['action']   : 'switch';
     $mode     = isset($_POST['mode'])     ? (string)$_POST['mode']     : 'revenue';
     $division = isset($_POST['division']) ? (string)$_POST['division'] : 'production';
 
@@ -159,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form['note']         = isset($_POST['note'])       ? (string)$_POST['note']       : '';
     $form['details_text'] = isset($_POST['details_text']) ? (string)$_POST['details_text'] : '';
     $form['subject']      = isset($_POST['subject'])    ? (string)$_POST['subject']    : '';
+    $form['journal_category'] = isset($_POST['journal_category']) ? (string)$_POST['journal_category'] : 'その他収入';
     $form['use_latest_fx'] = !empty($_POST['use_latest_fx']) ? '1' : '0';
 
     if ($action === 'fetch_fx') {
@@ -203,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $details = parse_detail_lines($form['details_text']);
                     if ($subject === '') throw new RuntimeException('件名を入力してください。');
                     if (!$details)       throw new RuntimeException('明細を1行以上入力してください。');
-                    $invoiceId = accounting_create_manual_invoice($pdo, $config, $user['id'], $talentId, $year, $month, $subject, $details, $note);
+                    $invoiceId = accounting_create_manual_invoice($pdo, $config, $user['id'], $talentId, $year, $month, $subject, $details, $note, $form['journal_category']);
                 } else {
                     if (!empty($form['use_latest_fx'])) {
                         $latestFxInfo = invoice_edit_fetch_latest_usd_jpy_rate($fxApiKey);
@@ -237,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $divLabels = ['production' => 'Production', 'business' => 'Business', 'creative' => 'Creative'];
 $pageTitle = $division !== 'production'
     ? ($divLabels[$division] ?? $division) . ' 請求書を作成'
-    : ($mode === 'manual' ? '手入力で請求書を作る' : '収益から請求書を作る');
+    : ($mode === 'manual' ? 'Production スポット請求書を作る' : '収益から請求書を作る');
 start_page($pageTitle, '請求書を作成します。');
 ?>
 <main class="page-container narrow">
@@ -249,7 +252,6 @@ start_page($pageTitle, '請求書を作成します。');
   <?php endif; ?>
 
   <form method="post" class="card form-card form-stack">
-    <input type="hidden" name="mode" value="<?= h($mode) ?>">
     <input type="hidden" name="deal_id" value="<?= h($form['deal_id']) ?>">
     <input type="hidden" name="project_id" value="<?= h($form['project_id']) ?>">
 
@@ -261,6 +263,17 @@ start_page($pageTitle, '請求書を作成します。');
           <?php endforeach; ?>
         </select>
       </label>
+
+      <?php if ($form['division'] === 'production'): ?>
+        <label><span>請求種別</span>
+          <select name="mode" onchange="this.form.submit()">
+            <option value="revenue" <?= selected($mode, 'revenue') ?>>収益から自動作成</option>
+            <option value="manual" <?= selected($mode, 'manual') ?>>スポット請求（グッズ制作費など）</option>
+          </select>
+        </label>
+      <?php else: ?>
+        <input type="hidden" name="mode" value="manual">
+      <?php endif; ?>
 
       <?php if ($form['division'] !== 'production'): ?>
         <label><span>クライアント</span>
@@ -311,7 +324,7 @@ start_page($pageTitle, '請求書を作成します。');
       <?php if ($mode === 'manual'): ?>
         <label>
           <span>件名</span>
-          <input type="text" name="subject" value="<?= h($form['subject']) ?>" placeholder="例：イベント出演費">
+          <input type="text" name="subject" value="<?= h($form['subject']) ?>" placeholder="<?= $form['division'] === 'production' ? '例：グッズ制作費請求' : '例：イベント出演費' ?>">
         </label>
       <?php else: ?>
         <label>
@@ -354,9 +367,28 @@ start_page($pageTitle, '請求書を作成します。');
     </div>
 
     <?php if ($mode === 'manual'): ?>
+      <?php if ($form['division'] === 'production'): ?>
+        <div class="alert-box alert-info" style="position:static;transform:none;min-width:0;max-width:none;box-shadow:none;border-radius:var(--radius);">
+          タレント宛に、収益とは別の請求書を作成します。グッズ制作費、送料、立替金、イベント関連費などを明細に入力してください。
+        </div>
+      <?php endif; ?>
+      <?php if ($form['division'] === 'production'): ?>
+        <label>
+          <span>自動記帳カテゴリ</span>
+          <select name="journal_category">
+            <?php foreach ($incomeCategories as $cat): ?>
+              <option value="<?= h($cat['name']) ?>" <?= selected($form['journal_category'], $cat['name']) ?>><?= h($cat['name']) ?></option>
+            <?php endforeach; ?>
+            <?php if (!$incomeCategories): ?>
+              <option value="その他収入">その他収入</option>
+            <?php endif; ?>
+          </select>
+          <span class="help-text">グッズ制作費の請求なら「その他収入」または運用に合わせて「グッズ売上」を選べます。</span>
+        </label>
+      <?php endif; ?>
       <label>
         <span>明細（1行ごとに 内容|金額）</span>
-        <textarea name="details_text" rows="8" placeholder="イベント参加費|25000&#10;デザイン費|18000"><?= h($form['details_text']) ?></textarea>
+        <textarea name="details_text" rows="8" placeholder="<?= $form['division'] === 'production' ? 'アクリルスタンド制作費|25000&#10;梱包資材・送料|3000' : 'イベント参加費|25000&#10;デザイン費|18000' ?>"><?= h($form['details_text']) ?></textarea>
       </label>
     <?php else: ?>
       <div class="invoice-preview-box" id="revenue-preview-box">

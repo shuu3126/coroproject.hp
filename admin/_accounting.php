@@ -543,7 +543,11 @@ function accounting_create_client_invoice($pdo, $config, $userId, $clientId, $ye
     return $invoiceId;
 }
 
-function accounting_insert_journal_for_invoice($pdo, $invoiceId, $talentId, $invoiceNo, $subject, $amount, $userId) {
+function accounting_insert_journal_for_invoice($pdo, $invoiceId, $talentId, $invoiceNo, $subject, $amount, $userId, $category = '配信収益') {
+    $category = trim((string)$category);
+    if ($category === '') {
+        $category = '配信収益';
+    }
     $stmt = $pdo->prepare('
         INSERT INTO accounting_journal_entries
             (`date`, kind, category, amount, description, talent_id, invoice_id, source, evidence_path, created_by, updated_by, created_at, updated_at)
@@ -552,7 +556,7 @@ function accounting_insert_journal_for_invoice($pdo, $invoiceId, $talentId, $inv
     ');
     $stmt->execute([
         'income',
-        '配信収益',
+        $category,
         (float)$amount,
         '請求書 ' . $invoiceNo . '｜' . $subject,
         (string)$talentId,
@@ -629,7 +633,9 @@ function accounting_generate_receipt_pdf($pdo, $config, $invoiceId, $userId) {
         ? accounting_period_label($invoice['months'])
         : sprintf('%d年%02d月', $invoice['close_year'], $invoice['close_month']);
 
-    $description = '配信収益分配金として、' . $periodLabel . ' 分の請求に対する入金。';
+    $description = $invoice['months']
+        ? '配信収益分配金として、' . $periodLabel . ' 分の請求に対する入金。'
+        : '「' . $invoice['subject'] . '」の請求に対する入金。';
 
     $payload = [
         'invoice_no' => $invoice['invoice_no'],
@@ -760,7 +766,7 @@ function accounting_create_revenue_invoice($pdo, $config, $userId, $talentId, $y
     return $invoiceId;
 }
 
-function accounting_create_manual_invoice($pdo, $config, $userId, $talentId, $year, $month, $subject, $details, $note) {
+function accounting_create_manual_invoice($pdo, $config, $userId, $talentId, $year, $month, $subject, $details, $note, $journalCategory = 'その他収入') {
     $amount = 0.0;
     foreach ($details as $detail) {
         $amount += (float)$detail['amount'];
@@ -803,7 +809,7 @@ function accounting_create_manual_invoice($pdo, $config, $userId, $talentId, $ye
             $itemStmt->execute([$invoiceId, $idx + 1, $item['desc'], $item['amount']]);
         }
 
-        accounting_insert_journal_for_invoice($pdo, $invoiceId, $talentId, $invoiceNo, $subject, $amount, $userId);
+        accounting_insert_journal_for_invoice($pdo, $invoiceId, $talentId, $invoiceNo, $subject, $amount, $userId, $journalCategory);
         $pdo->commit();
     } catch (Exception $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();

@@ -53,7 +53,10 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
       <h1>収益入力</h1>
       <p>登録した収益は請求書の計算に使われます。請求待ちの状況は下のサマリーで確認できます。</p>
     </div>
-    <a class="primary-btn" href="<?= h($baseUrl) ?>/accounting/revenue_edit.php">新しく収益を登録する</a>
+    <div class="actions-inline">
+      <a class="ghost-btn" href="<?= h($baseUrl) ?>/accounting/invoice_edit.php?mode=manual&division=production">スポット請求書を作成</a>
+      <a class="primary-btn" href="<?= h($baseUrl) ?>/accounting/revenue_edit.php">新しく収益を登録する</a>
+    </div>
   </section>
 
   <?php if ($pendingSummaries): ?>
