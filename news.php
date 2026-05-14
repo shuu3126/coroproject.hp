@@ -56,6 +56,7 @@ render_header('news');
     <div class="container news-list reveal is-visible">
       <?php foreach ($filteredNews as $item): ?>
         <article class="news-card cyber-clip-lg">
+          <div class="news-card-thumb" style="background-image:url('<?= h(news_thumb_url($item['thumb'] ?? '')) ?>')" aria-hidden="true"></div>
           <div class="news-meta">
             <span class="news-category"><?= h($item['category']) ?></span>
             <span class="news-date"><?= h($item['date']) ?></span>

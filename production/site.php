@@ -38,6 +38,11 @@ function production_public_url($path) {
     return rtrim(production_project_base_url(), '/') . '/' . $path;
 }
 
+function production_news_thumb_path($thumb) {
+    $thumb = trim((string)$thumb);
+    return $thumb !== '' ? $thumb : 'images/ogp.png';
+}
+
 function production_safe_external_url($url) {
     $url = trim((string)$url);
     if ($url === '') {

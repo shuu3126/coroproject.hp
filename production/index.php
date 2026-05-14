@@ -277,7 +277,7 @@ try {
               <?php foreach ($topNews as $n): ?>
                 <article class="news-card">
                   <a href="<?= $n['url'] ? esc($n['url']) : 'html/news.php' ?>">
-                    <div class="card-thumb" aria-hidden="true" style="<?= $n['thumb'] ? "background-image:url('".esc(production_public_url($n['thumb']))."')" : '' ?>"></div>
+                    <div class="card-thumb" aria-hidden="true" style="background-image:url('<?= esc(production_public_url(production_news_thumb_path($n['thumb'] ?? ''))) ?>')"></div>
                     <span class="news-label"><?= esc($n['tag'] ?: 'News') ?></span>
                     <span class="news-date"><?= esc($n['date']) ?></span>
                     <h3 class="news-title"><?= esc($n['title']) ?></h3>

@@ -1116,6 +1116,22 @@ img { display: block; max-width: 100%; }
   background: rgba(10,13,26,.96);
 }
 
+.news-card-thumb,
+.article-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.08);
+  background-color: rgba(255,255,255,.04);
+  background-position: center;
+  background-size: cover;
+}
+
+.news-card-thumb {
+  margin-bottom: 18px;
+}
+
 .news-card h2 {
   margin: 14px 0 12px;
   font-family: var(--display);
@@ -1155,6 +1171,10 @@ img { display: block; max-width: 100%; }
   border: 1px solid rgba(255,255,255,.08);
   background: rgba(10,13,26,.72);
   clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+}
+
+.article-image {
+  margin-bottom: 28px;
 }
 
 .article-shell p { margin: 0 0 18px; }

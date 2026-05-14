@@ -124,10 +124,11 @@ function safeId($id) {
           <?php else: ?>
             <?php foreach ($newsList as $n): 
               $anchor = "#" . safeId($n['id']);
+              $thumb = production_news_thumb_path($n['thumb'] ?? '');
             ?>
             <article class="card">
               <a class="card-body" href="<?= $anchor ?>">
-                <div class="card-thumb" style="background-image:url('<?= esc(production_public_url($n['thumb'])) ?>')" aria-hidden="true"></div>
+                <div class="card-thumb" style="background-image:url('<?= esc(production_public_url($thumb)) ?>')" aria-hidden="true"></div>
                 <div class="card-meta">
                   <time datetime="<?= esc($n['date']) ?>"><?= fmtDate($n['date']) ?></time>
                   <span class="tag"><?= esc($n['tag']) ?></span>
@@ -153,6 +154,7 @@ function safeId($id) {
           <?php foreach ($newsList as $i => $n): 
             $cid = safeId($n['id']);
             $contentArr = json_decode($n['content_json'], true) ?: [];
+            $thumb = production_news_thumb_path($n['thumb'] ?? '');
           ?>
           <li class="time-item" id="<?= $cid ?>">
             <span class="time-badge">#<?= str_pad($i + 1, 2, '0', STR_PAD_LEFT) ?></span>
@@ -165,11 +167,9 @@ function safeId($id) {
 
                 <h3 class="card-title" style="margin:4px 0 10px"><?= esc($n['title']) ?></h3>
 
-                <?php if ($n['thumb']): ?>
-                  <div class="card-thumb"
-                       style="margin-bottom:12px; background-image:url('<?= esc(production_public_url($n['thumb'])) ?>')">
-                  </div>
-                <?php endif; ?>
+                <div class="card-thumb"
+                     style="margin-bottom:12px; background-image:url('<?= esc(production_public_url($thumb)) ?>')">
+                </div>
 
                 <?php foreach ($contentArr as $p): ?>
                   <p><?= esc($p) ?></p>

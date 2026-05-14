@@ -15,7 +15,7 @@ render_head($item['title'], $item['title'] . ' | CORO PROJECTのニュース詳�
     'canonical' => $id !== '' ? 'https://coroproject.jp/news_detail.php?id=' . urlencode($id) : null,
     'robots'    => $id !== '' ? 'index, follow' : 'noindex, nofollow',
     'og_type'   => 'article',
-    'og_image'  => 'https://coroproject.jp/images/ogp.png',
+    'og_image'  => news_og_image_url($item['thumb'] ?? ''),
 ]);
 render_header('news');
 ?>
@@ -33,6 +33,7 @@ render_header('news');
 
   <section class="content-section">
     <div class="container article-shell reveal is-visible">
+      <img class="article-image" src="<?= h(news_thumb_url($item['thumb'] ?? '')) ?>" alt="<?= h($item['title']) ?>">
       <?php foreach ($item['body'] as $paragraph): ?>
         <p><?= h($paragraph) ?></p>
       <?php endforeach; ?>

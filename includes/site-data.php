@@ -232,6 +232,27 @@ function h(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
+function news_thumb_path(?string $thumb): string {
+    $thumb = trim((string)$thumb);
+    return $thumb !== '' ? $thumb : 'images/ogp.png';
+}
+
+function news_thumb_url(?string $thumb): string {
+    $path = news_thumb_path($thumb);
+    if (preg_match('#^(https?:)?//#i', $path)) {
+        return $path;
+    }
+    return ltrim($path, '/');
+}
+
+function news_og_image_url(?string $thumb): string {
+    $path = news_thumb_path($thumb);
+    if (preg_match('#^(https?:)?//#i', $path)) {
+        return $path;
+    }
+    return 'https://coroproject.jp/' . ltrim($path, '/');
+}
+
 function find_news_by_id(array $newsItems, string $id): ?array {
     foreach ($newsItems as $item) {
         if ($item['id'] === $id) {

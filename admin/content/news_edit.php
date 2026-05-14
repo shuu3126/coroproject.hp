@@ -181,6 +181,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $thumb = $ogpImg;
             }
         }
+        if ($thumb === '') {
+            $thumb = 'images/ogp.png';
+        }
 
         $contentJson = parse_text_lines_to_json($contentText);
         $contentPlain = $contentText;
