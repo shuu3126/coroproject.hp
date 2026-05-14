@@ -54,17 +54,17 @@ cp_start_page('支払・請求', '支払明細、請求書、領収書をまと�
           <?php endif; ?>
           <?php foreach ($statements as $statement): $st = cp_statement_status($statement['status']); ?>
             <tr>
-              <td>
+              <td data-label="件名">
                 <strong><?= cp_h($statement['subject']) ?></strong>
                 <?php if (!empty($statement['portal_note'])): ?>
                   <div class="cp-muted cp-small"><?= nl2br(cp_h($statement['portal_note'])) ?></div>
                 <?php endif; ?>
               </td>
-              <td><?= cp_h($statement['project_title'] ?: ($statement['statement_month'] ?: '—')) ?></td>
-              <td><?= cp_h(cp_format_date($statement['scheduled_at'] ?: $statement['paid_at'])) ?></td>
-              <td class="cp-text-right"><?= cp_h(cp_format_money($statement['net_amount'], $statement['currency'])) ?></td>
-              <td><span class="cp-badge <?= cp_h($st['class']) ?>"><?= cp_h($st['label']) ?></span></td>
-              <td>
+              <td data-label="対象"><?= cp_h($statement['project_title'] ?: ($statement['statement_month'] ?: '—')) ?></td>
+              <td data-label="支払予定"><?= cp_h(cp_format_date($statement['scheduled_at'] ?: $statement['paid_at'])) ?></td>
+              <td data-label="税込支払額" class="cp-text-right"><?= cp_h(cp_format_money($statement['net_amount'], $statement['currency'])) ?></td>
+              <td data-label="状態"><span class="cp-badge <?= cp_h($st['class']) ?>"><?= cp_h($st['label']) ?></span></td>
+              <td data-label="書類">
                 <div class="cp-actions">
                   <?php if (!empty($statement['statement_file_path'])): ?>
                     <a class="cp-btn-muted" href="<?= cp_h($creativePortalBase) ?>/download.php?type=statement&id=<?= (int)$statement['id'] ?>">明細</a>
@@ -109,17 +109,17 @@ cp_start_page('支払・請求', '支払明細、請求書、領収書をまと�
           <?php endif; ?>
           <?php foreach ($invoices as $invoice): $st = cp_invoice_status($invoice['status']); ?>
             <tr>
-              <td>
+              <td data-label="請求書">
                 <strong><?= cp_h($invoice['invoice_no'] ?: '請求書 #' . $invoice['id']) ?></strong>
                 <?php if (!empty($invoice['admin_note'])): ?>
                   <div class="cp-alert cp-mt"><strong>確認コメント</strong><?= nl2br(cp_h($invoice['admin_note'])) ?></div>
                 <?php endif; ?>
               </td>
-              <td><?= cp_h($invoice['project_title'] ?: '—') ?></td>
-              <td><?= cp_h(cp_format_date($invoice['invoice_date'] ?: $invoice['created_at'])) ?></td>
-              <td class="cp-text-right"><?= cp_h(cp_format_money($invoice['total_amount'], $invoice['currency'])) ?></td>
-              <td><span class="cp-badge <?= cp_h($st['class']) ?>"><?= cp_h($st['label']) ?></span></td>
-              <td>
+              <td data-label="案件"><?= cp_h($invoice['project_title'] ?: '—') ?></td>
+              <td data-label="請求日"><?= cp_h(cp_format_date($invoice['invoice_date'] ?: $invoice['created_at'])) ?></td>
+              <td data-label="請求額" class="cp-text-right"><?= cp_h(cp_format_money($invoice['total_amount'], $invoice['currency'])) ?></td>
+              <td data-label="状態"><span class="cp-badge <?= cp_h($st['class']) ?>"><?= cp_h($st['label']) ?></span></td>
+              <td data-label="操作">
                 <div class="cp-actions">
                   <?php if (!empty($invoice['invoice_file_path'])): ?>
                     <a class="cp-btn-muted" href="<?= cp_h($creativePortalBase) ?>/download.php?type=invoice&id=<?= (int)$invoice['id'] ?>">請求書</a>

@@ -1,11 +1,18 @@
 <?php
 $flash = cp_flash_get();
 $currentCreator = cp_current_creator();
-$creatorInfo = $currentCreator ? cp_get_creator_info($pdo, $currentCreator['creator_id']) : null;
+$creatorInfo = $currentCreator ? (cp_get_creator_info($pdo, $currentCreator['creator_id']) ?: []) : [];
 $projectBase = preg_replace('#/creative-portal/?$#', '', $creativePortalBase);
 $logoUrl = rtrim($projectBase, '/') . '/images/logo.png';
 $scriptName = basename(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''));
 $notificationCount = $currentCreator ? cp_notification_count($pdo, $currentCreator['creator_id']) : 0;
+$creatorDisplayName = '';
+if ($currentCreator) {
+    $creatorDisplayName = trim((string)($creatorInfo['display_name'] ?? ''));
+    if ($creatorDisplayName === '') {
+        $creatorDisplayName = trim((string)($creatorInfo['name'] ?? ($currentCreator['creator_name'] ?? 'Creator')));
+    }
+}
 
 if (!function_exists('cp_nav_active')) {
     function cp_nav_active($file, $scriptName) {
@@ -21,7 +28,7 @@ if (!function_exists('cp_nav_active')) {
   <title><?= cp_h($page_title ?? 'Creative Portal') ?> | CORO PROJECT</title>
   <link rel="icon" type="image/png" href="<?= cp_h($logoUrl) ?>">
   <link rel="apple-touch-icon" href="<?= cp_h($logoUrl) ?>">
-  <link rel="stylesheet" href="<?= cp_h($creativePortalBase) ?>/assets/css/portal.css?v=20260514-creative-portal">
+  <link rel="stylesheet" href="<?= cp_h($creativePortalBase) ?>/assets/css/portal.css?v=20260514-mobile-refresh">
   <script>
     window.CORO_CREATIVE_PORTAL_CSRF = <?= json_encode(cp_csrf_token(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
   </script>
@@ -37,6 +44,17 @@ if (!function_exists('cp_nav_active')) {
       </span>
     </a>
 
+    <?php if ($currentCreator): ?>
+    <div class="cp-mobile-actions">
+      <a class="cp-mobile-bell" href="<?= cp_h($creativePortalBase) ?>/notifications.php" aria-label="通知">
+        <span><?= (int)min(99, $notificationCount) ?></span>
+      </a>
+      <a class="cp-mobile-avatar" href="<?= cp_h($creativePortalBase) ?>/profile.php" aria-label="登録情報">
+        <?= cp_h(mb_substr($creatorDisplayName !== '' ? $creatorDisplayName : 'C', 0, 1)) ?>
+      </a>
+    </div>
+    <?php endif; ?>
+
     <nav class="cp-nav" aria-label="Creative Portal">
       <a class="<?= cp_nav_active('dashboard.php', $scriptName) ?>" href="<?= cp_h($creativePortalBase) ?>/dashboard.php">ダッシュボード</a>
       <a class="<?= cp_nav_active('projects.php', $scriptName) || cp_nav_active('project.php', $scriptName) ? 'active' : '' ?>" href="<?= cp_h($creativePortalBase) ?>/projects.php">制作案件</a>
@@ -50,12 +68,37 @@ if (!function_exists('cp_nav_active')) {
 
     <div class="cp-sidebar-foot">
       <div class="cp-user">
-        <div class="cp-user-name"><?= cp_h($creatorInfo['display_name'] ?: ($creatorInfo['name'] ?? $currentCreator['creator_name'] ?? 'Creator')) ?></div>
+        <div class="cp-user-name"><?= cp_h($creatorDisplayName !== '' ? $creatorDisplayName : 'Creator') ?></div>
         <div class="cp-user-meta"><?= cp_h($currentCreator['login_id'] ?? '') ?></div>
       </div>
       <a class="cp-logout" href="<?= cp_h($creativePortalBase) ?>/logout.php">ログアウト</a>
     </div>
   </aside>
+
+  <?php if ($currentCreator): ?>
+  <nav class="cp-bottom-nav" aria-label="Creative Portal">
+    <a href="<?= cp_h($creativePortalBase) ?>/dashboard.php" class="<?= cp_nav_active('dashboard.php', $scriptName) ?>">
+      <span class="cp-bottom-icon home" aria-hidden="true"></span>
+      <span>ホーム</span>
+    </a>
+    <a href="<?= cp_h($creativePortalBase) ?>/projects.php" class="<?= cp_nav_active('projects.php', $scriptName) || cp_nav_active('project.php', $scriptName) ? 'active' : '' ?>">
+      <span class="cp-bottom-icon projects" aria-hidden="true"></span>
+      <span>案件</span>
+    </a>
+    <a href="<?= cp_h($creativePortalBase) ?>/billing.php" class="<?= cp_nav_active('billing.php', $scriptName) ?>">
+      <span class="cp-bottom-icon billing" aria-hidden="true"></span>
+      <span>請求</span>
+    </a>
+    <a href="<?= cp_h($creativePortalBase) ?>/notifications.php" class="<?= cp_nav_active('notifications.php', $scriptName) || cp_nav_active('activity.php', $scriptName) ? 'active' : '' ?>">
+      <span class="cp-bottom-icon notice" aria-hidden="true"></span>
+      <span>通知</span>
+    </a>
+    <a href="<?= cp_h($creativePortalBase) ?>/profile.php" class="<?= cp_nav_active('profile.php', $scriptName) ?>">
+      <span class="cp-bottom-icon profile" aria-hidden="true"></span>
+      <span>マイページ</span>
+    </a>
+  </nav>
+  <?php endif; ?>
 
   <main class="cp-main">
     <header class="cp-topbar">

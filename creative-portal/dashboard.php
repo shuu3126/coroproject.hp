@@ -4,6 +4,10 @@ cp_require_login();
 
 $creator = cp_current_creator();
 $creatorInfo = cp_get_creator_info($pdo, $creator['creator_id']);
+$displayName = trim((string)($creatorInfo['display_name'] ?? ''));
+if ($displayName === '') {
+    $displayName = trim((string)($creatorInfo['name'] ?? ($creator['creator_name'] ?? 'クリエイター')));
+}
 $projects = cp_fetch_projects($pdo, $creator['creator_id'], 100);
 $latestProjects = array_slice($projects, 0, 6);
 $submissions = cp_fetch_submissions($pdo, $creator['creator_id'], null, 5);
@@ -42,6 +46,12 @@ foreach (cp_fetch_statements($pdo, $creator['creator_id'], 100) as $statement) {
 
 cp_start_page('ダッシュボード', '制作進行と支払まわりをまとめて確認できます。');
 ?>
+<section class="cp-mobile-welcome">
+  <p>ようこそ！</p>
+  <h2><?= cp_h($displayName) ?><span>さん</span></h2>
+  <strong>今日もよろしくお願いします！</strong>
+</section>
+
 <div class="cp-grid four">
   <section class="cp-card cp-stat">
     <small>進行中案件</small>
@@ -92,11 +102,11 @@ cp_start_page('ダッシュボード', '制作進行と支払まわりをまと�
           <?php endif; ?>
           <?php foreach ($latestProjects as $project): ?>
             <tr>
-              <td><strong><?= cp_h($project['title']) ?></strong><div class="cp-muted cp-small"><?= cp_h($project['category']) ?></div></td>
-              <td><span class="cp-badge <?= cp_h(cp_project_status_class($project['status'])) ?>"><?= cp_h($project['status']) ?></span></td>
-              <td><?= cp_h(cp_format_date($project['deadline'] ?? '')) ?></td>
-              <td class="cp-text-right"><?= cp_h(cp_format_money($project['creator_amount'] ?? 0)) ?></td>
-              <td><a class="cp-btn-muted" href="<?= cp_h($creativePortalBase) ?>/project.php?id=<?= urlencode($project['id']) ?>">開く</a></td>
+              <td data-label="案件"><strong><?= cp_h($project['title']) ?></strong><div class="cp-muted cp-small"><?= cp_h($project['category']) ?></div></td>
+              <td data-label="ステータス"><span class="cp-badge <?= cp_h(cp_project_status_class($project['status'])) ?>"><?= cp_h($project['status']) ?></span></td>
+              <td data-label="納期"><?= cp_h(cp_format_date($project['deadline'] ?? '')) ?></td>
+              <td data-label="支払予定" class="cp-text-right"><?= cp_h(cp_format_money($project['creator_amount'] ?? 0)) ?></td>
+              <td data-label="操作"><a class="cp-btn-muted" href="<?= cp_h($creativePortalBase) ?>/project.php?id=<?= urlencode($project['id']) ?>">開く</a></td>
             </tr>
           <?php endforeach; ?>
           </tbody>
@@ -127,10 +137,10 @@ cp_start_page('ダッシュボード', '制作進行と支払まわりをまと�
           <?php endif; ?>
           <?php foreach ($submissions as $submission): $st = cp_submission_status($submission['status']); ?>
             <tr>
-              <td><?= cp_h($submission['project_title'] ?: $submission['project_id']) ?></td>
-              <td><?= cp_h(cp_submission_type_label($submission['submission_type'])) ?></td>
-              <td><span class="cp-badge <?= cp_h($st['class']) ?>"><?= cp_h($st['label']) ?></span></td>
-              <td><?= cp_h(cp_format_datetime($submission['created_at'])) ?></td>
+              <td data-label="案件"><?= cp_h($submission['project_title'] ?: $submission['project_id']) ?></td>
+              <td data-label="種別"><?= cp_h(cp_submission_type_label($submission['submission_type'])) ?></td>
+              <td data-label="状態"><span class="cp-badge <?= cp_h($st['class']) ?>"><?= cp_h($st['label']) ?></span></td>
+              <td data-label="提出日"><?= cp_h(cp_format_datetime($submission['created_at'])) ?></td>
             </tr>
           <?php endforeach; ?>
           </tbody>
