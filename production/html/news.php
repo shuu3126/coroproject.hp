@@ -4,25 +4,58 @@ require_once __DIR__ . '/../site.php';
 
 // ------ フィルタ処理 ------
 $filterTag = $_GET['tag'] ?? '';
+$filterTalent = trim((string)($_GET['talent'] ?? ''));
+$hasNewsTalent = false;
+try {
+    $colStmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+    $colStmt->execute(['news', 'talent_id']);
+    $hasNewsTalent = ((int)$colStmt->fetchColumn()) > 0;
+} catch (Exception $e) {
+    $hasNewsTalent = false;
+}
 
 $sql = "
-    SELECT *
-    FROM news
-    WHERE is_published = 1
-      AND (targets IS NULL OR targets = '' OR FIND_IN_SET('production', targets))
+    SELECT n.*" . ($hasNewsTalent ? ", t.name AS talent_name" : ", NULL AS talent_name") . "
+    FROM news n
+    " . ($hasNewsTalent ? "LEFT JOIN talents t ON t.id = n.talent_id" : "") . "
+    WHERE n.is_published = 1
+      AND (n.targets IS NULL OR n.targets = '' OR FIND_IN_SET('production', n.targets))
 ";
 $params = [];
 
 if ($filterTag !== '') {
-    $sql .= " AND tag = :tag";
+    $sql .= " AND n.tag = :tag";
     $params[':tag'] = $filterTag;
 }
+if ($hasNewsTalent && $filterTalent !== '') {
+    $sql .= " AND n.talent_id = :talent_id";
+    $params[':talent_id'] = $filterTalent;
+}
 
-$sql .= " ORDER BY sort_order ASC, date DESC, id DESC";
+$sql .= " ORDER BY n.sort_order ASC, n.date DESC, n.id DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $newsList = $stmt->fetchAll();
+
+$talentFilters = [];
+if ($hasNewsTalent) {
+    try {
+        $talentStmt = $pdo->query("
+            SELECT DISTINCT t.id, t.name
+            FROM news n
+            JOIN talents t ON t.id = n.talent_id
+            WHERE n.is_published = 1
+              AND n.talent_id IS NOT NULL
+              AND n.talent_id <> ''
+              AND (n.targets IS NULL OR n.targets = '' OR FIND_IN_SET('production', n.targets))
+            ORDER BY t.sort_order ASC, t.name ASC
+        ");
+        $talentFilters = $talentStmt->fetchAll();
+    } catch (Exception $e) {
+        $talentFilters = [];
+    }
+}
 
 
 // ------ Helper ------
@@ -116,6 +149,14 @@ function safeId($id) {
             <a class="btn btn-ghost <?= $filterTag === 'リリース' ? 'btn-primary' : '' ?>" href="news.php?tag=リリース">リリース</a>
             <a class="btn btn-ghost <?= $filterTag === 'イベント' ? 'btn-primary' : '' ?>" href="news.php?tag=イベント">イベント</a>
           </div>
+          <?php if ($talentFilters): ?>
+            <div class="filter-row" style="margin-top:10px">
+              <a class="btn btn-ghost <?= $filterTalent === '' ? 'btn-primary' : '' ?>" href="news.php<?= $filterTag !== '' ? '?tag=' . urlencode($filterTag) : '' ?>">全タレント</a>
+              <?php foreach ($talentFilters as $talent): ?>
+                <a class="btn btn-ghost <?= $filterTalent === (string)$talent['id'] ? 'btn-primary' : '' ?>" href="news.php?<?= http_build_query(array_filter(['tag' => $filterTag !== '' ? $filterTag : null, 'talent' => $talent['id']])) ?>"><?= esc($talent['name']) ?></a>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
         </div>
 
         <div class="grid grid-3" id="newsGrid">
@@ -132,6 +173,7 @@ function safeId($id) {
                 <div class="card-meta">
                   <time datetime="<?= esc($n['date']) ?>"><?= fmtDate($n['date']) ?></time>
                   <span class="tag"><?= esc($n['tag']) ?></span>
+                  <?php if (!empty($n['talent_name'])): ?><span class="tag"><?= esc($n['talent_name']) ?></span><?php endif; ?>
                 </div>
                 <h3 class="card-title"><?= esc($n['title']) ?></h3>
                 <p class="card-text"><?= esc($n['excerpt']) ?></p>
@@ -163,6 +205,7 @@ function safeId($id) {
                 <div class="card-meta" style="margin-bottom:6px">
                   <time datetime="<?= esc($n['date']) ?>"><?= fmtDate($n['date']) ?></time>
                   <span class="tag"><?= esc($n['tag']) ?></span>
+                  <?php if (!empty($n['talent_name'])): ?><span class="tag"><?= esc($n['talent_name']) ?></span><?php endif; ?>
                 </div>
 
                 <h3 class="card-title" style="margin:4px 0 10px"><?= esc($n['title']) ?></h3>

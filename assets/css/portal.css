@@ -1155,6 +1155,13 @@ img { display: block; max-width: 100%; }
 
 .news-category { color: var(--cyan); }
 .news-date { color: rgba(255,255,255,.54); }
+.news-talent {
+  color: var(--pink);
+}
+
+.news-talent-filter {
+  margin-top: -10px;
+}
 
 .article-hero {
   display: grid;

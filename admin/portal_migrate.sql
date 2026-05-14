@@ -442,6 +442,18 @@ CALL coro_add_column_if_missing(
 );
 
 CALL coro_add_column_if_missing(
+  'news',
+  'targets',
+  'VARCHAR(120) NOT NULL DEFAULT ''main,production'' AFTER `sort_order`'
+);
+
+CALL coro_add_column_if_missing(
+  'news',
+  'talent_id',
+  'VARCHAR(191) NULL AFTER `targets`'
+);
+
+CALL coro_add_column_if_missing(
   'cre_creators',
   'email',
   'VARCHAR(191) NULL AFTER `contact`'

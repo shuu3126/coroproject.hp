@@ -1,9 +1,14 @@
 <?php
 require_once __DIR__ . '/includes/layout.php';
 $filter = $_GET['category'] ?? 'all';
+$talentFilter = trim((string)($_GET['talent'] ?? 'all'));
 $counts = news_category_count($newsItems);
+$talentOptions = news_talent_filter_options($newsItems);
 $filteredNews = array_values(array_filter($newsItems, static function ($item) use ($filter) {
     return $filter === 'all' || $item['category'] === $filter;
+}));
+$filteredNews = array_values(array_filter($filteredNews, static function ($item) use ($talentFilter) {
+    return $talentFilter === 'all' || (string)($item['talent_id'] ?? '') === $talentFilter;
 }));
 render_head('NEWS', 'CORO PROJECTのお知らせ、所属タレント情報、募集情報、事業更新を掲載しています。', [
     'canonical' => 'https://coroproject.jp/news.php',
@@ -32,11 +37,19 @@ render_header('news');
 
   <section class="content-section">
     <div class="container filter-bar reveal is-visible">
-      <a class="filter-pill <?= $filter === 'all' ? 'is-current' : '' ?>" href="news.php">ALL <span><?= count($newsItems) ?></span></a>
+      <a class="filter-pill <?= $filter === 'all' && $talentFilter === 'all' ? 'is-current' : '' ?>" href="news.php">ALL <span><?= count($newsItems) ?></span></a>
       <?php foreach ($counts as $category => $count): ?>
-        <a class="filter-pill <?= $filter === $category ? 'is-current' : '' ?>" href="news.php?category=<?= urlencode($category) ?>"><?= h($category) ?> <span><?= h((string)$count) ?></span></a>
+        <a class="filter-pill <?= $filter === $category ? 'is-current' : '' ?>" href="news.php?category=<?= urlencode($category) ?><?= $talentFilter !== 'all' ? '&talent=' . urlencode($talentFilter) : '' ?>"><?= h($category) ?> <span><?= h((string)$count) ?></span></a>
       <?php endforeach; ?>
     </div>
+    <?php if ($talentOptions): ?>
+      <div class="container filter-bar news-talent-filter reveal is-visible">
+        <a class="filter-pill <?= $talentFilter === 'all' ? 'is-current' : '' ?>" href="news.php<?= $filter !== 'all' ? '?category=' . urlencode($filter) : '' ?>">ALL TALENTS</a>
+        <?php foreach ($talentOptions as $talentId => $talentName): ?>
+          <a class="filter-pill <?= $talentFilter === $talentId ? 'is-current' : '' ?>" href="news.php?<?= http_build_query(array_filter(['category' => $filter !== 'all' ? $filter : null, 'talent' => $talentId])) ?>"><?= h($talentName) ?></a>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
 
     <div class="container news-guide-grid reveal is-visible">
       <article class="matrix-card cyber-clip">
@@ -60,6 +73,7 @@ render_header('news');
           <div class="news-meta">
             <span class="news-category"><?= h($item['category']) ?></span>
             <span class="news-date"><?= h($item['date']) ?></span>
+            <?php if (!empty($item['talent_name'])): ?><span class="news-talent"><?= h($item['talent_name']) ?></span><?php endif; ?>
           </div>
           <h2><?= h($item['title']) ?></h2>
           <p><?= h($item['excerpt']) ?></p>

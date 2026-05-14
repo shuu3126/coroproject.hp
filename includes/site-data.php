@@ -160,6 +160,22 @@ function site_database_connection(): ?PDO {
     return null;
 }
 
+function site_table_has_column(PDO $pdo, string $table, string $column): bool {
+    static $cache = [];
+    $key = $table . '.' . $column;
+    if (array_key_exists($key, $cache)) {
+        return $cache[$key];
+    }
+    try {
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+        $stmt->execute([$table, $column]);
+        $cache[$key] = ((int)$stmt->fetchColumn()) > 0;
+    } catch (Throwable $e) {
+        $cache[$key] = false;
+    }
+    return $cache[$key];
+}
+
 function load_news_items_from_database(): ?array {
     $pdo = site_database_connection();
     if (!$pdo) {
@@ -167,12 +183,18 @@ function load_news_items_from_database(): ?array {
     }
 
     try {
+        $hasTalentId = site_table_has_column($pdo, 'news', 'talent_id');
+        $hasTargets = site_table_has_column($pdo, 'news', 'targets');
+        $selectTalent = $hasTalentId ? ', n.talent_id, t.name AS talent_name' : ', NULL AS talent_id, NULL AS talent_name';
+        $joinTalent = $hasTalentId ? ' LEFT JOIN talents t ON t.id = n.talent_id' : '';
+        $targetWhere = $hasTargets ? "AND (n.targets IS NULL OR n.targets = '' OR FIND_IN_SET('main', n.targets))" : '';
         $stmt = $pdo->query("
-            SELECT id, title, date, tag, thumb, excerpt, content, content_json, url
-            FROM news
-            WHERE is_published = 1
-              AND (targets IS NULL OR targets = '' OR FIND_IN_SET('main', targets))
-            ORDER BY sort_order ASC, date DESC, id DESC
+            SELECT n.id, n.title, n.date, n.tag, n.thumb, n.excerpt, n.content, n.content_json, n.url{$selectTalent}
+            FROM news n
+            {$joinTalent}
+            WHERE n.is_published = 1
+              {$targetWhere}
+            ORDER BY n.sort_order ASC, n.date DESC, n.id DESC
         ");
         $rows = $stmt->fetchAll();
     } catch (Throwable $e) {
@@ -196,6 +218,8 @@ function load_news_items_from_database(): ?array {
             'body' => $body,
             'thumb' => (string)($row['thumb'] ?? ''),
             'url' => (string)($row['url'] ?? ''),
+            'talent_id' => (string)($row['talent_id'] ?? ''),
+            'talent_name' => (string)($row['talent_name'] ?? ''),
         ];
     }
 
@@ -268,4 +292,17 @@ function news_category_count(array $newsItems): array {
         $counts[$item['category']] = ($counts[$item['category']] ?? 0) + 1;
     }
     return $counts;
+}
+
+function news_talent_filter_options(array $newsItems): array {
+    $options = [];
+    foreach ($newsItems as $item) {
+        $id = trim((string)($item['talent_id'] ?? ''));
+        $name = trim((string)($item['talent_name'] ?? ''));
+        if ($id !== '' && $name !== '') {
+            $options[$id] = $name;
+        }
+    }
+    natcasesort($options);
+    return $options;
 }

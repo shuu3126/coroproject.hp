@@ -43,8 +43,43 @@ function news_lines_from_any_content($jsonOrText) {
     return $raw;
 }
 
+function news_talent_stream_url(array $talent): string {
+    $platforms = json_decode((string)($talent['platforms_json'] ?? '[]'), true);
+    $links = json_decode((string)($talent['links_json'] ?? '[]'), true);
+    $candidates = [];
+
+    foreach (is_array($platforms) ? $platforms : [] as $row) {
+        $label = mb_strtolower((string)($row['name'] ?? ''));
+        $url = trim((string)($row['url'] ?? ''));
+        if ($url === '') continue;
+        $score = (strpos($label, 'youtube') !== false || strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false) ? 100 : 10;
+        if (strpos($label, 'twitch') !== false || strpos($url, 'twitch.tv') !== false) $score = max($score, 90);
+        $candidates[] = ['score' => $score, 'url' => $url];
+    }
+    foreach (is_array($links) ? $links : [] as $row) {
+        $url = trim((string)($row['url'] ?? ''));
+        if ($url !== '') $candidates[] = ['score' => 1, 'url' => $url];
+    }
+
+    usort($candidates, static function ($a, $b) {
+        return $b['score'] <=> $a['score'];
+    });
+    return $candidates[0]['url'] ?? '';
+}
+
 // Ensure targets column exists
 try { $pdo->exec("ALTER TABLE news ADD COLUMN targets VARCHAR(120) NOT NULL DEFAULT 'main,production'"); } catch (Exception $e) {}
+try { $pdo->exec("ALTER TABLE news ADD COLUMN talent_id VARCHAR(191) NULL AFTER targets"); } catch (Exception $e) {}
+
+$talentRows = $pdo->query('SELECT id, name, platforms_json, links_json FROM talents WHERE is_published = 1 ORDER BY sort_order ASC, name ASC')->fetchAll(PDO::FETCH_ASSOC);
+$talentOptions = [];
+foreach ($talentRows as $talentRow) {
+    $talentOptions[] = [
+        'id' => (string)$talentRow['id'],
+        'name' => (string)$talentRow['name'],
+        'stream_url' => news_talent_stream_url($talentRow),
+    ];
+}
 
 // OGP画像取得AJAXエンドポイント
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && (isset($_GET['action']) ? $_GET['action'] : '') === 'fetch_ogp') {
@@ -86,6 +121,7 @@ $row = [
     'is_published' => 1,
     'sort_order' => 0,
     'targets' => 'main,production',
+    'talent_id' => '',
 ];
 
 if ($id !== '') {
@@ -143,6 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contentText = trim((isset($_POST['content_text']) ? $_POST['content_text'] : ''));
     $url = trim((isset($_POST['url']) ? $_POST['url'] : ''));
     $sortOrder = (int)((isset($_POST['sort_order']) ? $_POST['sort_order'] : 0));
+    $talentId = trim((isset($_POST['talent_id']) ? $_POST['talent_id'] : ''));
     $isPublished = isset($_POST['is_published']) ? 1 : 0;
     $allowedTargets = ['main', 'production', 'business', 'creative'];
     $postedTargets = array_values(array_intersect((array)($_POST['target'] ?? []), $allowedTargets));
@@ -192,22 +229,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($postedOriginalId !== '') {
                 $stmt = $pdo->prepare('
                     UPDATE news
-                    SET id = ?, title = ?, date = ?, tag = ?, thumb = ?, excerpt = ?, content = ?, content_json = ?, url = ?, is_published = ?, sort_order = ?, targets = ?
+                    SET id = ?, title = ?, date = ?, tag = ?, thumb = ?, excerpt = ?, content = ?, content_json = ?, url = ?, is_published = ?, sort_order = ?, targets = ?, talent_id = ?
                     WHERE id = ?
                 ');
                 $stmt->execute([
-                    $newsId, $title, $date, $tag, $thumb, $excerpt, $contentPlain, $contentJson, $url, $isPublished, $sortOrder, $targets,
+                    $newsId, $title, $date, $tag, $thumb, $excerpt, $contentPlain, $contentJson, $url, $isPublished, $sortOrder, $targets, $talentId !== '' ? $talentId : null,
                     $postedOriginalId
                 ]);
             } else {
                 $stmt = $pdo->prepare('
                     UPDATE news
-                    SET id = ?, title = ?, date = ?, tag = ?, thumb = ?, excerpt = ?, content = ?, content_json = ?, url = ?, is_published = ?, sort_order = ?, targets = ?
+                    SET id = ?, title = ?, date = ?, tag = ?, thumb = ?, excerpt = ?, content = ?, content_json = ?, url = ?, is_published = ?, sort_order = ?, targets = ?, talent_id = ?
                     WHERE (id IS NULL OR id = "") AND title = ? AND date = ? AND tag = ?
                     LIMIT 1
                 ');
                 $stmt->execute([
-                    $newsId, $title, $date, $tag, $thumb, $excerpt, $contentPlain, $contentJson, $url, $isPublished, $sortOrder, $targets,
+                    $newsId, $title, $date, $tag, $thumb, $excerpt, $contentPlain, $contentJson, $url, $isPublished, $sortOrder, $targets, $talentId !== '' ? $talentId : null,
                     $postedOriginalTitle, $postedOriginalDate, $postedOriginalTag
                 ]);
             }
@@ -216,11 +253,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             set_flash('success', 'ニュースを更新しました。');
         } else {
             $stmt = $pdo->prepare('
-                INSERT INTO news (id, title, date, tag, thumb, excerpt, content, content_json, url, is_published, sort_order, targets)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO news (id, title, date, tag, thumb, excerpt, content, content_json, url, is_published, sort_order, targets, talent_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ');
             $stmt->execute([
-                $newsId, $title, $date, $tag, $thumb, $excerpt, $contentPlain, $contentJson, $url, $isPublished, $sortOrder, $targets
+                $newsId, $title, $date, $tag, $thumb, $excerpt, $contentPlain, $contentJson, $url, $isPublished, $sortOrder, $targets, $talentId !== '' ? $talentId : null
             ]);
 
             write_admin_log($pdo, (int)$user['id'], 'create', 'news', null, 'ニュースを作成しました', ['news_id' => $newsId]);
@@ -306,6 +343,18 @@ start_page($isEdit ? 'ニュースを編集' : 'ニュースを追加', 'ニュ�
       <input type="text" name="url" id="news-url" value="<?= h($row['url']) ?>">
     </label>
 
+    <label>
+      <span>関連タレント</span>
+      <select name="talent_id" id="news-talent-id">
+        <option value="">指定なし</option>
+        <?php foreach ($talentOptions as $talent): ?>
+          <option value="<?= h($talent['id']) ?>" data-stream-url="<?= h($talent['stream_url']) ?>" <?= selected((string)($row['talent_id'] ?? ''), $talent['id']) ?>>
+            <?= h($talent['name']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </label>
+
     <div id="ogp-fetch-wrap" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <button type="button" id="ogp-fetch-btn" class="ghost-btn" style="font-size:.82em;">URLからOGP画像を取得</button>
       <span id="ogp-fetch-status" style="font-size:.8em;color:#666;"></span>
@@ -341,8 +390,30 @@ start_page($isEdit ? 'ニュースを編集' : 'ニュースを追加', 'ニュ�
   var thumbInput = document.querySelector('input[name="thumb"]');
   var thumbPreview = document.querySelector('.inline-preview');
   var urlInput = document.getElementById('news-url');
+  var talentSelect = document.getElementById('news-talent-id');
 
   if (!btn || !thumbInput || !urlInput) return;
+
+  if (talentSelect) {
+    var applyTalentUrl = function (force) {
+      var option = talentSelect.options[talentSelect.selectedIndex];
+      var streamUrl = option ? (option.getAttribute('data-stream-url') || '') : '';
+      if (streamUrl && (force || !urlInput.value.trim())) {
+        urlInput.value = streamUrl;
+        status.textContent = '関連URLにタレントの配信URLを入力しました。';
+        status.style.color = '#27ae60';
+      }
+    };
+    talentSelect.addEventListener('change', function () {
+      applyTalentUrl(true);
+    });
+    var form = talentSelect.closest('form');
+    if (form) {
+      form.addEventListener('submit', function () {
+        applyTalentUrl(false);
+      });
+    }
+  }
 
   btn.addEventListener('click', function () {
     var url = urlInput.value.trim();

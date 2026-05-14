@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS news (
   url VARCHAR(500) NULL,
   is_published TINYINT(1) NOT NULL DEFAULT 1,
   sort_order INT NOT NULL DEFAULT 0,
+  targets VARCHAR(120) NOT NULL DEFAULT 'main,production',
+  talent_id VARCHAR(191) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_news_published_order (is_published, sort_order, date)

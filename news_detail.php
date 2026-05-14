@@ -25,6 +25,7 @@ render_header('news');
       <div class="news-meta">
         <span class="news-category"><?= h($item['category']) ?></span>
         <span class="news-date"><?= h($item['date']) ?></span>
+        <?php if (!empty($item['talent_name'])): ?><span class="news-talent"><?= h($item['talent_name']) ?></span><?php endif; ?>
       </div>
       <h1 class="sub-title article-title"><?= h($item['title']) ?></h1>
       <a href="news.php" class="outline-button cyber-clip">BACK TO NEWS <span aria-hidden="true">›</span></a>
