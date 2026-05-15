@@ -330,7 +330,8 @@ img { display: block; max-width: 100%; }
 .card-top {
   display: flex;
   justify-content: flex-end;
-  align-items: flex-start;
+  align-items: center;
+  gap: 14px;
   margin-bottom: 28px;
 }
 .card-num {
@@ -339,6 +340,16 @@ img { display: block; max-width: 100%; }
   font-style: italic;
   font-size: 4rem;
   opacity: .22;
+}
+.card-num-name {
+  min-width: 0;
+  color: currentColor;
+  font-family: var(--display);
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.2;
+  text-align: right;
 }
 .card-en {
   display:block;

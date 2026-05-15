@@ -102,13 +102,13 @@ render_header('', false);
               <div class="corner corner-tl"></div>
               <div class="card-top">
                 <span class="card-num"><?= h($division['num']) ?></span>
+                <span class="card-num-name"><?= h($division['title_jp']) ?></span>
               </div>
               <span class="card-en"><?= h($division['title']) ?></span>
               <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
               <p class="card-desc"><?= h($division['desc']) ?></p>
               <span class="card-link">
                 <span class="card-link-main">ENTER</span>
-                <span class="card-link-name"><?= h($division['title_jp']) ?></span>
                 <span aria-hidden="true">›</span>
               </span>
             </a>
