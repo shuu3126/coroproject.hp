@@ -106,7 +106,11 @@ render_header('', false);
               <span class="card-en"><?= h($division['title']) ?></span>
               <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
               <p class="card-desc"><?= h($division['desc']) ?></p>
-              <span class="card-link">ENTER SYNC <span aria-hidden="true">›</span></span>
+              <span class="card-link">
+                <span class="card-link-main">ENTER</span>
+                <span class="card-link-name"><?= h($division['title_jp']) ?></span>
+                <span aria-hidden="true">›</span>
+              </span>
             </a>
           <?php endforeach; ?>
         </div>
@@ -206,7 +210,11 @@ render_header('', false);
               <span class="info-eyebrow"><?= h($division['title']) ?></span>
               <h3><?= h($division['title_jp']) ?></h3>
               <p><?= h($division['summary']) ?></p>
-              <a href="<?= h($division['slug']) ?>/" class="card-link">OPEN DIVISION <span aria-hidden="true">›</span></a>
+              <a href="<?= h($division['slug']) ?>/" class="card-link">
+                <span class="card-link-main">OPEN</span>
+                <span class="card-link-name"><?= h($division['title_jp']) ?></span>
+                <span aria-hidden="true">›</span>
+              </a>
             </article>
           <?php endforeach; ?>
         </div>

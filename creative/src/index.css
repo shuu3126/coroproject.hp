@@ -44,6 +44,21 @@ select {
   letter-spacing: 0;
 }
 
+h1,
+h2,
+h3,
+p,
+li,
+summary,
+a,
+button,
+span,
+strong,
+b,
+small {
+  overflow-wrap: anywhere;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -357,6 +372,7 @@ button {
   font-weight: 800;
   line-height: 1.12;
   text-wrap: balance;
+  word-break: normal;
 }
 
 .hero-lead {
@@ -365,6 +381,7 @@ button {
   color: var(--ink-soft);
   font-size: 1.04rem;
   line-height: 2;
+  word-break: normal;
 }
 
 .hero-actions {
@@ -954,7 +971,9 @@ button {
 
 @media (max-width: 760px) {
   .container {
-    width: min(100% - 36px, 1180px);
+    width: calc(100% - 36px);
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .header-inner {
@@ -981,9 +1000,19 @@ button {
     padding-bottom: 36px;
   }
 
+  .hero-copy,
+  .hero-actions,
+  .trust-row,
+  .section-heading,
+  .intro-copy {
+    width: 100%;
+    max-width: calc(100vw - 36px);
+  }
+
   .hero h1 {
-    font-size: 2.35rem;
+    font-size: 2.18rem;
     line-height: 1.22;
+    word-break: normal;
   }
 
   .hero-lead {
@@ -1001,6 +1030,7 @@ button {
   .button,
   .header-cta {
     width: 100%;
+    max-width: 100%;
     min-height: 46px;
   }
 
@@ -1067,11 +1097,21 @@ button {
 
 @media (max-width: 420px) {
   .container {
-    width: min(100% - 28px, 1180px);
+    width: calc(100% - 28px);
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .brand span {
     gap: 0;
+  }
+
+  .hero-copy,
+  .hero-actions,
+  .trust-row,
+  .section-heading,
+  .intro-copy {
+    max-width: calc(100vw - 28px);
   }
 
   .brand small {
@@ -1079,7 +1119,7 @@ button {
   }
 
   .hero h1 {
-    font-size: 2.05rem;
+    font-size: 1.94rem;
   }
 
   .section-heading h2,
