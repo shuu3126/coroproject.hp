@@ -885,6 +885,23 @@ button {
   color: #fff;
 }
 
+.quality-section .section-heading h2 {
+  max-width: 620px;
+  font-family: var(--font);
+  font-size: clamp(2.7rem, 4.6vw, 4.8rem);
+  line-height: 1.12;
+  text-transform: none;
+}
+
+.quality-section .section-heading h2 span {
+  display: block;
+}
+
+.quality-section .section-heading > p:not(.eyebrow) {
+  max-width: 560px;
+  font-size: 1rem;
+}
+
 .quality-section .eyebrow {
   background: var(--yellow);
   color: var(--ink);
@@ -1237,6 +1254,12 @@ button {
   .intro-section .section-heading h2 {
     max-width: 100%;
     font-size: clamp(2rem, 8.8vw, 3.1rem);
+    line-height: 1.12;
+  }
+
+  .quality-section .section-heading h2 {
+    max-width: 100%;
+    font-size: clamp(2rem, 8.6vw, 3.1rem);
     line-height: 1.12;
   }
 
