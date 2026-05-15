@@ -739,6 +739,22 @@ button {
   text-wrap: balance;
 }
 
+.intro-section {
+  padding: 86px 0 96px;
+}
+
+.intro-section .section-heading h2 {
+  max-width: 680px;
+  font-family: var(--font);
+  font-size: clamp(2.7rem, 4.7vw, 4.9rem);
+  line-height: 1.1;
+  text-transform: none;
+}
+
+.intro-section .section-heading h2 span {
+  display: block;
+}
+
 .section-heading > p:not(.eyebrow),
 .intro-copy p {
   color: var(--ink-soft);
@@ -748,9 +764,10 @@ button {
 }
 
 .intro-copy {
+  align-self: center;
   border: var(--line);
   background: var(--yellow);
-  padding: 30px;
+  padding: 34px;
   box-shadow: var(--shadow);
   transform: rotate(1deg);
 }
@@ -1215,6 +1232,12 @@ button {
 
   .section {
     padding: 78px 0;
+  }
+
+  .intro-section .section-heading h2 {
+    max-width: 100%;
+    font-size: clamp(2rem, 8.8vw, 3.1rem);
+    line-height: 1.12;
   }
 
   .service-grid,
