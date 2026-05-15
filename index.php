@@ -68,151 +68,148 @@ render_head($siteName, $pageDescription, [
     'og_url' => $homeUrl,
     'og_image' => $ogImage,
     'json_ld' => $homeJsonLd,
-    'shell_class' => 'page-shell',
+    'shell_class' => 'page-shell nexus-home',
 ]);
 render_header('', false);
 ?>
-    <main>
-      <section class="hero-section">
-        <div class="hero-marquee hero-marquee-top">
-          <div class="marquee-track">CORO PROJECT // VTUBER PRODUCTION // NEXT GENERATION // CORO PROJECT // VTUBER PRODUCTION //</div>
-        </div>
-        <div class="hero-marquee hero-marquee-bottom">
-          <div class="marquee-track reverse">CREATIVE SUPPORT // BUSINESS MATCHING // CREATIVE SUPPORT // BUSINESS MATCHING //</div>
-        </div>
+    <main class="brutal-main">
+      <section class="brutal-hero">
+        <div class="brutal-bg-word brutal-bg-word-a" aria-hidden="true">CREATIVE</div>
+        <div class="brutal-bg-word brutal-bg-word-b" aria-hidden="true">CORO</div>
 
-        <div class="hero-hud hero-hud-left">SYS.VER.1.0.4<br>STATUS: ONLINE</div>
-        <div class="hero-hud hero-hud-right">TARGET: ACQUIRED<br>COORD: 35.6895° N, 139.6917° E</div>
-
-        <div class="container hero-content reveal">
-          <div class="hero-label cyber-clip">VTuber Total Solutions</div>
-          <h1 class="hero-title">
-            VTuberと企業・クリエイターを<br>
-            <span>つなぎ、可能性を拡張する。</span>
-          </h1>
-          <p class="hero-lead">
-            CORO PROJECTは、VTuber事務所運営を軸に、<br class="hide-mobile">
-            活動設計、企業案件の接続、制作進行までを一つの導線で支える総合支援ブランドです。
-          </p>
+        <div class="brutal-tape brutal-tape-yellow">
+          <div class="brutal-tape-track">CORO PROJECT / VTUBER / BUSINESS / CREATIVE / PRODUCTION / CORO PROJECT / VTUBER / BUSINESS / CREATIVE / PRODUCTION /</div>
+        </div>
+        <div class="brutal-tape brutal-tape-blue">
+          <div class="brutal-tape-track brutal-tape-track-reverse">CONNECT TALENT AND COMPANY / CREATIVE HUB / NEXT GENERATION / CONNECT TALENT AND COMPANY / CREATIVE HUB /</div>
+        </div>
+        <div class="brutal-tape brutal-tape-pink">
+          <div class="brutal-tape-track">VIRTUAL TALENT PRODUCTION / BRAND COLLABORATION / DESIGN SUPPORT / VIRTUAL TALENT PRODUCTION /</div>
         </div>
 
-        <div class="container cards-grid reveal" id="services">
-          <?php foreach ($divisions as $division): ?>
-            <a class="division-card cyber-clip-lg <?= h($division['class']) ?>" href="<?= h($basePath . '/' . $division['slug'] . '/') ?>">
-              <div class="corner corner-tl"></div>
-              <div class="card-top">
-                <span class="card-num"><?= h($division['num']) ?></span>
+        <div class="container brutal-hero-grid">
+          <div class="brutal-hero-copy reveal">
+            <div class="brutal-sticker">[ SYS.01 ] VTUBER TOTAL HUB</div>
+            <h1 class="brutal-title">
+              <span>VTuberと</span>
+              <span class="brutal-title-outline">企業を</span>
+              <span>つなぐ。</span>
+            </h1>
+            <div class="brutal-copy-panel">
+              <span class="brutal-mini-badge">NEW WAVE</span>
+              <p>
+                CORO PROJECTは、VTuber事務所運営、企業案件仲介、クリエイティブ制作をひとつの導線でつなぐ総合支援ブランドです。
+                活動者・企業・クリエイターが迷わず動けるよう、相談から実行までを整理します。
+              </p>
+              <div class="brutal-actions">
+                <a class="brutal-button brutal-button-dark" href="contact.php">相談する <span aria-hidden="true">›</span></a>
+                <a class="brutal-button brutal-button-light" href="#services">3事業を見る</a>
               </div>
-              <span class="card-en"><?= h($division['title']) ?></span>
-              <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
-              <p class="card-desc"><?= h($division['desc']) ?></p>
-              <span class="card-link">
-                <span class="card-link-main">ENTER</span>
-                <span class="card-link-name"><?= h($division['title_jp']) ?></span>
+            </div>
+          </div>
+
+          <div class="brutal-collage reveal">
+            <div class="brutal-image-card">
+              <div class="brutal-image-offset" aria-hidden="true"></div>
+              <img src="images/ogp.png" alt="CORO PROJECT visual">
+              <div class="brutal-quality">QUALITY 100%</div>
+              <div class="brutal-approved"><span>APPROVED</span></div>
+              <div class="brutal-round-badge" aria-hidden="true">
+                <span>DESIGN / CASTING / PRODUCTION</span>
+                <b>CP</b>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="brutal-section brutal-section-white" id="services">
+        <div class="container brutal-section-head reveal">
+          <div>
+            <span class="brutal-kicker">02 // DIVISIONS</span>
+            <h2>3つの事業部から、必要な入口へ。</h2>
+          </div>
+          <p>参考デザインの勢いはそのままに、CORO PROJECTの事業内容が直感的に選べる導線へ整理しました。</p>
+        </div>
+
+        <div class="container brutal-division-grid reveal">
+          <?php foreach ($divisions as $division): ?>
+            <a class="brutal-division-card <?= h($division['class']) ?>" href="<?= h($basePath . '/' . $division['slug'] . '/') ?>">
+              <div class="brutal-card-head">
+                <span class="brutal-card-num"><?= h($division['num']) ?></span>
+                <span class="brutal-card-unit"><?= h($division['title_jp']) ?></span>
+              </div>
+              <span class="brutal-card-en"><?= h($division['title']) ?></span>
+              <h3><?= h($division['title_jp']) ?></h3>
+              <p><?= h($division['desc']) ?></p>
+              <span class="brutal-card-link">
+                <span>ENTER</span>
                 <span aria-hidden="true">›</span>
               </span>
             </a>
           <?php endforeach; ?>
         </div>
-
-        <div class="hero-scroll reveal">
-          <div class="hero-scroll-line"></div>
-          <span>SCROLL DOWN</span>
-        </div>
       </section>
 
-      <section class="content-section content-section-alt">
-        <div class="container section-head reveal">
-          <div class="section-title-wrap">
-            <span class="pink-bar"></span>
-            <div>
-              <span class="section-sub">WHY INTEGRATED</span>
-              <h2 class="section-title">分断されやすい仕事を、ひとつの流れにする。</h2>
-            </div>
+      <section class="brutal-section brutal-section-grid">
+        <div class="container brutal-section-head reveal">
+          <div>
+            <span class="brutal-kicker">03 // PROMISE</span>
+            <h2>分断されやすい仕事を、ひとつの流れにする。</h2>
           </div>
-          <p class="section-note">VTuber活動は、配信だけで完結しません。企画、営業、制作、告知、権利確認、納期管理が同時に動くからこそ、相談窓口を分けすぎない設計が必要です。</p>
+          <p>企画、営業、制作、告知、権利確認、納期管理。VTuber施策に必要な要素を、相談段階からまとめて設計します。</p>
         </div>
-        <div class="container insight-grid reveal">
-          <article class="insight-card cyber-clip-lg">
-            <span class="insight-index">01</span>
-            <h3>活動者の魅力を、案件で消費しない</h3>
-            <p>タレントの人格、世界観、活動ペースを理解したうえで、無理に案件へ当てはめず、長く応援される見せ方へ整えます。</p>
+        <div class="container brutal-feature-grid reveal">
+          <article class="brutal-feature-card brutal-feature-yellow">
+            <span>01</span>
+            <h3>活動者の魅力を案件で消費しない</h3>
+            <p>タレントの人格、世界観、活動ペースを理解したうえで、長く応援される見せ方へ整えます。</p>
           </article>
-          <article class="insight-card cyber-clip-lg">
-            <span class="insight-index">02</span>
-            <h3>企業の目的を、施策に翻訳する</h3>
-            <p>商品紹介、認知拡大、来店促進、採用広報など、目的によって必要な出演形式や制作物は変わります。最初の相談段階から整理します。</p>
+          <article class="brutal-feature-card brutal-feature-pink">
+            <span>02</span>
+            <h3>企業の目的を施策に翻訳する</h3>
+            <p>商品紹介、認知拡大、来店促進、採用広報など、目的に合わせて出演形式と制作物を設計します。</p>
           </article>
-          <article class="insight-card cyber-clip-lg">
-            <span class="insight-index">03</span>
+          <article class="brutal-feature-card brutal-feature-blue">
+            <span>03</span>
             <h3>制作物まで含めて進行を止めない</h3>
-            <p>サムネイル、告知画像、動画、配信画面、ロゴなど、案件や活動に必要な素材を制作相談へつなげ、実行までの抜け漏れを減らします。</p>
+            <p>サムネイル、告知画像、動画、配信画面、ロゴなど、実行に必要な素材まで相談できます。</p>
           </article>
         </div>
       </section>
 
-      <section class="about-section" id="about">
-        <div class="container about-grid">
-          <div class="about-copy reveal">
-            <div class="section-marker">
-              <span class="marker-bar"></span>
-              <span class="marker-text">MISSION OBJECTIVE</span>
-            </div>
-            <h2>
-              VTuberという新時代の才能を、<br>
-              一過性のブームではなく、<br>
-              多角的な価値へと<span>変革</span>していく。
-            </h2>
-            <div class="about-text">
-              <p>
-                CORO PROJECTは、単なるタレント事務所に留まりません。企業とタレントが互いの価値を高め合える案件の創出、
-                クリエイターのスキルを最適な形で接続する仕組み、そしてそれらを支える確かなマネジメントを構築します。
-              </p>
-              <p>
-                大切にしているのは、短期的な話題づくりだけではなく、活動者・企業・制作パートナーが安心して関わり続けられる状態をつくること。
-                「三方よし」の精神で、VTuber業界のさらなる成熟と、そこに集うすべての人々の可能性を最大化することを使命としています。
-              </p>
-            </div>
-            <a href="about.php" class="outline-button cyber-clip">ABOUT CORO PROJECT <span aria-hidden="true">›</span></a>
-          </div>
-
-          <div class="about-visual reveal">
-            <div class="visual-frame cyber-clip-lg">
-              <div class="visual-gradient"></div>
-              <video class="visual-video" src="images/short/short1.mp4" autoplay muted loop playsinline preload="metadata" aria-label="青海しび ゲームプレイ動画"></video>
-              <div class="frame-corner frame-corner-tl"></div>
-              <div class="frame-corner frame-corner-br"></div>
-              <div class="visual-caption">
-                <span>FEATURED TALENT</span>
-                <strong class="talent-name">青海しび</strong>
-              </div>
-            </div>
-          </div>
+      <section class="brutal-split-section">
+        <div class="brutal-split-panel brutal-split-dark reveal">
+          <span class="brutal-kicker">04 // FOR TALENTS</span>
+          <h2>次世代のスターを、継続できる活動へ。</h2>
+          <p>所属・活動設計・企画・案件対応・制作相談まで、VTuberが安心して活動を続けられる環境を整えます。</p>
+          <a class="brutal-row-link" href="production/">VTuber事務所を見る <span aria-hidden="true">›</span></a>
+        </div>
+        <div class="brutal-split-panel brutal-split-yellow reveal">
+          <span class="brutal-kicker">05 // FOR COMPANY</span>
+          <h2>企業施策を、VTuberらしい熱量へ。</h2>
+          <p>既存タレントとの連携、新規企画、PR施策、イベント出演など、目的に合わせた起用方法をご提案します。</p>
+          <a class="brutal-row-link" href="business/">案件仲介を見る <span aria-hidden="true">›</span></a>
         </div>
       </section>
 
-      <section class="content-section service-overview">
-        <div class="container section-head reveal">
-          <div class="section-title-wrap">
-            <span class="pink-bar"></span>
-            <div>
-              <span class="section-sub">SERVICE OVERVIEW</span>
-              <h2 class="section-title">3つの窓口で、活動と案件と制作を止めない。</h2>
-            </div>
+      <section class="brutal-section brutal-section-white">
+        <div class="container brutal-section-head reveal">
+          <div>
+            <span class="brutal-kicker">06 // SERVICE OVERVIEW</span>
+            <h2>相談内容から、最適な事業部へつなぎます。</h2>
           </div>
-          <a href="service.php" class="ghost-link cyber-clip">VIEW SERVICE PAGE <span aria-hidden="true">→</span></a>
+          <a class="brutal-button brutal-button-light" href="service.php">サービス詳細</a>
         </div>
-        <div class="container info-grid reveal">
+        <div class="container brutal-info-grid reveal">
           <?php foreach ($divisions as $division): ?>
-            <article class="info-card cyber-clip-lg <?= h($division['class']) ?>">
-              <div class="corner corner-tl"></div>
-              <span class="info-num"><?= h($division['num']) ?></span>
-              <span class="info-eyebrow"><?= h($division['title']) ?></span>
+            <article class="brutal-info-card <?= h($division['class']) ?>">
+              <span><?= h($division['num']) ?></span>
               <h3><?= h($division['title_jp']) ?></h3>
               <p><?= h($division['summary']) ?></p>
-              <a href="<?= h($division['slug']) ?>/" class="card-link">
-                <span class="card-link-main">OPEN</span>
-                <span class="card-link-name"><?= h($division['title_jp']) ?></span>
+              <a class="brutal-card-link" href="<?= h($division['slug']) ?>/">
+                <span>OPEN</span>
+                <b><?= h($division['title_jp']) ?></b>
                 <span aria-hidden="true">›</span>
               </a>
             </article>
@@ -220,77 +217,39 @@ render_header('', false);
         </div>
       </section>
 
-      <section class="content-section">
-        <div class="container section-head reveal">
-          <div class="section-title-wrap">
-            <span class="pink-bar"></span>
-            <div>
-              <span class="section-sub">CONSULTATION ROUTES</span>
-              <h2 class="section-title">相談内容から、最適な入口を選べます。</h2>
-            </div>
+      <section class="brutal-section brutal-section-news" id="news-preview">
+        <div class="container brutal-section-head reveal">
+          <div>
+            <span class="brutal-kicker">07 // NEWS</span>
+            <h2>最新情報</h2>
           </div>
-          <a href="contact.php" class="ghost-link cyber-clip">START CONSULTATION <span aria-hidden="true">→</span></a>
+          <a class="brutal-button brutal-button-light" href="news.php">ニュース一覧</a>
         </div>
-        <div class="container route-grid reveal">
-          <article class="route-card cyber-clip-lg">
-            <span>FOR COMPANY</span>
-            <h3>企業案件・PR施策</h3>
-            <p>商品紹介、サービス認知、イベント出演、SNS施策など、目的に合わせてVTuber起用の形を整理します。</p>
-          </article>
-          <article class="route-card cyber-clip-lg">
-            <span>FOR CREATOR</span>
-            <h3>制作・デザイン相談</h3>
-            <p>イラスト、動画、配信素材、ロゴなど、活動や案件に必要な制作物を依頼しやすい粒度に整えます。</p>
-          </article>
-          <article class="route-card cyber-clip-lg">
-            <span>FOR TALENT</span>
-            <h3>所属・活動相談</h3>
-            <p>活動方針、企画、案件対応、制作の悩みまで、継続して活動するために必要な支援を一緒に確認します。</p>
-          </article>
-          <article class="route-card cyber-clip-lg">
-            <span>FOR PARTNER</span>
-            <h3>提携・取材・協業</h3>
-            <p>メディア掲載、共同企画、業務提携など、CORO PROJECTとの接点を広げる相談を受け付けています。</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="content-section content-section-alt" id="news-preview">
-        <div class="container section-head reveal">
-          <div class="section-title-wrap">
-            <span class="pink-bar"></span>
-            <div>
-              <span class="section-sub">SIGNAL ARCHIVE</span>
-              <h2 class="section-title">NEWS</h2>
-            </div>
-          </div>
-          <a href="news.php" class="ghost-link cyber-clip">OPEN NEWS PAGE <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="container news-list news-list-preview reveal">
+        <div class="container brutal-news-grid reveal">
           <?php foreach (array_slice($newsItems, 0, 3) as $item): ?>
-            <article class="news-card cyber-clip-lg">
-              <div class="news-meta">
-                <span class="news-category"><?= h($item['category']) ?></span>
-                <span class="news-date"><?= h($item['date']) ?></span>
+            <article class="brutal-news-card">
+              <div>
+                <span><?= h($item['category']) ?></span>
+                <time><?= h($item['date']) ?></time>
               </div>
-              <h2><?= h($item['title']) ?></h2>
+              <h3><?= h($item['title']) ?></h3>
               <p><?= h($item['excerpt']) ?></p>
-              <a href="news_detail.php?id=<?= urlencode($item['id']) ?>" class="card-link">READ DETAIL <span aria-hidden="true">›</span></a>
+              <a href="news_detail.php?id=<?= urlencode($item['id']) ?>">READ DETAIL <span aria-hidden="true">›</span></a>
             </article>
           <?php endforeach; ?>
         </div>
       </section>
 
-      <section class="cta-section" id="contact">
-        <video class="cta-bg-video" src="images/short/short1.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
-        <div class="cta-beam"></div>
-        <div class="container cta-inner reveal">
-          <div class="mini-tag">SYSTEM_PROMPT: NEXT_STEP</div>
-          <h2>企画の種を、<br>実行できる導線へ。</h2>
-          <p class="cta-lead">相談内容がまだ曖昧でも大丈夫です。目的、予算感、希望時期、必要な制作物を整理しながら、最初に開くべき窓口へつなぎます。</p>
-          <div class="cta-actions">
-            <a href="contact.php" class="primary-button cyber-clip">CONTACT US</a>
-            <a href="service.php" class="secondary-button cyber-clip">SERVICE / SYSTEM DETAIL</a>
+      <section class="brutal-cta" id="contact">
+        <div class="container brutal-cta-inner reveal">
+          <div>
+            <span class="brutal-kicker">CONTACT</span>
+            <h2>企画の種を、実行できる導線へ。</h2>
+            <p>目的、予算感、希望時期、必要な制作物を整理しながら、最初に開くべき窓口へつなぎます。</p>
+          </div>
+          <div class="brutal-actions">
+            <a class="brutal-button brutal-button-light" href="contact.php">お問い合わせへ進む</a>
+            <a class="brutal-button brutal-button-ghost" href="about.php">CORO PROJECTとは</a>
           </div>
         </div>
       </section>

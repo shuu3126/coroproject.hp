@@ -56,7 +56,7 @@ function render_head(string $pageTitle, string $description, array $options = []
   <link rel="icon" type="image/png" sizes="192x192" href="images/logo.png">
   <link rel="apple-touch-icon" href="images/logo.png">
   <link rel="shortcut icon" href="images/logo.png">
-  <link rel="stylesheet" href="assets/css/portal.css?v=20260429-content-depth">
+  <link rel="stylesheet" href="assets/css/portal.css?v=20260515-nexus-home">
 </head>
 <body>
   <div class="<?= h($shellClass) ?>">

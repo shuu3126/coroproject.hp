@@ -73,6 +73,7 @@ render_header('service');
           <div class="card-top">
             <div class="card-icon"></div>
             <span class="card-num"><?= h($division['num']) ?></span>
+            <span class="card-num-name"><?= h($division['title_jp']) ?></span>
           </div>
           <span class="card-en"><?= h($division['title']) ?></span>
           <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
