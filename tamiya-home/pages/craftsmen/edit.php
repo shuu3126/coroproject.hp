@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../db/connect.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/layout.php';
+require_once __DIR__ . '/../../includes/logger.php';
 
 requireAdmin();
 
@@ -42,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             WHERE id=?
         ");
         $stmt->execute([$input['name'], $input['job_type'], $input['phone'], $input['status'], $input['memo'], $id]);
+        log_action($pdo, 'update', '職人', $input['name'], $input['job_type'] . ' / ' . $input['status']);
         header('Location: /tamiya-home/pages/craftsmen/detail.php?id=' . $id);
         exit;
     }

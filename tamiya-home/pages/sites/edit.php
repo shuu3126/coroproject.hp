@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../db/connect.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/layout.php';
+require_once __DIR__ . '/../../includes/logger.php';
 
 requireAdmin();
 
@@ -48,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $input['memo'] ?: null,
             $id,
         ]);
+        log_action($pdo, 'update', '現場', $input['name'], $input['status']);
         header('Location: /tamiya-home/pages/sites/detail.php?id=' . $id);
         exit;
     }

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../db/connect.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/layout.php';
+require_once __DIR__ . '/../../includes/logger.php';
 
 requireAdmin();
 
@@ -33,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errors)) {
         $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
         $stmt->execute([$input['name'], $input['email'], password_hash($input['password'], PASSWORD_DEFAULT), $input['role']]);
+        log_action($pdo, 'create', 'ユーザー', $input['name'], $input['role'] === 'admin' ? '管理者' : '現場監督');
         header('Location: /tamiya-home/pages/users/index.php');
         exit;
     }

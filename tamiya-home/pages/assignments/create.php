@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../db/connect.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/layout.php';
+require_once __DIR__ . '/../../includes/logger.php';
 
 requireAdmin();
 
@@ -42,6 +43,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $input['end_date'] ?: null,
             $input['memo'] ?: null,
         ]);
+
+        // ログ
+        $c_stmt = $pdo->prepare('SELECT name FROM craftsmen WHERE id = ?');
+        $c_stmt->execute([$input['craftsman_id']]);
+        $s_stmt = $pdo->prepare('SELECT name FROM sites WHERE id = ?');
+        $s_stmt->execute([$input['site_id']]);
+        $c_name = $c_stmt->fetchColumn() ?: '';
+        $s_name = $s_stmt->fetchColumn() ?: '';
+        log_action($pdo, 'create', 'アサイン', $c_name, $s_name . ' / ' . $input['start_date'] . '〜');
 
         // 遷移先：現場詳細 or アサイン一覧
         $redirect = isset($_POST['site_id']) && $_POST['site_id']

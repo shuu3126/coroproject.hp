@@ -75,6 +75,8 @@ renderHeader('アサイン状況');
                   <div class="text-xs text-gray-300">〜 <?= $a['end_date'] ?? '終了日未定' ?></div>
                 </div>
                 <?php if (isAdmin()): ?>
+                  <a href="/tamiya-home/pages/assignments/edit.php?id=<?= $a['id'] ?>"
+                     class="text-xs text-gray-400 hover:text-blue-500">編集</a>
                   <form method="post" action="/tamiya-home/pages/assignments/delete.php"
                         onsubmit="return confirm('このアサインを解除しますか？')">
                     <input type="hidden" name="id" value="<?= $a['id'] ?>">

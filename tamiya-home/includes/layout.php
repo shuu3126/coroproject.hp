@@ -60,7 +60,8 @@ function renderBottomNav(string $current = ''): void {
 
     $admin_nav = [
         ['href' => '/tamiya-home/pages/export/index.php', 'label' => 'Excel出力', 'key' => 'export'],
-        ['href' => '/tamiya-home/pages/users/index.php',  'label' => 'ユーザー',  'key' => 'users'],
+        ['href' => '/tamiya-home/pages/users/index.php',  'label' => 'ユーザー管理', 'key' => 'users'],
+        ['href' => '/tamiya-home/pages/logs/index.php',   'label' => '操作ログ',  'key' => 'logs'],
     ];
 
     // ── デスクトップ: 左サイドバー ──
