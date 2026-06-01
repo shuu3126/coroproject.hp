@@ -1,0 +1,6 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# インストーラー（本番では削除必須）
+tamiya-home/install.php
