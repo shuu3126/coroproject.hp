@@ -7,7 +7,7 @@ $isProd  = strpos($_SERVER['HTTP_HOST'] ?? '', 'coroproject.jp') !== false;
 $host   = 'localhost';
 $dbname = $isProd ? 'db_coroproject_2'  : 'tamiya_home';
 $user   = $isProd ? 'db_coroproject' : 'root';
-$pass   = $isProd ? 'FaMkCTUO'       : '';
+$pass   = $isProd ? 'FwMMCTUO'       : '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
