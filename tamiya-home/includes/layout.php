@@ -101,14 +101,24 @@ function renderBottomNav(string $current = ''): void {
     echo '</nav>';
 
     // ── モバイル: ボトムナビ ──
+    $icons = [
+        'dashboard'   => '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>',
+        'craftsmen'   => '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+        'sites'       => '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>',
+        'assignments' => '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>',
+    ];
+
     echo '<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-20">';
     echo '<div class="flex">';
     foreach ($nav as $item) {
-        $active = ($current === $item['key'])
-            ? 'text-blue-600 font-semibold border-t-2 border-blue-600'
-            : 'text-gray-400';
-        echo '<a href="' . $item['href'] . '" class="flex flex-col items-center flex-1 py-2 text-xs ' . $active . '">';
-        echo '<span class="text-xs">' . $item['label'] . '</span>';
+        $isActive = ($current === $item['key']);
+        $color    = $isActive ? 'text-blue-600' : 'text-gray-400';
+        $bar      = $isActive ? '<span class="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-blue-600 rounded-full"></span>' : '';
+        $icon     = $icons[$item['key']] ?? '';
+        echo '<a href="' . $item['href'] . '" class="relative flex flex-col items-center justify-center flex-1 py-3 gap-1 ' . $color . '">';
+        echo $bar;
+        echo $icon;
+        echo '<span class="text-xs leading-none">' . $item['label'] . '</span>';
         echo '</a>';
     }
     echo '</div></nav>';
