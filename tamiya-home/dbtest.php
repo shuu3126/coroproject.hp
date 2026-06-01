@@ -2,10 +2,10 @@
 // 確認後すぐ削除
 $isProd = strpos($_SERVER['HTTP_HOST'] ?? '', 'coroproject.jp') !== false;
 
-$host   = 'localhost';
-$dbname = $isProd ? 'coroproject_2' : 'tamiya_home';
+$host   = $isProd ? 'mysql.coroproject-mine.ne.jp' : 'localhost';
+$dbname = $isProd ? 'coroproject_2'  : 'tamiya_home';
 $user   = $isProd ? 'db_coroproject' : 'root';
-$pass   = $isProd ? (getenv('CORO_DB_PASS') ?: '') : '';
+$pass   = $isProd ? 'FaMkCTUO'       : '';
 
 echo "isProd=" . ($isProd ? 'true' : 'false') . ", user=$user, dbname=$dbname<br>";
 
