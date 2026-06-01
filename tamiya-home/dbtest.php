@@ -1,14 +1,13 @@
 <?php
 // 確認後すぐ削除
-$isLocal = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1'], true)
-        || str_starts_with($_SERVER['HTTP_HOST'] ?? '', 'localhost:');
+$isProd = strpos($_SERVER['HTTP_HOST'] ?? '', 'coroproject.jp') !== false;
 
 $host   = 'localhost';
-$dbname = $isLocal ? 'tamiya_home'    : 'coroproject_2';
-$user   = $isLocal ? 'root'           : 'db_coroproject';
-$pass   = $isLocal ? ''               : (getenv('CORO_DB_PASS') ?: '');
+$dbname = $isProd ? 'coroproject_2' : 'tamiya_home';
+$user   = $isProd ? 'db_coroproject' : 'root';
+$pass   = $isProd ? (getenv('CORO_DB_PASS') ?: '') : '';
 
-echo "host=$host, dbname=$dbname, user=$user<br>";
+echo "isProd=" . ($isProd ? 'true' : 'false') . ", user=$user, dbname=$dbname<br>";
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
