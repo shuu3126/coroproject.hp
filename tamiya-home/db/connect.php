@@ -1,10 +1,12 @@
 <?php
 
-// ローカル(XAMPP)と本番で自動切り替え
-$host   = getenv('DB_HOST')   ?: 'localhost';
-$dbname = getenv('DB_NAME')   ?: 'tamiya_home';
-$user   = getenv('DB_USER')   ?: 'root';
-$pass   = getenv('DB_PASS')   ?: '';
+// CORO_DB_PASS が設定されていれば本番、なければローカル(XAMPP)
+$coroPass = getenv('CORO_DB_PASS');
+
+$host   = 'localhost';
+$dbname = $coroPass !== false ? 'coroproject_2' : 'tamiya_home';
+$user   = $coroPass !== false ? 'db_coroproject' : 'root';
+$pass   = $coroPass !== false ? $coroPass : '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
