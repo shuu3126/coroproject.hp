@@ -3,7 +3,7 @@
 $isProd = strpos($_SERVER['HTTP_HOST'] ?? '', 'coroproject.jp') !== false;
 
 $host   = 'localhost';
-$dbname = $isProd ? 'coroproject_2'  : 'tamiya_home';
+$dbname = $isProd ? 'db_coroproject_2'  : 'tamiya_home';
 $user   = $isProd ? 'db_coroproject' : 'root';
 $pass   = $isProd ? 'FaMkCTUO'       : '';
 
