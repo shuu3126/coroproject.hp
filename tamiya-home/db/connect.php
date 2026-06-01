@@ -1,12 +1,12 @@
 <?php
 
-// ローカル: root/tamiya_home、本番: coroproject サーバーの設定を使用
-$isLocal = (bool)preg_match('/^(localhost|127\.0\.0\.1)(:\d+)?$/', $_SERVER['HTTP_HOST'] ?? '');
+// CORO_DB_PASS が設定されていれば本番、なければローカル(XAMPP)
+$coroPass = getenv('CORO_DB_PASS');
 
 $host   = 'localhost';
-$dbname = $isLocal ? 'tamiya_home'    : 'coroproject_2';
-$user   = $isLocal ? 'root'           : 'db_coroproject';
-$pass   = $isLocal ? ''               : (getenv('CORO_DB_PASS') ?: '');
+$dbname = $coroPass !== false ? 'coroproject_2' : 'tamiya_home';
+$user   = $coroPass !== false ? 'db_coroproject' : 'root';
+$pass   = $coroPass !== false ? $coroPass : '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
