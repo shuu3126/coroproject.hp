@@ -32,6 +32,12 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id, $today, $today]);
 $past_craftsmen = $stmt->fetchAll();
 
+$stmt = $pdo->prepare("
+    SELECT * FROM site_comments WHERE site_id = ? ORDER BY created_at DESC LIMIT 50
+");
+$stmt->execute([$id]);
+$comments = $stmt->fetchAll();
+
 $status_badge = [
     '準備中' => 'bg-blue-100 text-blue-700',
     '施工中' => 'bg-green-100 text-green-700',
@@ -104,7 +110,7 @@ renderHeader('現場詳細');
 
   <?php if ($past_craftsmen): ?>
     <div class="text-xs text-gray-400 font-medium mb-2">過去のアサイン</div>
-    <div class="bg-white rounded-xl border border-gray-100 p-4 space-y-1.5">
+    <div class="bg-white rounded-xl border border-gray-100 p-4 mb-4 space-y-1.5">
       <?php foreach ($past_craftsmen as $c): ?>
         <div class="flex items-center justify-between py-1 border-b border-gray-50 last:border-0 text-sm text-gray-500">
           <div class="flex items-center gap-2">
@@ -116,6 +122,54 @@ renderHeader('現場詳細');
       <?php endforeach; ?>
     </div>
   <?php endif; ?>
+
+  <div id="comments">
+    <div class="text-xs text-gray-400 font-medium mb-2">進捗コメント</div>
+
+    <form method="post" action="/tamiya-home/pages/sites/comment_add.php"
+          class="bg-white rounded-xl border border-gray-100 p-4 mb-3">
+      <input type="hidden" name="site_id" value="<?= $id ?>">
+      <textarea name="body" rows="2" maxlength="1000"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        placeholder="現場の状況を記録..."></textarea>
+      <div class="flex justify-end mt-3">
+        <button type="submit"
+          class="bg-gray-800 text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-900">
+          コメントを追加
+        </button>
+      </div>
+    </form>
+
+    <?php if ($comments): ?>
+      <?php foreach ($comments as $c): ?>
+        <div class="bg-white rounded-xl border border-gray-100 p-4 mb-2">
+          <div class="flex justify-between items-start gap-3">
+            <div class="min-w-0">
+              <div class="text-sm text-gray-800 whitespace-pre-line"><?= htmlspecialchars($c['body']) ?></div>
+              <div class="text-xs text-gray-400 mt-1">
+                <?= htmlspecialchars($c['user_name']) ?> · <?= htmlspecialchars(substr($c['created_at'], 0, 16)) ?>
+              </div>
+            </div>
+            <?php if (isAdmin()): ?>
+              <form method="post" action="/tamiya-home/pages/sites/comment_delete.php"
+                    onsubmit="return confirm('削除しますか？')"
+                    class="shrink-0">
+                <input type="hidden" name="comment_id" value="<?= $c['id'] ?>">
+                <input type="hidden" name="site_id" value="<?= $id ?>">
+                <button type="submit" class="text-xs text-gray-300 hover:text-red-400">
+                  削除
+                </button>
+              </form>
+            <?php endif; ?>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <div class="text-center text-gray-400 py-6 bg-white rounded-xl border border-gray-100">
+        まだコメントはありません
+      </div>
+    <?php endif; ?>
+  </div>
 
 </main>
 

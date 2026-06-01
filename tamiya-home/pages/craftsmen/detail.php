@@ -13,6 +13,13 @@ $stmt->execute([$id]);
 $craftsman = $stmt->fetch();
 if (!$craftsman) { header('Location: /tamiya-home/pages/craftsmen/index.php'); exit; }
 
+$today = date('Y-m-d');
+$warn_date = date('Y-m-d', strtotime('+60 days'));
+
+$stmt = $pdo->prepare("SELECT * FROM qualifications WHERE craftsman_id = ? ORDER BY expiry_date IS NULL, expiry_date ASC");
+$stmt->execute([$id]);
+$qualifications = $stmt->fetchAll();
+
 $stmt = $pdo->prepare("
     SELECT a.*, s.name AS site_name
     FROM assignments a
@@ -24,7 +31,6 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id]);
 $history = $stmt->fetchAll();
 
-$today = date('Y-m-d');
 $status_badge = [
     '稼働中' => 'bg-green-100 text-green-700',
     '休業中' => 'bg-yellow-100 text-yellow-700',
@@ -72,6 +78,50 @@ renderHeader('職人詳細');
       </a>
     <?php endif; ?>
   </div>
+
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="text-sm font-semibold text-gray-500">資格・免許</h2>
+    <?php if (isAdmin()): ?>
+      <a href="/tamiya-home/pages/qualifications/create.php?craftsman_id=<?= $id ?>"
+         class="text-sm bg-blue-600 text-white font-bold px-3 py-2 rounded-lg hover:bg-blue-700">＋ 資格追加</a>
+    <?php endif; ?>
+  </div>
+  <?php if ($qualifications): ?>
+    <div class="space-y-2 mb-5">
+      <?php foreach ($qualifications as $q): ?>
+        <div class="bg-white rounded-xl border border-gray-100 p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="font-medium text-sm text-gray-800"><?= htmlspecialchars($q['name']) ?></div>
+              <div class="text-xs text-gray-400 mt-1">
+                取得日: <?= $q['issued_date'] ? htmlspecialchars($q['issued_date']) : '未設定' ?>
+              </div>
+            </div>
+            <div class="shrink-0"><?= qualification_expiry_badge($q['expiry_date']) ?></div>
+          </div>
+
+          <?php if ($q['note']): ?>
+            <div class="bg-gray-50 rounded-lg p-3 text-sm text-gray-600 mt-3">
+              <?= nl2br(htmlspecialchars($q['note'])) ?>
+            </div>
+          <?php endif; ?>
+
+          <?php if (isAdmin()): ?>
+            <form method="post" action="/tamiya-home/pages/qualifications/delete.php"
+                  onsubmit="return confirm('<?= htmlspecialchars($q['name']) ?> を削除しますか？')"
+                  class="mt-3 text-right">
+              <input type="hidden" name="id" value="<?= $q['id'] ?>">
+              <button type="submit" class="text-xs text-red-500 hover:text-red-700 border border-red-200 rounded-lg px-3 py-1.5">
+                削除
+              </button>
+            </form>
+          <?php endif; ?>
+        </div>
+      <?php endforeach; ?>
+    </div>
+  <?php else: ?>
+    <div class="text-center text-gray-400 py-8 bg-white rounded-xl border border-gray-100 mb-5">資格・免許が登録されていません</div>
+  <?php endif; ?>
 
   <h2 class="text-sm font-semibold text-gray-500 mb-2">アサイン履歴</h2>
   <?php if ($history): ?>
