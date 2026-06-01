@@ -4,7 +4,7 @@
 // 本番(coroproject.jp): db_coroproject / coroproject_2
 $isProd  = strpos($_SERVER['HTTP_HOST'] ?? '', 'coroproject.jp') !== false;
 
-$host   = $isProd ? 'mysql.coroproject-mine.ne.jp' : 'localhost';
+$host   = 'localhost';
 $dbname = $isProd ? 'coroproject_2'  : 'tamiya_home';
 $user   = $isProd ? 'db_coroproject' : 'root';
 $pass   = $isProd ? 'FaMkCTUO'       : '';
