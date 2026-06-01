@@ -20,14 +20,20 @@ if ($filter_action !== '') {
     $params[] = $filter_action;
 }
 
-$stmt = $pdo->prepare("
-    SELECT * FROM activity_logs
-    WHERE " . implode(' AND ', $where) . "
-    ORDER BY created_at DESC
-    LIMIT 300
-");
-$stmt->execute($params);
-$logs = $stmt->fetchAll();
+$logs = [];
+$table_error = '';
+try {
+    $stmt = $pdo->prepare("
+        SELECT * FROM activity_logs
+        WHERE " . implode(' AND ', $where) . "
+        ORDER BY created_at DESC
+        LIMIT 300
+    ");
+    $stmt->execute($params);
+    $logs = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $table_error = 'activity_logs テーブルが存在しません。phpMyAdmin で migration_logs.sql を実行してください。';
+}
 
 $action_badge = [
     'create' => 'bg-green-100 text-green-700',
@@ -64,7 +70,11 @@ renderHeader('操作ログ');
     <span class="text-xs text-gray-400 ml-auto"><?= count($logs) ?> 件（最新300件）</span>
   </form>
 
-  <?php if ($logs): ?>
+  <?php if ($table_error): ?>
+    <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-4">
+      <?= htmlspecialchars($table_error) ?>
+    </div>
+  <?php elseif ($logs): ?>
     <!-- デスクトップ: テーブル -->
     <div class="hidden md:block bg-white rounded-xl border border-gray-100 overflow-hidden">
       <table class="w-full text-sm">
