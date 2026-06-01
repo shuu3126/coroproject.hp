@@ -32,11 +32,16 @@ $stmt = $pdo->prepare("
 $stmt->execute([$id, $today, $today]);
 $past_craftsmen = $stmt->fetchAll();
 
-$stmt = $pdo->prepare("
-    SELECT * FROM site_comments WHERE site_id = ? ORDER BY created_at DESC LIMIT 50
-");
-$stmt->execute([$id]);
-$comments = $stmt->fetchAll();
+$comments = [];
+try {
+    $stmt = $pdo->prepare("
+        SELECT * FROM site_comments WHERE site_id = ? ORDER BY created_at DESC LIMIT 50
+    ");
+    $stmt->execute([$id]);
+    $comments = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // site_comments テーブル未作成時はスキップ
+}
 
 $status_badge = [
     '準備中' => 'bg-blue-100 text-blue-700',

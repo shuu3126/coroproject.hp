@@ -31,11 +31,30 @@ $stmt = $pdo->prepare("
 $stmt->execute([$today, $today]);
 $unassigned = (int)$stmt->fetchColumn();
 
-$stmt = $pdo->query("
-    SELECT COUNT(*) FROM qualifications
-    WHERE expiry_date IS NOT NULL AND expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
-");
-$expiring_qualification_count = (int)$stmt->fetchColumn();
+$expiring_qualification_count = 0;
+$expiring_qualifications = [];
+try {
+    $stmt = $pdo->query("
+        SELECT COUNT(*) FROM qualifications
+        WHERE expiry_date IS NOT NULL AND expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+    ");
+    $expiring_qualification_count = (int)$stmt->fetchColumn();
+
+    $stmt = $pdo->query("
+        SELECT q.name AS qualification_name, q.expiry_date,
+               c.name AS craftsman_name,
+               DATEDIFF(q.expiry_date, CURDATE()) AS remaining_days
+        FROM qualifications q
+        JOIN craftsmen c ON q.craftsman_id = c.id
+        WHERE q.expiry_date IS NOT NULL
+          AND q.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+        ORDER BY q.expiry_date ASC, c.name, q.name
+        LIMIT 5
+    ");
+    $expiring_qualifications = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // qualifications テーブル未作成時はスキップ
+}
 
 $stmt = $pdo->prepare("
     SELECT c.name AS craftsman_name, c.job_type, s.name AS site_name
@@ -57,19 +76,6 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$today, $three_days_later]);
 $ending_soon = $stmt->fetchAll();
-
-$stmt = $pdo->query("
-    SELECT q.name AS qualification_name, q.expiry_date,
-           c.name AS craftsman_name,
-           DATEDIFF(q.expiry_date, CURDATE()) AS remaining_days
-    FROM qualifications q
-    JOIN craftsmen c ON q.craftsman_id = c.id
-    WHERE q.expiry_date IS NOT NULL
-      AND q.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
-    ORDER BY q.expiry_date ASC, c.name, q.name
-    LIMIT 5
-");
-$expiring_qualifications = $stmt->fetchAll();
 
 renderHead('ダッシュボード');
 renderHeader('ダッシュボード');

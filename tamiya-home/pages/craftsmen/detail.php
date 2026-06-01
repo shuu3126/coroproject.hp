@@ -16,9 +16,14 @@ if (!$craftsman) { header('Location: /tamiya-home/pages/craftsmen/index.php'); e
 $today = date('Y-m-d');
 $warn_date = date('Y-m-d', strtotime('+60 days'));
 
-$stmt = $pdo->prepare("SELECT * FROM qualifications WHERE craftsman_id = ? ORDER BY expiry_date IS NULL, expiry_date ASC");
-$stmt->execute([$id]);
-$qualifications = $stmt->fetchAll();
+$qualifications = [];
+try {
+    $stmt = $pdo->prepare("SELECT * FROM qualifications WHERE craftsman_id = ? ORDER BY expiry_date IS NULL, expiry_date ASC");
+    $stmt->execute([$id]);
+    $qualifications = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // qualifications テーブル未作成時はスキップ
+}
 
 $stmt = $pdo->prepare("
     SELECT a.*, s.name AS site_name
