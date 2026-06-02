@@ -23,12 +23,7 @@ function renderHead(string $title = '職人管理システム'): void {
     main { animation: fadeIn 0.25s ease both; }
 
     /* カードホバー */
-    a[href]:not([href="#"]):not([href="javascript:history.back()"]) {
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .rounded-xl:hover, .rounded-lg:hover {
-      transition: box-shadow 0.15s ease;
-    }
+    .rounded-xl:hover, .rounded-lg:hover { transition: box-shadow 0.15s ease; }
 
     /* ボタン押下 */
     button[type="submit"], a.bg-blue-600, a.bg-green-600,
@@ -37,19 +32,62 @@ function renderHead(string $title = '職人管理システム'): void {
     }
     button[type="submit"]:active, a.bg-blue-600:active,
     a.bg-green-600:active, a.bg-indigo-600:active {
-      transform: scale(0.97);
-      opacity: 0.85;
+      transform: scale(0.97); opacity: 0.85;
     }
 
-    /* サイドバーナビリンクのホバー */
+    /* サイドバーナビリンク・テーブル行ホバー */
     nav a { transition: background 0.15s ease, color 0.15s ease; }
-
-    /* テーブル行ホバー */
     tbody tr { transition: background 0.1s ease; }
     tbody tr:hover td { background: #f4f4f5; }
+
+    /* ローディング画面 */
+    #loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #1e3a5f;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.4s ease;
+    }
+    .house-path {
+      stroke-dasharray: 80;
+      stroke-dashoffset: 80;
+      animation: draw-house 2s ease-in-out infinite;
+    }
+    @keyframes draw-house {
+      0%   { stroke-dashoffset: 80;  fill: transparent; }
+      40%  { stroke-dashoffset: 0;   fill: transparent; }
+      60%  { stroke-dashoffset: 0;   fill: rgba(249,115,22,0.15); }
+      100% { stroke-dashoffset: -80; fill: transparent; }
+    }
+    .loading-dot { display: inline-block; animation: bounce-dot 1.4s infinite; }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce-dot {
+      0%, 80%, 100% { transform: translateY(0); }
+      40%           { transform: translateY(-4px); }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
+
+  <!-- ローディングオーバーレイ -->
+  <div id="loading-overlay">
+    <svg viewBox="0 0 24 24" style="width:96px;height:96px;stroke:#f97316;stroke-width:1.5;fill:transparent;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(249,115,22,0.5))">
+      <path class="house-path" d="M4 21 V9 L12 3 L20 9 V21 H14 V14 H10 V21 Z"/>
+    </svg>
+    <div style="margin-top:2rem;text-align:center;">
+      <p style="color:white;font-size:1.1rem;letter-spacing:0.2em;font-family:'Noto Sans JP',sans-serif;">
+        読み込み中<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span>
+      </p>
+      <p style="color:#fb923c;font-size:0.75rem;margin-top:0.5rem;letter-spacing:0.25em;opacity:0.8;">TAMIYA HOME</p>
+    </div>
+  </div>
+  <script>
+    window.addEventListener('load', function() {
+      var el = document.getElementById('loading-overlay');
+      el.style.opacity = '0';
+      setTimeout(function() { el.style.display = 'none'; }, 400);
+    });
+  </script>
 HTML;
 }
 
@@ -83,6 +121,28 @@ function job_badge(string $job_type): string {
     return '<span class="text-xs px-2 py-0.5 rounded font-medium ' . $cls . '">' . htmlspecialchars($job_type) . '</span>';
 }
 
+function qualification_expiry_badge($expiry_date): string {
+    if (!$expiry_date) {
+        return '<span class="text-xs px-2 py-0.5 rounded font-medium bg-gray-100 text-gray-600">無期限</span>';
+    }
+
+    $today = date('Y-m-d');
+    $days = (int)floor((strtotime($expiry_date) - strtotime($today)) / 86400);
+
+    if ($expiry_date < $today) {
+        $cls = 'bg-red-100 text-red-800';
+        $label = '期限切れ';
+    } elseif ($days <= 60) {
+        $cls = 'bg-orange-100 text-orange-800';
+        $label = '残' . $days . '日';
+    } else {
+        $cls = 'bg-green-100 text-green-800';
+        $label = $expiry_date . ' まで';
+    }
+
+    return '<span class="text-xs px-2 py-0.5 rounded font-medium ' . $cls . '">' . htmlspecialchars($label) . '</span>';
+}
+
 function renderBottomNav(string $current = ''): void {
     $nav = [
         ['href' => '/tamiya-home/dashboard.php',               'label' => 'ホーム',   'key' => 'dashboard'],
@@ -91,10 +151,13 @@ function renderBottomNav(string $current = ''): void {
         ['href' => '/tamiya-home/pages/assignments/index.php', 'label' => 'アサイン', 'key' => 'assignments'],
     ];
 
+    $desktop_nav = $nav;
+    $desktop_nav[] = ['href' => '/tamiya-home/pages/assignments/calendar.php', 'label' => 'カレンダー', 'key' => 'calendar'];
+
     $admin_nav = [
+        ['href' => '/tamiya-home/pages/qualifications/index.php', 'label' => '資格管理', 'key' => 'qualifications'],
         ['href' => '/tamiya-home/pages/export/index.php', 'label' => 'Excel出力', 'key' => 'export'],
-        ['href' => '/tamiya-home/pages/users/index.php',  'label' => 'ユーザー管理', 'key' => 'users'],
-        ['href' => '/tamiya-home/pages/logs/index.php',   'label' => '操作ログ',  'key' => 'logs'],
+        ['href' => '/tamiya-home/pages/users/index.php',  'label' => 'ユーザー',  'key' => 'users'],
     ];
 
     // ── デスクトップ: 左サイドバー ──
@@ -105,7 +168,7 @@ function renderBottomNav(string $current = ''): void {
     echo '</div>';
     echo '<div class="flex flex-col gap-0.5 p-3 flex-1 overflow-y-auto">';
 
-    foreach ($nav as $item) {
+    foreach ($desktop_nav as $item) {
         $active = ($current === $item['key'])
             ? 'bg-blue-50 text-blue-700 font-semibold'
             : 'text-gray-600 hover:bg-gray-50';
