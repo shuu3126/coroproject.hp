@@ -148,7 +148,28 @@ renderHeader('週次アサインカレンダー');
                 </td>
                 <?php foreach ($week_days as $day): ?>
                   <?php $items = $craftsman['days'][$day['date']]; ?>
-                  <td class="border-t border-gray-100 px-2 py-2 align-top h-14 <?= $day['is_today'] ? 'bg-blue-50/30' : '' ?>">
+                  <?php if ($day['is_today']): ?>
+                  <td class="today-cell border-t border-gray-100 px-2 py-2 align-top h-14 bg-blue-50/30 transition-colors"
+                      data-craftsman-id="<?= $craftsman['id'] ?>"
+                      data-site-id="<?= $items ? $items[0]['site_id'] : '' ?>"
+                      data-date="<?= $day['date'] ?>">
+                    <?php if ($items): ?>
+                      <div class="space-y-1">
+                        <?php foreach ($items as $item): ?>
+                          <div class="today-chip cursor-grab active:cursor-grabbing select-none text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded px-1 py-0.5 truncate"
+                               data-craftsman-id="<?= $craftsman['id'] ?>"
+                               data-site-id="<?= $item['site_id'] ?>"
+                               title="<?= htmlspecialchars($item['site_name']) ?>">
+                            <?= htmlspecialchars(short_site_name($item['site_name'])) ?>
+                          </div>
+                        <?php endforeach; ?>
+                      </div>
+                    <?php else: ?>
+                      <div class="text-gray-300 text-xs text-center py-2">ここへドロップ</div>
+                    <?php endif; ?>
+                  </td>
+                  <?php else: ?>
+                  <td class="border-t border-gray-100 px-2 py-2 align-top h-14">
                     <?php if ($items): ?>
                       <div class="space-y-1">
                         <?php foreach ($items as $item): ?>
@@ -163,6 +184,7 @@ renderHeader('週次アサインカレンダー');
                       <div class="text-gray-200 text-xs text-center py-1">─</div>
                     <?php endif; ?>
                   </td>
+                  <?php endif; ?>
                 <?php endforeach; ?>
               </tr>
             <?php endforeach; ?>
@@ -179,6 +201,79 @@ renderHeader('週次アサインカレンダー');
   </div>
 
 </main>
+
+<script>
+(function () {
+  const today = '<?= date('Y-m-d') ?>';
+  let dragData = null;
+
+  document.querySelectorAll('.today-chip').forEach(chip => {
+    chip.draggable = true;
+    chip.addEventListener('dragstart', e => {
+      dragData = { craftsmanId: chip.dataset.craftsmanId, siteId: chip.dataset.siteId };
+      e.dataTransfer.effectAllowed = 'move';
+      chip.classList.add('opacity-40');
+    });
+    chip.addEventListener('dragend', () => {
+      chip.classList.remove('opacity-40');
+      dragData = null;
+    });
+  });
+
+  document.querySelectorAll('.today-cell').forEach(cell => {
+    cell.addEventListener('dragover', e => {
+      if (!dragData) return;
+      e.preventDefault();
+      cell.classList.add('ring-2', 'ring-inset', 'ring-blue-400', '!bg-blue-100');
+    });
+    cell.addEventListener('dragleave', () => {
+      cell.classList.remove('ring-2', 'ring-inset', 'ring-blue-400', '!bg-blue-100');
+    });
+    cell.addEventListener('drop', async e => {
+      e.preventDefault();
+      cell.classList.remove('ring-2', 'ring-inset', 'ring-blue-400', '!bg-blue-100');
+      if (!dragData) return;
+
+      const fromId   = parseInt(dragData.craftsmanId);
+      const fromSite = dragData.siteId ? parseInt(dragData.siteId) : null;
+      const toId     = parseInt(cell.dataset.craftsmanId);
+      const toSite   = cell.dataset.siteId ? parseInt(cell.dataset.siteId) : null;
+
+      if (fromId === toId) return;
+
+      try {
+        await Promise.all([
+          post({ craftsman_id: fromId, site_id: toSite, date: today }),
+          post({ craftsman_id: toId,   site_id: fromSite, date: today }),
+        ]);
+        toast('アサインを更新しました');
+        setTimeout(() => location.reload(), 700);
+      } catch {
+        toast('エラーが発生しました', true);
+      }
+    });
+  });
+
+  function post(body) {
+    return fetch('/tamiya-home/pages/assignments/api_reassign_today.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(r => { if (!r.ok) throw new Error(); });
+  }
+
+  function toast(msg, isError = false) {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+      background:${isError ? '#ef4444' : '#1e3a5f'};color:#fff;
+      padding:10px 24px;border-radius:8px;font-size:13px;z-index:9999;
+      box-shadow:0 4px 16px rgba(0,0,0,0.2);pointer-events:none;`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+})();
+</script>
 
 <?php
 renderBottomNav('calendar');
