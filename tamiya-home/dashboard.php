@@ -31,30 +31,11 @@ $stmt = $pdo->prepare("
 $stmt->execute([$today, $today]);
 $unassigned = (int)$stmt->fetchColumn();
 
-$expiring_qualification_count = 0;
-$expiring_qualifications = [];
-try {
-    $stmt = $pdo->query("
-        SELECT COUNT(*) FROM qualifications
-        WHERE expiry_date IS NOT NULL AND expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
-    ");
-    $expiring_qualification_count = (int)$stmt->fetchColumn();
-
-    $stmt = $pdo->query("
-        SELECT q.name AS qualification_name, q.expiry_date,
-               c.name AS craftsman_name,
-               DATEDIFF(q.expiry_date, CURDATE()) AS remaining_days
-        FROM qualifications q
-        JOIN craftsmen c ON q.craftsman_id = c.id
-        WHERE q.expiry_date IS NOT NULL
-          AND q.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
-        ORDER BY q.expiry_date ASC, c.name, q.name
-        LIMIT 5
-    ");
-    $expiring_qualifications = $stmt->fetchAll();
-} catch (PDOException $e) {
-    // qualifications テーブル未作成時はスキップ
-}
+$stmt = $pdo->query("
+    SELECT COUNT(*) FROM qualifications
+    WHERE expiry_date IS NOT NULL AND expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+");
+$expiring_qualification_count = (int)$stmt->fetchColumn();
 
 $stmt = $pdo->prepare("
     SELECT c.name AS craftsman_name, c.job_type, s.name AS site_name
@@ -77,8 +58,69 @@ $stmt = $pdo->prepare("
 $stmt->execute([$today, $three_days_later]);
 $ending_soon = $stmt->fetchAll();
 
+$stmt = $pdo->query("
+    SELECT q.name AS qualification_name, q.expiry_date,
+           c.name AS craftsman_name,
+           DATEDIFF(q.expiry_date, CURDATE()) AS remaining_days
+    FROM qualifications q
+    JOIN craftsmen c ON q.craftsman_id = c.id
+    WHERE q.expiry_date IS NOT NULL
+      AND q.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+    ORDER BY q.expiry_date ASC, c.name, q.name
+    LIMIT 5
+");
+$expiring_qualifications = $stmt->fetchAll();
+
 renderHead('ダッシュボード');
 ?>
+<style>
+  #loading-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #ffffff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.4s ease;
+  }
+  .house-path {
+    stroke-dasharray: 80; stroke-dashoffset: 80;
+    animation: draw-house 2s ease-in-out infinite;
+  }
+  @keyframes draw-house {
+    0%   { stroke-dashoffset: 80;  fill: transparent; }
+    40%  { stroke-dashoffset: 0;   fill: transparent; }
+    60%  { stroke-dashoffset: 0;   fill: rgba(30,58,95,0.08); }
+    100% { stroke-dashoffset: -80; fill: transparent; }
+  }
+  .loading-dot { display: inline-block; animation: bounce-dot 1.4s infinite; }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce-dot {
+    0%, 80%, 100% { transform: translateY(0); }
+    40%           { transform: translateY(-4px); }
+  }
+</style>
+<div id="loading-overlay">
+  <svg viewBox="0 0 24 24" style="width:96px;height:96px;stroke:#1e3a5f;stroke-width:1.5;fill:transparent;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(30,58,95,0.2))">
+    <path class="house-path" d="M4 21 V9 L12 3 L20 9 V21 H14 V14 H10 V21 Z"/>
+  </svg>
+  <div style="margin-top:2rem;text-align:center;">
+    <p style="color:#1e3a5f;font-size:1.1rem;letter-spacing:0.2em;font-family:'Noto Sans JP',sans-serif;">
+      読み込み中<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span>
+    </p>
+    <p style="color:#f97316;font-size:0.75rem;margin-top:0.5rem;letter-spacing:0.25em;opacity:0.8;">TAMIYA HOME</p>
+  </div>
+</div>
+<script>
+  var _loadStart = Date.now();
+  window.addEventListener('load', function() {
+    var el = document.getElementById('loading-overlay');
+    var elapsed = Date.now() - _loadStart;
+    var wait = Math.max(0, 1500 - elapsed);
+    setTimeout(function() {
+      el.style.opacity = '0';
+      setTimeout(function() { el.style.display = 'none'; }, 400);
+    }, wait);
+  });
+</script>
 <?php
 renderHeader('ダッシュボード');
 ?>
