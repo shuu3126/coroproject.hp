@@ -78,6 +78,37 @@ $stmt->execute([$today, $three_days_later]);
 $ending_soon = $stmt->fetchAll();
 
 renderHead('ダッシュボード');
+?>
+<!-- ローディングオーバーレイ -->
+<style>
+  #loading-overlay {
+    position: fixed; inset: 0; background: #fff;
+    z-index: 9999; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    transition: opacity 0.3s ease;
+  }
+  #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid #e4e4e7;
+    border-top-color: #18181b;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p style="margin-top:14px; font-size:12px; color:#a1a1aa; font-family:sans-serif;">読み込み中...</p>
+</div>
+<script>
+  window.addEventListener('load', function () {
+    var overlay = document.getElementById('loading-overlay');
+    overlay.classList.add('hidden');
+    setTimeout(function () { overlay.style.display = 'none'; }, 350);
+  });
+</script>
+<?php
 renderHeader('ダッシュボード');
 ?>
 

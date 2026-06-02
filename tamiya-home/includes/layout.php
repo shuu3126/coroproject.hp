@@ -14,6 +14,39 @@ function renderHead(string $title = '職人管理システム'): void {
     @media (min-width: 768px) {
       body { padding-bottom: 0; padding-left: 220px; }
     }
+
+    /* ページフェードイン */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    main { animation: fadeIn 0.25s ease both; }
+
+    /* カードホバー */
+    a[href]:not([href="#"]):not([href="javascript:history.back()"]) {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .rounded-xl:hover, .rounded-lg:hover {
+      transition: box-shadow 0.15s ease;
+    }
+
+    /* ボタン押下 */
+    button[type="submit"], a.bg-blue-600, a.bg-green-600,
+    a.bg-indigo-600, a.bg-gray-800, a.bg-zinc-900 {
+      transition: transform 0.1s ease, opacity 0.1s ease;
+    }
+    button[type="submit"]:active, a.bg-blue-600:active,
+    a.bg-green-600:active, a.bg-indigo-600:active {
+      transform: scale(0.97);
+      opacity: 0.85;
+    }
+
+    /* サイドバーナビリンクのホバー */
+    nav a { transition: background 0.15s ease, color 0.15s ease; }
+
+    /* テーブル行ホバー */
+    tbody tr { transition: background 0.1s ease; }
+    tbody tr:hover td { background: #f4f4f5; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
