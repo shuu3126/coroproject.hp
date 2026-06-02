@@ -82,10 +82,15 @@ function renderHead(string $title = '職人管理システム'): void {
     </div>
   </div>
   <script>
+    var _loadStart = Date.now();
     window.addEventListener('load', function() {
       var el = document.getElementById('loading-overlay');
-      el.style.opacity = '0';
-      setTimeout(function() { el.style.display = 'none'; }, 400);
+      var elapsed = Date.now() - _loadStart;
+      var wait = Math.max(0, 1500 - elapsed);
+      setTimeout(function() {
+        el.style.opacity = '0';
+        setTimeout(function() { el.style.display = 'none'; }, 400);
+      }, wait);
     });
   </script>
 HTML;
