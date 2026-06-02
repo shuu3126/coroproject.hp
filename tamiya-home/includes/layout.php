@@ -43,7 +43,7 @@ function renderHead(string $title = '職人管理システム'): void {
     /* ローディング画面 */
     #loading-overlay {
       position: fixed; inset: 0; z-index: 9999;
-      background: #1e3a5f;
+      background: #ffffff;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       transition: opacity 0.4s ease;
     }
@@ -55,7 +55,7 @@ function renderHead(string $title = '職人管理システム'): void {
     @keyframes draw-house {
       0%   { stroke-dashoffset: 80;  fill: transparent; }
       40%  { stroke-dashoffset: 0;   fill: transparent; }
-      60%  { stroke-dashoffset: 0;   fill: rgba(249,115,22,0.15); }
+      60%  { stroke-dashoffset: 0;   fill: rgba(30,58,95,0.08); }
       100% { stroke-dashoffset: -80; fill: transparent; }
     }
     .loading-dot { display: inline-block; animation: bounce-dot 1.4s infinite; }
@@ -71,14 +71,14 @@ function renderHead(string $title = '職人管理システム'): void {
 
   <!-- ローディングオーバーレイ -->
   <div id="loading-overlay">
-    <svg viewBox="0 0 24 24" style="width:96px;height:96px;stroke:#f97316;stroke-width:1.5;fill:transparent;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 8px rgba(249,115,22,0.5))">
+    <svg viewBox="0 0 24 24" style="width:96px;height:96px;stroke:#1e3a5f;stroke-width:1.5;fill:transparent;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(30,58,95,0.2))">
       <path class="house-path" d="M4 21 V9 L12 3 L20 9 V21 H14 V14 H10 V21 Z"/>
     </svg>
     <div style="margin-top:2rem;text-align:center;">
-      <p style="color:white;font-size:1.1rem;letter-spacing:0.2em;font-family:'Noto Sans JP',sans-serif;">
+      <p style="color:#1e3a5f;font-size:1.1rem;letter-spacing:0.2em;font-family:'Noto Sans JP',sans-serif;">
         読み込み中<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span>
       </p>
-      <p style="color:#fb923c;font-size:0.75rem;margin-top:0.5rem;letter-spacing:0.25em;opacity:0.8;">TAMIYA HOME</p>
+      <p style="color:#f97316;font-size:0.75rem;margin-top:0.5rem;letter-spacing:0.25em;opacity:0.8;">TAMIYA HOME</p>
     </div>
   </div>
   <script>
