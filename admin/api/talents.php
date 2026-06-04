@@ -44,4 +44,24 @@ if ($method === 'GET') {
     api_ok($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 
+// PATCH /api/talents/{id} — 部分更新
+if ($method === 'PATCH' && $id) {
+    $body    = api_input();
+    $allowed = ['debut', 'status', 'kana', 'talent_group', 'is_published', 'sort_order', 'bio'];
+    $sets    = [];
+    $params  = [];
+    foreach ($allowed as $field) {
+        if (array_key_exists($field, $body)) {
+            $sets[]   = "{$field} = ?";
+            $params[] = $body[$field];
+        }
+    }
+    if (empty($sets)) { api_error(400, 'No updatable fields provided'); }
+    $params[] = $id;
+    $stmt = $pdo->prepare("UPDATE talents SET " . implode(', ', $sets) . " WHERE id = ?");
+    $stmt->execute($params);
+    if ($stmt->rowCount() === 0) { api_error(404, 'Talent not found'); }
+    api_ok(['id' => $id, 'updated' => array_keys(array_intersect_key($body, array_flip($allowed)))]);
+}
+
 api_error(405, 'Method not allowed');
