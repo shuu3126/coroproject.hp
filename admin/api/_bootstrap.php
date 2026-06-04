@@ -56,10 +56,14 @@ function api_input(): array {
     return $raw ? (json_decode($raw, true) ?? []) : [];
 }
 
-// URLからIDを取得（例: /api/talents/3 → 3）
-function api_path_id(): ?int {
+// URLからIDを取得（例: /api/talents/3 → 3, /api/clients/client-abc → "client-abc"）
+// エンドポイント名自体は除外する
+function api_path_id(): int|string|null {
     $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-    $parts = array_filter(explode('/', $uri));
+    $parts = array_values(array_filter(explode('/', $uri)));
     $last = end($parts);
-    return is_numeric($last) ? (int)$last : null;
+    if ($last === false || $last === '') { return null; }
+    $endpoints = ['talents','clients','deals','invoices','revenues','journal','payments','update','migrate'];
+    if (in_array($last, $endpoints, true)) { return null; }
+    return is_numeric($last) ? (int)$last : $last;
 }
