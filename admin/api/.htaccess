@@ -1,5 +1,9 @@
 Options -Indexes
 
+# Basic認証をAPIパスでは無効化（APIキー認証で代替）
+Satisfy Any
+Allow from all
+
 RewriteEngine On
 RewriteBase /admin/api/
 
