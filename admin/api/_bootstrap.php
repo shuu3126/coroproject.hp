@@ -58,7 +58,7 @@ function api_input(): array {
 
 // URLからIDを取得（例: /api/talents/3 → 3, /api/clients/client-abc → "client-abc"）
 // エンドポイント名自体は除外する
-function api_path_id(): int|string|null {
+function api_path_id() {
     $uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
     $parts = array_values(array_filter(explode('/', $uri)));
     $last = end($parts);
