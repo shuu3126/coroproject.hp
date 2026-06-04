@@ -4,8 +4,17 @@ Options -Indexes
 Satisfy Any
 Allow from all
 
+# GET/POST/PUT/PATCH/DELETE を許可
+<Limit GET POST PUT PATCH DELETE OPTIONS>
+    Allow from all
+</Limit>
+
 RewriteEngine On
 RewriteBase /admin/api/
+
+# OPTIONSはPreflight対応
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
 
 # _で始まるファイルへの直接アクセスを禁止
 RewriteRule ^_ - [F,L]
@@ -18,3 +27,6 @@ RewriteRule ^deals(/.*)?$ deals.php [L,QSA]
 RewriteRule ^clients(/.*)?$ clients.php [L,QSA]
 RewriteRule ^journal(/.*)?$ journal.php [L,QSA]
 RewriteRule ^payments(/.*)?$ payments.php [L,QSA]
+RewriteRule ^talents_settings(/.*)?$ talents_settings.php [L,QSA]
+RewriteRule ^news(/.*)?$ news.php [L,QSA]
+RewriteRule ^notices(/.*)?$ notices.php [L,QSA]

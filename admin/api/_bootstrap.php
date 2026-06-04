@@ -22,6 +22,15 @@ if (!hash_equals(CORO_API_KEY, $key)) {
     api_error(401, 'Invalid API key');
 }
 
+// メソッドオーバーライド（ApacheがPATCH/PUT/DELETEを拒否する場合の対策）
+// POST + X-HTTP-Method-Override: PATCH で代替できる
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $override = $_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'] ?? '';
+    if (in_array(strtoupper($override), ['PUT', 'PATCH', 'DELETE'], true)) {
+        $_SERVER['REQUEST_METHOD'] = strtoupper($override);
+    }
+}
+
 // レスポンスヘルパー
 function api_ok($data = null, int $code = 200): void {
     http_response_code($code);
