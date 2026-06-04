@@ -1,0 +1,16 @@
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /admin/api/
+
+# _で始まるファイルへの直接アクセスを禁止
+RewriteRule ^_ - [F,L]
+
+# /api/talents/3 → talents.php
+RewriteRule ^talents(/.*)?$ talents.php [L,QSA]
+RewriteRule ^invoices(/.*)?$ invoices.php [L,QSA]
+RewriteRule ^revenues(/.*)?$ revenues.php [L,QSA]
+RewriteRule ^deals(/.*)?$ deals.php [L,QSA]
+RewriteRule ^clients(/.*)?$ clients.php [L,QSA]
+RewriteRule ^journal(/.*)?$ journal.php [L,QSA]
+RewriteRule ^payments(/.*)?$ payments.php [L,QSA]
