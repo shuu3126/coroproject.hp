@@ -2,8 +2,14 @@
 ini_set('display_errors', 0);
 error_reporting(0);
 header('Content-Type: application/json; charset=UTF-8');
-header('Access-Control-Allow-Origin: *');
+// CORS: 管理画面からの直接アクセスのみ許可（ワイルドカード禁止）
+$allowed_origins = ['https://coroproject.jp'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowed_origins, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+}
 header('Access-Control-Allow-Headers: X-Api-Key, Content-Type');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 
 define('CORO_API_KEY', 'a473997a0ca9348cbcdf58aa2bea270f3ff27edc6eadbfca80bad2e1ec2ffd20');
 

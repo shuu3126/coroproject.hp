@@ -8,9 +8,10 @@ $id     = api_path_id();
 if ($method === 'GET') {
     if ($id) {
         $stmt = $pdo->prepare("
-            SELECT t.*,
-                   s.office_share_percent, s.invoice_name, s.email AS accounting_email,
-                   s.bank_info, s.is_active AS accounting_active
+            SELECT t.id, t.name, t.kana, t.talent_group, t.status, t.debut,
+                   t.avatar, t.bio, t.is_published, t.sort_order,
+                   t.platforms_json, t.links_json, t.tags_json,
+                   s.office_share_percent, s.invoice_name, s.is_active AS accounting_active
             FROM talents t
             LEFT JOIN accounting_talent_settings s ON s.talent_id = t.id
             WHERE t.id = ?
