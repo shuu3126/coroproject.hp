@@ -68,6 +68,22 @@ if ($method === 'GET') {
     api_ok(['summary' => $summary, 'entries' => $rows]);
 }
 
+// PATCH /api/journal/{id} — 摘要・カテゴリのみ修正可
+if ($method === 'PATCH') {
+    $id = api_path_id();
+    if (!$id) { api_error(400, 'id is required'); }
+    $body    = api_input();
+    $allowed = ['description', 'category'];
+    $sets = []; $params = [];
+    foreach ($allowed as $f) {
+        if (array_key_exists($f, $body)) { $sets[] = "{$f} = ?"; $params[] = $body[$f]; }
+    }
+    if (empty($sets)) { api_error(400, 'No updatable fields'); }
+    $params[] = $id;
+    $pdo->prepare("UPDATE accounting_journal_entries SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = ?")->execute($params);
+    api_ok(['id' => $id, 'updated' => array_keys(array_intersect_key($body, array_flip($allowed)))]);
+}
+
 // DELETE /api/journal/{id}
 if ($method === 'DELETE') {
     $id = api_path_id();
