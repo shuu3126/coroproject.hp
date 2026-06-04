@@ -68,4 +68,14 @@ if ($method === 'GET') {
     api_ok(['summary' => $summary, 'entries' => $rows]);
 }
 
+// DELETE /api/journal/{id}
+if ($method === 'DELETE') {
+    $id = api_path_id();
+    if (!$id) { api_error(400, 'id is required'); }
+    $stmt = $pdo->prepare("DELETE FROM accounting_journal_entries WHERE id = ? AND source = 'manual'");
+    $stmt->execute([$id]);
+    if ($stmt->rowCount() === 0) { api_error(404, 'Entry not found or not deletable (invoice_auto entries are protected)'); }
+    api_ok(['deleted' => $id]);
+}
+
 api_error(405, 'Method not allowed');
