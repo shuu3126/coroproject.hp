@@ -102,7 +102,7 @@ require __DIR__ . '/_header.php';
     <strong><?= portal_h(number_format((int)$latest['total_views'])) ?></strong>
     <small>総視聴数 / 配信 <?= portal_h((string)$latest['total_streams']) ?> 回</small>
   </div>
-  <svg class="portal-line-chart" viewBox="0 0 420 176" role="img" aria-label="Twitch視聴推移">
+  <svg class="portal-line-chart" viewBox="0 0 420 144" role="img" aria-label="Twitch視聴推移">
     <?php
       $values = array_map(static function ($r) { return max(0, (int)$r['views']); }, $latestRows);
       if (!$values) $values = [0, 0];
@@ -110,10 +110,10 @@ require __DIR__ . '/_header.php';
       $scale = portal_chart_axis_scale($max, 4);
       $axisMax = (float)$scale['max'];
       $axisStep = (float)$scale['step'];
-      $plotLeft = 54;
-      $plotRight = 400;
-      $plotTop = 24;
-      $plotBottom = 132;
+      $plotLeft = 42;
+      $plotRight = 408;
+      $plotTop = 12;
+      $plotBottom = 126;
       $points = [];
       $count = count($values);
       foreach ($values as $idx => $value) {
@@ -152,10 +152,8 @@ require __DIR__ . '/_header.php';
       <circle cx="<?= $x ?>" cy="<?= $y ?>" r="5" fill="#7b4dea"/>
     <?php endforeach; ?>
     <?php foreach ($xLabels as $label): ?>
-      <text x="<?= $label['x'] ?>" y="158" text-anchor="middle" fill="#8a7f99" font-size="10"><?= portal_h($label['label']) ?></text>
+      <text x="<?= $label['x'] ?>" y="140" text-anchor="middle" fill="#8a7f99" font-size="10"><?= portal_h($label['label']) ?></text>
     <?php endforeach; ?>
-    <text x="<?= ($plotLeft + $plotRight) / 2 ?>" y="172" text-anchor="middle" fill="#8a7f99" font-size="10">配信日</text>
-    <text x="12" y="<?= ($plotTop + $plotBottom) / 2 ?>" text-anchor="middle" fill="#8a7f99" font-size="10" transform="rotate(-90 12 <?= ($plotTop + $plotBottom) / 2 ?>)">視聴数</text>
   </svg>
   <div class="portal-metric-grid">
     <div><span>配信時間</span><strong><?= portal_h(number_format((float)$latest['total_minutes'] / 60, 1)) ?>h</strong></div>

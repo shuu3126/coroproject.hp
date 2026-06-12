@@ -64,10 +64,10 @@ $detailRows = [];
 $chartPoints = [];
 $chartYTicks = [];
 $chartXLabels = [];
-$chartPlotLeft = 64;
-$chartPlotRight = 540;
-$chartPlotTop = 28;
-$chartPlotBottom = 156;
+$chartPlotLeft = 50;
+$chartPlotRight = 548;
+$chartPlotTop = 16;
+$chartPlotBottom = 150;
 
 if ($ready) {
     $stmt = $pdo->query('
@@ -156,7 +156,7 @@ start_page('Twitch CSV解析', 'タレントが提出したTwitch配信概要CSV
       </div>
       <div class="card mt-24" style="padding:20px;background:linear-gradient(180deg,#ffffff 0%,#f8f5ff 100%);">
         <div class="section-heading" style="margin-bottom:10px;">視聴数推移</div>
-        <svg viewBox="0 0 560 210" role="img" aria-label="Twitch視聴数推移" style="width:100%;height:250px;display:block;">
+        <svg viewBox="0 0 560 178" role="img" aria-label="Twitch視聴数推移" style="width:100%;height:220px;display:block;">
           <?php foreach ($chartYTicks as $tick): ?>
             <line x1="<?= h((string)$chartPlotLeft) ?>" y1="<?= h((string)$tick['y']) ?>" x2="<?= h((string)$chartPlotRight) ?>" y2="<?= h((string)$tick['y']) ?>" stroke="#ece7f8" stroke-width="1"/>
             <text x="<?= h((string)($chartPlotLeft - 8)) ?>" y="<?= h((string)($tick['y'] + 4)) ?>" text-anchor="end" fill="#7c708f" font-size="11"><?= h(number_format($tick['value'])) ?></text>
@@ -168,10 +168,8 @@ start_page('Twitch CSV解析', 'タレントが提出したTwitch配信概要CSV
             <circle cx="<?= h((string)$x) ?>" cy="<?= h((string)$y) ?>" r="5" fill="#7b4dea"/>
           <?php endforeach; ?>
           <?php foreach ($chartXLabels as $label): ?>
-            <text x="<?= h((string)$label['x']) ?>" y="184" text-anchor="middle" fill="#7c708f" font-size="11"><?= h($label['label']) ?></text>
+            <text x="<?= h((string)$label['x']) ?>" y="172" text-anchor="middle" fill="#7c708f" font-size="11"><?= h($label['label']) ?></text>
           <?php endforeach; ?>
-          <text x="<?= h((string)(($chartPlotLeft + $chartPlotRight) / 2)) ?>" y="204" text-anchor="middle" fill="#7c708f" font-size="11">配信日</text>
-          <text x="16" y="<?= h((string)(($chartPlotTop + $chartPlotBottom) / 2)) ?>" text-anchor="middle" fill="#7c708f" font-size="11" transform="rotate(-90 16 <?= h((string)(($chartPlotTop + $chartPlotBottom) / 2)) ?>)">視聴数</text>
         </svg>
       </div>
       <div class="table-wrap mt-24">

@@ -43,10 +43,10 @@ $streamChartMax = max($streamChartValues) ?: 1;
 $streamChartScale = portal_chart_axis_scale($streamChartMax, 4);
 $streamAxisMax = (float)$streamChartScale['max'];
 $streamAxisStep = (float)$streamChartScale['step'];
-$streamPlotLeft = 54;
-$streamPlotRight = 400;
-$streamPlotTop = 24;
-$streamPlotBottom = 132;
+$streamPlotLeft = 42;
+$streamPlotRight = 408;
+$streamPlotTop = 12;
+$streamPlotBottom = 126;
 $streamChartPoints = [];
 $streamChartCount = count($streamChartValues);
 foreach ($streamChartValues as $idx => $value) {
@@ -166,7 +166,7 @@ require __DIR__ . '/_header.php';
       <strong><?= portal_h(number_format((int)$latestTwitchReport['total_views'])) ?></strong>
       <small>総視聴数 / 配信 <?= portal_h((string)$latestTwitchReport['total_streams']) ?> 回</small>
     </div>
-    <svg class="portal-line-chart" viewBox="0 0 420 176" role="img" aria-label="Twitch視聴推移">
+    <svg class="portal-line-chart" viewBox="0 0 420 144" role="img" aria-label="Twitch視聴推移">
       <?php foreach ($streamChartYTicks as $tick): ?>
         <line x1="<?= $streamPlotLeft ?>" y1="<?= $tick['y'] ?>" x2="<?= $streamPlotRight ?>" y2="<?= $tick['y'] ?>" stroke="#ece7f8" stroke-width="1"/>
         <text x="<?= $streamPlotLeft - 8 ?>" y="<?= $tick['y'] + 4 ?>" text-anchor="end" fill="#8a7f99" font-size="10"><?= portal_h(number_format($tick['value'])) ?></text>
@@ -178,10 +178,8 @@ require __DIR__ . '/_header.php';
         <circle cx="<?= $x ?>" cy="<?= $y ?>" r="5" fill="#7b4dea"/>
       <?php endforeach; ?>
       <?php foreach ($streamChartXLabels as $label): ?>
-        <text x="<?= $label['x'] ?>" y="158" text-anchor="middle" fill="#8a7f99" font-size="10"><?= portal_h($label['label']) ?></text>
+        <text x="<?= $label['x'] ?>" y="140" text-anchor="middle" fill="#8a7f99" font-size="10"><?= portal_h($label['label']) ?></text>
       <?php endforeach; ?>
-      <text x="<?= ($streamPlotLeft + $streamPlotRight) / 2 ?>" y="172" text-anchor="middle" fill="#8a7f99" font-size="10">配信日</text>
-      <text x="12" y="<?= ($streamPlotTop + $streamPlotBottom) / 2 ?>" text-anchor="middle" fill="#8a7f99" font-size="10" transform="rotate(-90 12 <?= ($streamPlotTop + $streamPlotBottom) / 2 ?>)">視聴数</text>
     </svg>
     <div class="portal-metric-grid">
       <div><span>配信時間</span><strong><?= portal_h(number_format((float)$latestTwitchReport['total_minutes'] / 60, 1)) ?>h</strong></div>
