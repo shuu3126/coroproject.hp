@@ -741,6 +741,41 @@ function portal_fetch_twitch_report_rows($pdo, $reportId, $talent_id) {
     return $stmt->fetchAll();
 }
 
+function portal_find_previous_twitch_report($reports, $currentReport) {
+    if (!$currentReport) {
+        return null;
+    }
+    $dt = DateTime::createFromFormat('!Y-n-j', sprintf('%04d-%d-1', (int)$currentReport['report_year'], (int)$currentReport['report_month']));
+    if (!$dt) {
+        return null;
+    }
+    $dt->modify('-1 month');
+    $prevYear = (int)$dt->format('Y');
+    $prevMonth = (int)$dt->format('n');
+    foreach ($reports as $report) {
+        if ((int)$report['report_year'] === $prevYear && (int)$report['report_month'] === $prevMonth) {
+            return $report;
+        }
+    }
+    return null;
+}
+
+function portal_twitch_trend_badge($current, $previous) {
+    if ($previous === null || $previous === '') {
+        return '';
+    }
+    $currentValue = (float)$current;
+    $previousValue = (float)$previous;
+    $diff = $currentValue - $previousValue;
+    if (abs($diff) < 0.000001) {
+        return '<span class="portal-trend-badge portal-trend-flat" title="same as previous month" aria-label="same as previous month">&#8594;</span>';
+    }
+    $class = $diff > 0 ? 'portal-trend-up' : 'portal-trend-down';
+    $arrow = $diff > 0 ? '&#8599;' : '&#8600;';
+    $label = $diff > 0 ? 'up from previous month' : 'down from previous month';
+    return '<span class="portal-trend-badge ' . $class . '" title="' . portal_h($label) . '" aria-label="' . portal_h($label) . '">' . $arrow . '</span>';
+}
+
 function portal_update_talent_profile($pdo, $talent_id, $data) {
     if (!portal_profile_columns_ready($pdo)) {
         return ['error' => 'プロフィール用のDB更新が未実行です。運営に連絡してください。'];

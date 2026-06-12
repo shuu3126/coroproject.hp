@@ -36,6 +36,22 @@ function admin_twitch_chart_stream_date_label($value, $fallback = '') {
     }
 }
 
+function admin_twitch_trend_badge($current, $previous) {
+    if ($previous === null || $previous === '') {
+        return '';
+    }
+    $currentValue = (float)$current;
+    $previousValue = (float)$previous;
+    $diff = $currentValue - $previousValue;
+    if (abs($diff) < 0.000001) {
+        return '<span class="stat-delta stat-delta-flat" title="same as previous month" aria-label="same as previous month">&#8594;</span>';
+    }
+    $class = $diff > 0 ? 'stat-delta-up' : 'stat-delta-down';
+    $arrow = $diff > 0 ? '&#8599;' : '&#8600;';
+    $label = $diff > 0 ? 'up from previous month' : 'down from previous month';
+    return '<span class="stat-delta ' . $class . '" title="' . h($label) . '" aria-label="' . h($label) . '">' . $arrow . '</span>';
+}
+
 $twitchRequiredColumns = [
     'talent_twitch_csv_reports' => [
         'id', 'talent_id', 'report_year', 'report_month', 'original_filename', 'file_path',
@@ -60,6 +76,7 @@ foreach ($twitchRequiredColumns as $table => $columns) {
 }
 $rows = [];
 $selected = null;
+$selectedPrevious = null;
 $detailRows = [];
 $chartPoints = [];
 $chartYTicks = [];
@@ -91,6 +108,19 @@ if ($ready) {
         $stmt->execute([$selectedId]);
         $selected = $stmt->fetch() ?: null;
         if ($selected) {
+            $prevDt = DateTime::createFromFormat('!Y-n-j', sprintf('%04d-%d-1', (int)$selected['report_year'], (int)$selected['report_month']));
+            if ($prevDt) {
+                $prevDt->modify('-1 month');
+                $stmt = $pdo->prepare('
+                    SELECT *
+                    FROM talent_twitch_csv_reports
+                    WHERE talent_id = ? AND report_year = ? AND report_month = ?
+                    ORDER BY id DESC
+                    LIMIT 1
+                ');
+                $stmt->execute([$selected['talent_id'], (int)$prevDt->format('Y'), (int)$prevDt->format('n')]);
+                $selectedPrevious = $stmt->fetch() ?: null;
+            }
             $stmt = $pdo->prepare('SELECT * FROM talent_twitch_csv_rows WHERE report_id = ? ORDER BY stream_date ASC, id ASC');
             $stmt->execute([$selectedId]);
             $detailRows = $stmt->fetchAll();
@@ -149,10 +179,10 @@ start_page('Twitch CSV解析', 'タレントが提出したTwitch配信概要CSV
     <section class="card form-card mt-24">
       <h2 class="section-heading"><?= h($selected['talent_name'] ?: $selected['talent_id']) ?> / <?= h(sprintf('%04d-%02d', $selected['report_year'], $selected['report_month'])) ?></h2>
       <div class="card-grid four">
-        <div class="card stat-card"><div class="muted">配信回数</div><div class="stat-number"><?= h((string)$selected['total_streams']) ?></div></div>
-        <div class="card stat-card"><div class="muted">総視聴数</div><div class="stat-number"><?= h(number_format((int)$selected['total_views'])) ?></div></div>
-        <div class="card stat-card"><div class="muted">配信時間</div><div class="stat-number"><?= h(number_format((float)$selected['total_minutes'] / 60, 1)) ?>h</div></div>
-        <div class="card stat-card"><div class="muted">平均視聴者</div><div class="stat-number"><?= h(number_format((float)$selected['avg_viewers'], 1)) ?></div></div>
+        <div class="card stat-card"><div class="muted">配信回数</div><div class="stat-number"><?= h((string)$selected['total_streams']) ?><?= admin_twitch_trend_badge($selected['total_streams'], $selectedPrevious['total_streams'] ?? null) ?></div></div>
+        <div class="card stat-card"><div class="muted">総視聴数</div><div class="stat-number"><?= h(number_format((int)$selected['total_views'])) ?><?= admin_twitch_trend_badge($selected['total_views'], $selectedPrevious['total_views'] ?? null) ?></div></div>
+        <div class="card stat-card"><div class="muted">配信時間</div><div class="stat-number"><?= h(number_format((float)$selected['total_minutes'] / 60, 1)) ?>h<?= admin_twitch_trend_badge($selected['total_minutes'], $selectedPrevious['total_minutes'] ?? null) ?></div></div>
+        <div class="card stat-card"><div class="muted">平均視聴者</div><div class="stat-number"><?= h(number_format((float)$selected['avg_viewers'], 1)) ?><?= admin_twitch_trend_badge($selected['avg_viewers'], $selectedPrevious['avg_viewers'] ?? null) ?></div></div>
       </div>
       <div class="card mt-24" style="padding:20px;background:linear-gradient(180deg,#ffffff 0%,#f8f5ff 100%);">
         <div class="section-heading" style="margin-bottom:10px;">視聴数推移</div>

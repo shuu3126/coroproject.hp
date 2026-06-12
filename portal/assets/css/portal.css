@@ -514,6 +514,55 @@ a, button, .portal-card, .portal-home-card, .portal-revenue-card, .portal-quick-
   font-size: 26px;
 }
 
+.portal-metric-grid strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.portal-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.portal-metric-grid .portal-trend-badge {
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+.portal-analytics-copy .portal-trend-badge {
+  width: 30px;
+  height: 30px;
+  margin-left: 10px;
+  font-size: 18px;
+}
+
+.portal-trend-up {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.portal-trend-down {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.portal-trend-flat {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
 .portal-submit-list {
   display: grid;
   gap: 20px;
@@ -1893,6 +1942,19 @@ body {
   .portal-revenue-stats strong,
   .portal-metric-grid strong {
     font-size: 18px;
+  }
+
+  .portal-trend-badge {
+    width: 20px;
+    height: 20px;
+    margin-left: 6px;
+    font-size: 12px;
+  }
+
+  .portal-analytics-copy .portal-trend-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
   }
 
   .portal-submit-list {

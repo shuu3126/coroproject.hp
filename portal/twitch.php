@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $reports = portal_fetch_twitch_reports($pdo, $talent['talent_id'], 12);
 $latest = $reports[0] ?? null;
+$previousReport = portal_find_previous_twitch_report($reports, $latest);
 $latestRows = $latest ? portal_fetch_twitch_report_rows($pdo, (int)$latest['id'], $talent['talent_id']) : [];
 $yearOptions = [];
 $curYear = (int)(new DateTime())->format('Y');
@@ -99,7 +100,7 @@ require __DIR__ . '/_header.php';
 <div class="portal-analytics-card portal-motion-card">
   <div class="portal-analytics-copy">
     <span><?= portal_h(sprintf('%04d年%02d月', $latest['report_year'], $latest['report_month'])) ?></span>
-    <strong><?= portal_h(number_format((int)$latest['total_views'])) ?></strong>
+    <strong><?= portal_h(number_format((int)$latest['total_views'])) ?><?= portal_twitch_trend_badge($latest['total_views'], $previousReport['total_views'] ?? null) ?></strong>
     <small>総視聴数 / 配信 <?= portal_h((string)$latest['total_streams']) ?> 回</small>
   </div>
   <svg class="portal-line-chart" viewBox="0 0 420 144" role="img" aria-label="Twitch視聴推移">
@@ -156,10 +157,10 @@ require __DIR__ . '/_header.php';
     <?php endforeach; ?>
   </svg>
   <div class="portal-metric-grid">
-    <div><span>配信時間</span><strong><?= portal_h(number_format((float)$latest['total_minutes'] / 60, 1)) ?>h</strong></div>
-    <div><span>平均視聴者</span><strong><?= portal_h(number_format((float)$latest['avg_viewers'], 1)) ?></strong></div>
-    <div><span>最大視聴者</span><strong><?= portal_h(number_format((int)$latest['peak_viewers'])) ?></strong></div>
-    <div><span>フォロワー増</span><strong><?= portal_h(number_format((int)$latest['followers_gained'])) ?></strong></div>
+    <div><span>配信時間</span><strong><?= portal_h(number_format((float)$latest['total_minutes'] / 60, 1)) ?>h<?= portal_twitch_trend_badge($latest['total_minutes'], $previousReport['total_minutes'] ?? null) ?></strong></div>
+    <div><span>平均視聴者</span><strong><?= portal_h(number_format((float)$latest['avg_viewers'], 1)) ?><?= portal_twitch_trend_badge($latest['avg_viewers'], $previousReport['avg_viewers'] ?? null) ?></strong></div>
+    <div><span>最大視聴者</span><strong><?= portal_h(number_format((int)$latest['peak_viewers'])) ?><?= portal_twitch_trend_badge($latest['peak_viewers'], $previousReport['peak_viewers'] ?? null) ?></strong></div>
+    <div><span>フォロワー増</span><strong><?= portal_h(number_format((int)$latest['followers_gained'])) ?><?= portal_twitch_trend_badge($latest['followers_gained'], $previousReport['followers_gained'] ?? null) ?></strong></div>
   </div>
 </div>
 <?php endif; ?>

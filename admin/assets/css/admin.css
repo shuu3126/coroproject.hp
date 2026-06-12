@@ -376,6 +376,33 @@ body:not(.login-body) .app-shell {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.stat-delta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+  background: #f3f4f6;
+  -webkit-text-fill-color: currentColor;
+}
+.stat-delta-up {
+  color: #15803d;
+  background: #dcfce7;
+}
+.stat-delta-down {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+.stat-delta-flat {
+  color: #6b7280;
+  background: #f3f4f6;
+}
 .stat-card p {
   margin: 4px 0 0;
   font-size: .8em;

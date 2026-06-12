@@ -9,6 +9,7 @@ $notices = portal_fetch_notices($pdo);
 $revenueAlerts = portal_fetch_rejected_revenue_alerts($pdo, $talent['talent_id'], 3);
 $twitchReports = portal_fetch_twitch_reports($pdo, $talent['talent_id'], 6);
 $latestTwitchReport = $twitchReports[0] ?? null;
+$previousTwitchReport = portal_find_previous_twitch_report($twitchReports, $latestTwitchReport);
 $latestTwitchRows = $latestTwitchReport ? portal_fetch_twitch_report_rows($pdo, (int)$latestTwitchReport['id'], $talent['talent_id']) : [];
 $latestPublicRequest = portal_fetch_latest_public_profile_request($pdo, $talent['talent_id']);
 
@@ -163,7 +164,7 @@ require __DIR__ . '/_header.php';
   <section class="portal-analytics-card portal-motion-card">
     <div class="portal-analytics-copy">
       <span><?= portal_h(sprintf('%04d年%02d月', $latestTwitchReport['report_year'], $latestTwitchReport['report_month'])) ?></span>
-      <strong><?= portal_h(number_format((int)$latestTwitchReport['total_views'])) ?></strong>
+      <strong><?= portal_h(number_format((int)$latestTwitchReport['total_views'])) ?><?= portal_twitch_trend_badge($latestTwitchReport['total_views'], $previousTwitchReport['total_views'] ?? null) ?></strong>
       <small>総視聴数 / 配信 <?= portal_h((string)$latestTwitchReport['total_streams']) ?> 回</small>
     </div>
     <svg class="portal-line-chart" viewBox="0 0 420 144" role="img" aria-label="Twitch視聴推移">
@@ -182,10 +183,10 @@ require __DIR__ . '/_header.php';
       <?php endforeach; ?>
     </svg>
     <div class="portal-metric-grid">
-      <div><span>配信時間</span><strong><?= portal_h(number_format((float)$latestTwitchReport['total_minutes'] / 60, 1)) ?>h</strong></div>
-      <div><span>平均視聴者</span><strong><?= portal_h(number_format((float)$latestTwitchReport['avg_viewers'], 1)) ?></strong></div>
-      <div><span>最大視聴者</span><strong><?= portal_h(number_format((int)$latestTwitchReport['peak_viewers'])) ?></strong></div>
-      <div><span>フォロワー増</span><strong><?= portal_h(number_format((int)$latestTwitchReport['followers_gained'])) ?></strong></div>
+      <div><span>配信時間</span><strong><?= portal_h(number_format((float)$latestTwitchReport['total_minutes'] / 60, 1)) ?>h<?= portal_twitch_trend_badge($latestTwitchReport['total_minutes'], $previousTwitchReport['total_minutes'] ?? null) ?></strong></div>
+      <div><span>平均視聴者</span><strong><?= portal_h(number_format((float)$latestTwitchReport['avg_viewers'], 1)) ?><?= portal_twitch_trend_badge($latestTwitchReport['avg_viewers'], $previousTwitchReport['avg_viewers'] ?? null) ?></strong></div>
+      <div><span>最大視聴者</span><strong><?= portal_h(number_format((int)$latestTwitchReport['peak_viewers'])) ?><?= portal_twitch_trend_badge($latestTwitchReport['peak_viewers'], $previousTwitchReport['peak_viewers'] ?? null) ?></strong></div>
+      <div><span>フォロワー増</span><strong><?= portal_h(number_format((int)$latestTwitchReport['followers_gained'])) ?><?= portal_twitch_trend_badge($latestTwitchReport['followers_gained'], $previousTwitchReport['followers_gained'] ?? null) ?></strong></div>
     </div>
   </section>
 <?php else: ?>
