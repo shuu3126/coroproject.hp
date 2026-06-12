@@ -262,9 +262,11 @@ if ($mailbox === 'inbox' && $receiveReady && $_SERVER['REQUEST_METHOD'] === 'GET
         $autoResult = admin_mail_sync_receive($pdo, $settings, (int)$user['id']);
         if ((int)($autoResult['inserted'] ?? 0) > 0) {
             set_flash('success', '新着メール ' . (int)$autoResult['inserted'] . ' 件を受信しました。');
+        } elseif (!empty($autoResult['errors'])) {
+            set_flash('error', '受信同期に失敗しました: ' . implode(' / ', $autoResult['errors']));
         }
     } catch (Exception $e) {
-        // silent
+        set_flash('error', '受信同期に失敗しました: ' . $e->getMessage());
     }
 }
 

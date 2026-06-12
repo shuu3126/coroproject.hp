@@ -417,6 +417,193 @@ CALL coro_add_column_if_missing(
   'BIGINT UNSIGNED NULL AFTER `created_by`'
 );
 
+-- talent_twitch_csv_reports / rows: 途中版を実行済みの場合の不足列補完
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'talent_id',
+  'VARCHAR(191) NOT NULL DEFAULT '''' AFTER `id`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'report_year',
+  'INT NOT NULL DEFAULT 0 AFTER `talent_id`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'report_month',
+  'INT NOT NULL DEFAULT 0 AFTER `report_year`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'original_filename',
+  'VARCHAR(255) NULL AFTER `report_month`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'file_path',
+  'VARCHAR(500) NULL AFTER `original_filename`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'row_count',
+  'INT NOT NULL DEFAULT 0 AFTER `file_path`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'total_streams',
+  'INT NOT NULL DEFAULT 0 AFTER `row_count`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'total_minutes',
+  'DECIMAL(12,2) NOT NULL DEFAULT 0 AFTER `total_streams`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'total_views',
+  'INT NOT NULL DEFAULT 0 AFTER `total_minutes`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'avg_viewers',
+  'DECIMAL(12,2) NOT NULL DEFAULT 0 AFTER `total_views`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'peak_viewers',
+  'INT NOT NULL DEFAULT 0 AFTER `avg_viewers`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'followers_gained',
+  'INT NOT NULL DEFAULT 0 AFTER `peak_viewers`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'chat_messages',
+  'INT NOT NULL DEFAULT 0 AFTER `followers_gained`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'estimated_revenue',
+  'DECIMAL(12,2) NOT NULL DEFAULT 0 AFTER `chat_messages`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'currency',
+  'VARCHAR(12) NOT NULL DEFAULT ''JPY'' AFTER `estimated_revenue`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'summary_json',
+  'LONGTEXT NULL AFTER `currency`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'status',
+  'VARCHAR(20) NOT NULL DEFAULT ''submitted'' AFTER `summary_json`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'created_at',
+  'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `status`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_reports',
+  'updated_at',
+  'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created_at`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'report_id',
+  'BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `id`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'stream_date',
+  'DATETIME NULL AFTER `report_id`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'title',
+  'VARCHAR(255) NULL AFTER `stream_date`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'duration_minutes',
+  'DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER `title`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'views',
+  'INT NOT NULL DEFAULT 0 AFTER `duration_minutes`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'avg_viewers',
+  'DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER `views`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'peak_viewers',
+  'INT NOT NULL DEFAULT 0 AFTER `avg_viewers`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'followers_gained',
+  'INT NOT NULL DEFAULT 0 AFTER `peak_viewers`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'chat_messages',
+  'INT NOT NULL DEFAULT 0 AFTER `followers_gained`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'estimated_revenue',
+  'DECIMAL(12,2) NOT NULL DEFAULT 0 AFTER `chat_messages`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'raw_json',
+  'LONGTEXT NULL AFTER `estimated_revenue`'
+);
+
+CALL coro_add_column_if_missing(
+  'talent_twitch_csv_rows',
+  'created_at',
+  'DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `raw_json`'
+);
+
 CALL coro_add_column_if_missing(
   'mail_messages',
   'account_id',

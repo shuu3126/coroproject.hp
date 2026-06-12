@@ -756,11 +756,13 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
         );
         $insertStmt = $pdo->prepare("
             INSERT INTO mail_messages
-              (mailbox, direction, uidl, message_id, thread_key, from_name, from_email, to_text, cc_text,
+              (account_id, account_email, mailbox, direction, uidl, message_id, thread_key, from_name, from_email, to_text, cc_text,
                subject, body_text, body_html, raw_headers, has_attachments, status, linked_inquiry_id, received_at, created_at, updated_at)
             VALUES
-              ('inbox', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unread', ?, ?, NOW(), NOW())
+              (?, ?, 'inbox', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unread', ?, ?, NOW(), NOW())
         ");
+        $accountId = (int)admin_mail_setting($settings, 'mail_account_id', '0');
+        $accountEmail = admin_mail_setting($settings, 'mail_account_email', admin_mail_setting($settings, 'smtp_from_email', ''));
 
         foreach ($items as $num => $uidl) {
             $rawUidl = (string)$uidl;
@@ -783,6 +785,8 @@ function admin_mail_sync_pop3($pdo, $settings, $userId = null) {
             $threadKey = admin_mail_thread_key($parsed['subject'], $parsed['from_email']);
 
             $insertStmt->execute([
+                $accountId ?: null,
+                $accountEmail !== '' ? $accountEmail : null,
                 $uidl,
                 $parsed['message_id'] !== '' ? $parsed['message_id'] : null,
                 $threadKey,
@@ -820,9 +824,9 @@ function admin_mail_imap_mailbox($settings) {
     $flags = '/imap';
 
     if ($encryption === 'ssl') {
-        $flags .= '/ssl';
+        $flags .= '/ssl/novalidate-cert';
     } elseif ($encryption === 'tls') {
-        $flags .= '/tls';
+        $flags .= '/tls/novalidate-cert';
     } else {
         $flags .= '/notls';
     }
@@ -882,11 +886,13 @@ function admin_mail_sync_imap($pdo, $settings, $userId = null) {
         );
         $insertStmt = $pdo->prepare("
             INSERT INTO mail_messages
-              (mailbox, direction, uidl, message_id, thread_key, from_name, from_email, to_text, cc_text,
+              (account_id, account_email, mailbox, direction, uidl, message_id, thread_key, from_name, from_email, to_text, cc_text,
                subject, body_text, body_html, raw_headers, has_attachments, status, linked_inquiry_id, received_at, created_at, updated_at)
             VALUES
-              ('inbox', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+              (?, ?, 'inbox', 'inbound', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
+        $accountId = (int)admin_mail_setting($settings, 'mail_account_id', '0');
+        $accountEmail = admin_mail_setting($settings, 'mail_account_email', admin_mail_setting($settings, 'smtp_from_email', ''));
 
         foreach ($uids as $uid) {
             $uidl = $uidPrefix . (int)$uid;
@@ -909,6 +915,8 @@ function admin_mail_sync_imap($pdo, $settings, $userId = null) {
             $seen = isset($overviewRows[0]) && !empty($overviewRows[0]->seen);
 
             $insertStmt->execute([
+                $accountId ?: null,
+                $accountEmail !== '' ? $accountEmail : null,
                 $uidl,
                 $parsed['message_id'] !== '' ? $parsed['message_id'] : null,
                 $threadKey,
@@ -926,8 +934,8 @@ function admin_mail_sync_imap($pdo, $settings, $userId = null) {
                 $parsed['received_at'] ?: date('Y-m-d H:i:s'),
             ]);
 
-            admin_mail_attach_account_to_message($pdo, (int)$pdo->lastInsertId(), $settings);
-            admin_mail_attach_account_to_message($pdo, (int)$pdo->lastInsertId(), $settings);
+            $messageId = (int)$pdo->lastInsertId();
+            admin_mail_attach_account_to_message($pdo, $messageId, $settings);
             admin_mail_upsert_contact($pdo, $parsed['from_email'], $parsed['from_name'], $userId);
             $inserted++;
         }

@@ -33,6 +33,40 @@ function portal_format_money($amount, $decimals = 2) {
     return number_format((float)$amount, $decimals);
 }
 
+function portal_chart_axis_scale($maxValue, $targetSteps = 4) {
+    $maxValue = max(1.0, (float)$maxValue);
+    $targetSteps = max(1, (int)$targetSteps);
+    $roughStep = $maxValue / $targetSteps;
+    $power = pow(10, floor(log10($roughStep)));
+    $fraction = $roughStep / $power;
+
+    if ($fraction <= 1.5) {
+        $niceFraction = 1;
+    } elseif ($fraction <= 3) {
+        $niceFraction = 2;
+    } elseif ($fraction <= 7) {
+        $niceFraction = 5;
+    } else {
+        $niceFraction = 10;
+    }
+
+    $step = $niceFraction * $power;
+    $axisMax = $step * ceil($maxValue / $step);
+    return ['max' => max($axisMax, $step), 'step' => $step];
+}
+
+function portal_chart_stream_date_label($value, $fallback = '') {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return $fallback;
+    }
+    try {
+        return (new DateTime($value))->format('n/j');
+    } catch (Exception $e) {
+        return $fallback;
+    }
+}
+
 function portal_revenue_status($status) {
     switch ((string)$status) {
         case 'pending':   return ['label' => '確認待ち', 'class' => 'badge-warning'];
@@ -363,9 +397,31 @@ function portal_fetch_activity_logs($pdo, $talent_id, $limit = 50) {
     }
 }
 
+function portal_twitch_required_columns() {
+    return [
+        'talent_twitch_csv_reports' => [
+            'id', 'talent_id', 'report_year', 'report_month', 'original_filename', 'file_path',
+            'row_count', 'total_streams', 'total_minutes', 'total_views', 'avg_viewers',
+            'peak_viewers', 'followers_gained', 'chat_messages', 'estimated_revenue',
+            'summary_json', 'status', 'created_at', 'updated_at',
+        ],
+        'talent_twitch_csv_rows' => [
+            'id', 'report_id', 'stream_date', 'title', 'duration_minutes', 'views',
+            'avg_viewers', 'peak_viewers', 'followers_gained', 'chat_messages',
+            'estimated_revenue', 'raw_json', 'created_at',
+        ],
+    ];
+}
+
 function portal_twitch_ready($pdo) {
-    return _portal_table_has_column($pdo, 'talent_twitch_csv_reports', 'id')
-        && _portal_table_has_column($pdo, 'talent_twitch_csv_rows', 'id');
+    foreach (portal_twitch_required_columns() as $table => $columns) {
+        foreach ($columns as $column) {
+            if (!_portal_table_has_column($pdo, $table, $column)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 function portal_upload_twitch_csv($file, $talent_id, $year, $month) {
@@ -643,6 +699,13 @@ function portal_save_twitch_csv_report($pdo, $talent_id, $account_id, $year, $mo
         return ['success' => true, 'id' => $reportId];
     } catch (Exception $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
+        portal_write_activity(
+            $pdo,
+            $talent_id,
+            $account_id,
+            'twitch_csv_error',
+            'Twitch CSV保存失敗: ' . mb_substr($e->getMessage(), 0, 500)
+        );
         return ['error' => 'Twitch CSVの保存に失敗しました。時間をおいて再試行してください。'];
     }
 }

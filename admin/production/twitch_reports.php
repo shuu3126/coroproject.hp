@@ -2,11 +2,72 @@
 require_once dirname(__DIR__) . '/_bootstrap.php';
 require_admin_login();
 
-$ready = admin_table_has_column($pdo, 'talent_twitch_csv_reports', 'id');
+function admin_twitch_chart_axis_scale($maxValue, $targetSteps = 4) {
+    $maxValue = max(1.0, (float)$maxValue);
+    $targetSteps = max(1, (int)$targetSteps);
+    $roughStep = $maxValue / $targetSteps;
+    $power = pow(10, floor(log10($roughStep)));
+    $fraction = $roughStep / $power;
+
+    if ($fraction <= 1.5) {
+        $niceFraction = 1;
+    } elseif ($fraction <= 3) {
+        $niceFraction = 2;
+    } elseif ($fraction <= 7) {
+        $niceFraction = 5;
+    } else {
+        $niceFraction = 10;
+    }
+
+    $step = $niceFraction * $power;
+    $axisMax = $step * ceil($maxValue / $step);
+    return ['max' => max($axisMax, $step), 'step' => $step];
+}
+
+function admin_twitch_chart_stream_date_label($value, $fallback = '') {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return $fallback;
+    }
+    try {
+        return (new DateTime($value))->format('n/j');
+    } catch (Exception $e) {
+        return $fallback;
+    }
+}
+
+$twitchRequiredColumns = [
+    'talent_twitch_csv_reports' => [
+        'id', 'talent_id', 'report_year', 'report_month', 'original_filename', 'file_path',
+        'row_count', 'total_streams', 'total_minutes', 'total_views', 'avg_viewers',
+        'peak_viewers', 'followers_gained', 'chat_messages', 'estimated_revenue',
+        'summary_json', 'status', 'created_at', 'updated_at',
+    ],
+    'talent_twitch_csv_rows' => [
+        'id', 'report_id', 'stream_date', 'title', 'duration_minutes', 'views',
+        'avg_viewers', 'peak_viewers', 'followers_gained', 'chat_messages',
+        'estimated_revenue', 'raw_json', 'created_at',
+    ],
+];
+$ready = true;
+foreach ($twitchRequiredColumns as $table => $columns) {
+    foreach ($columns as $column) {
+        if (!admin_table_has_column($pdo, $table, $column)) {
+            $ready = false;
+            break 2;
+        }
+    }
+}
 $rows = [];
 $selected = null;
 $detailRows = [];
 $chartPoints = [];
+$chartYTicks = [];
+$chartXLabels = [];
+$chartPlotLeft = 64;
+$chartPlotRight = 540;
+$chartPlotTop = 28;
+$chartPlotBottom = 156;
 
 if ($ready) {
     $stmt = $pdo->query('
@@ -40,11 +101,31 @@ if ($ready) {
                 $values = [0, 0];
             }
             $max = max($values) ?: 1;
+            $scale = admin_twitch_chart_axis_scale($max, 4);
+            $axisMax = (float)$scale['max'];
+            $axisStep = (float)$scale['step'];
             $count = count($values);
             foreach ($values as $idx => $value) {
-                $x = 20 + ($count <= 1 ? 0 : ($idx / ($count - 1)) * 520);
-                $y = 150 - (($value / $max) * 110);
+                $x = $chartPlotLeft + ($count <= 1 ? 0 : ($idx / ($count - 1)) * ($chartPlotRight - $chartPlotLeft));
+                $y = $chartPlotBottom - (($value / $axisMax) * ($chartPlotBottom - $chartPlotTop));
                 $chartPoints[] = round($x, 1) . ',' . round($y, 1);
+            }
+            for ($tick = 0.0; $tick <= $axisMax + ($axisStep / 2); $tick += $axisStep) {
+                $y = $chartPlotBottom - (($tick / $axisMax) * ($chartPlotBottom - $chartPlotTop));
+                $chartYTicks[] = ['value' => (int)round($tick), 'y' => round($y, 1)];
+            }
+            if ($detailRows) {
+                $labelStep = max(1, (int)ceil(count($detailRows) / 5));
+                foreach ($detailRows as $idx => $row) {
+                    if ($idx % $labelStep !== 0 && $idx !== count($detailRows) - 1) {
+                        continue;
+                    }
+                    $x = $chartPlotLeft + (count($detailRows) <= 1 ? 0 : ($idx / (count($detailRows) - 1)) * ($chartPlotRight - $chartPlotLeft));
+                    $chartXLabels[] = [
+                        'label' => admin_twitch_chart_stream_date_label($row['stream_date'] ?? '', (string)($idx + 1)),
+                        'x' => round($x, 1),
+                    ];
+                }
             }
         }
     }
@@ -75,12 +156,22 @@ start_page('Twitch CSV解析', 'タレントが提出したTwitch配信概要CSV
       </div>
       <div class="card mt-24" style="padding:20px;background:linear-gradient(180deg,#ffffff 0%,#f8f5ff 100%);">
         <div class="section-heading" style="margin-bottom:10px;">視聴数推移</div>
-        <svg viewBox="0 0 560 180" role="img" aria-label="Twitch視聴数推移" style="width:100%;height:220px;display:block;">
-          <line x1="20" y1="150" x2="540" y2="150" stroke="#e5e7eb" stroke-width="1"/>
+        <svg viewBox="0 0 560 210" role="img" aria-label="Twitch視聴数推移" style="width:100%;height:250px;display:block;">
+          <?php foreach ($chartYTicks as $tick): ?>
+            <line x1="<?= h((string)$chartPlotLeft) ?>" y1="<?= h((string)$tick['y']) ?>" x2="<?= h((string)$chartPlotRight) ?>" y2="<?= h((string)$tick['y']) ?>" stroke="#ece7f8" stroke-width="1"/>
+            <text x="<?= h((string)($chartPlotLeft - 8)) ?>" y="<?= h((string)($tick['y'] + 4)) ?>" text-anchor="end" fill="#7c708f" font-size="11"><?= h(number_format($tick['value'])) ?></text>
+          <?php endforeach; ?>
+          <line x1="<?= h((string)$chartPlotLeft) ?>" y1="<?= h((string)$chartPlotTop) ?>" x2="<?= h((string)$chartPlotLeft) ?>" y2="<?= h((string)$chartPlotBottom) ?>" stroke="#d8cdec" stroke-width="1.2"/>
+          <line x1="<?= h((string)$chartPlotLeft) ?>" y1="<?= h((string)$chartPlotBottom) ?>" x2="<?= h((string)$chartPlotRight) ?>" y2="<?= h((string)$chartPlotBottom) ?>" stroke="#d8cdec" stroke-width="1.2"/>
           <polyline points="<?= h(implode(' ', $chartPoints)) ?>" fill="none" stroke="#7b4dea" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
           <?php foreach ($chartPoints as $point): [$x, $y] = array_map('floatval', explode(',', $point)); ?>
             <circle cx="<?= h((string)$x) ?>" cy="<?= h((string)$y) ?>" r="5" fill="#7b4dea"/>
           <?php endforeach; ?>
+          <?php foreach ($chartXLabels as $label): ?>
+            <text x="<?= h((string)$label['x']) ?>" y="184" text-anchor="middle" fill="#7c708f" font-size="11"><?= h($label['label']) ?></text>
+          <?php endforeach; ?>
+          <text x="<?= h((string)(($chartPlotLeft + $chartPlotRight) / 2)) ?>" y="204" text-anchor="middle" fill="#7c708f" font-size="11">配信日</text>
+          <text x="16" y="<?= h((string)(($chartPlotTop + $chartPlotBottom) / 2)) ?>" text-anchor="middle" fill="#7c708f" font-size="11" transform="rotate(-90 16 <?= h((string)(($chartPlotTop + $chartPlotBottom) / 2)) ?>)">視聴数</text>
         </svg>
       </div>
       <div class="table-wrap mt-24">

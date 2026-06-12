@@ -8,6 +8,8 @@ $history = portal_fetch_revenue_history($pdo, $talent['talent_id']);
 $notices = portal_fetch_notices($pdo);
 $revenueAlerts = portal_fetch_rejected_revenue_alerts($pdo, $talent['talent_id'], 3);
 $twitchReports = portal_fetch_twitch_reports($pdo, $talent['talent_id'], 6);
+$latestTwitchReport = $twitchReports[0] ?? null;
+$latestTwitchRows = $latestTwitchReport ? portal_fetch_twitch_report_rows($pdo, (int)$latestTwitchReport['id'], $talent['talent_id']) : [];
 $latestPublicRequest = portal_fetch_latest_public_profile_request($pdo, $talent['talent_id']);
 
 $now = new DateTime();
@@ -18,19 +20,11 @@ $prevYear = (int)$prev->format('Y');
 $prevMonth = (int)$prev->format('n');
 
 $monthly = [];
-$yearTotal = 0.0;
-$pendingAmount = 0.0;
 foreach ($history as $row) {
     $sum = (float)$row['amount_streaming'] + (float)$row['amount_goods'] + (float)$row['amount_sponsor'];
-    if ((int)$row['year'] === $thisYear) $yearTotal += $sum;
-    if (($row['status'] ?? '') === 'pending') $pendingAmount += $sum;
     $monthly[sprintf('%04d-%02d', $row['year'], $row['month'])] = $sum;
 }
-$currentKey = sprintf('%04d-%02d', $thisYear, $thisMonth);
 $prevKey = sprintf('%04d-%02d', $prevYear, $prevMonth);
-$currentRevenue = $monthly[$currentKey] ?? 0.0;
-$prevRevenue = $monthly[$prevKey] ?? 0.0;
-$growth = $prevRevenue > 0 ? (($currentRevenue - $prevRevenue) / $prevRevenue) * 100 : 0.0;
 $hasPrevTwitchReport = false;
 foreach ($twitchReports as $report) {
     if ((int)$report['report_year'] === $prevYear && (int)$report['report_month'] === $prevMonth) {
@@ -39,17 +33,45 @@ foreach ($twitchReports as $report) {
     }
 }
 
-$chartValues = [];
-for ($i = 5; $i >= 0; $i--) {
-    $dt = (clone $now)->modify('-' . $i . ' month');
-    $chartValues[] = $monthly[$dt->format('Y-m')] ?? 0;
+$streamChartValues = array_map(static function ($row) {
+    return max(0, (int)$row['views']);
+}, $latestTwitchRows);
+if (!$streamChartValues) {
+    $streamChartValues = [0, 0];
 }
-$maxChart = max($chartValues) ?: 1;
-$chartPoints = [];
-foreach ($chartValues as $idx => $value) {
-    $x = 12 + ($idx / max(1, count($chartValues) - 1)) * 260;
-    $y = 94 - (($value / $maxChart) * 60);
-    $chartPoints[] = round($x, 1) . ',' . round($y, 1);
+$streamChartMax = max($streamChartValues) ?: 1;
+$streamChartScale = portal_chart_axis_scale($streamChartMax, 4);
+$streamAxisMax = (float)$streamChartScale['max'];
+$streamAxisStep = (float)$streamChartScale['step'];
+$streamPlotLeft = 54;
+$streamPlotRight = 400;
+$streamPlotTop = 24;
+$streamPlotBottom = 132;
+$streamChartPoints = [];
+$streamChartCount = count($streamChartValues);
+foreach ($streamChartValues as $idx => $value) {
+    $x = $streamPlotLeft + ($streamChartCount <= 1 ? 0 : ($idx / ($streamChartCount - 1)) * ($streamPlotRight - $streamPlotLeft));
+    $y = $streamPlotBottom - (($value / $streamAxisMax) * ($streamPlotBottom - $streamPlotTop));
+    $streamChartPoints[] = round($x, 1) . ',' . round($y, 1);
+}
+$streamChartYTicks = [];
+for ($tick = 0.0; $tick <= $streamAxisMax + ($streamAxisStep / 2); $tick += $streamAxisStep) {
+    $y = $streamPlotBottom - (($tick / $streamAxisMax) * ($streamPlotBottom - $streamPlotTop));
+    $streamChartYTicks[] = ['value' => (int)round($tick), 'y' => round($y, 1)];
+}
+$streamChartXLabels = [];
+if ($latestTwitchRows) {
+    $labelStep = max(1, (int)ceil(count($latestTwitchRows) / 4));
+    foreach ($latestTwitchRows as $idx => $row) {
+        if ($idx % $labelStep !== 0 && $idx !== count($latestTwitchRows) - 1) {
+            continue;
+        }
+        $x = $streamPlotLeft + (count($latestTwitchRows) <= 1 ? 0 : ($idx / (count($latestTwitchRows) - 1)) * ($streamPlotRight - $streamPlotLeft));
+        $streamChartXLabels[] = [
+            'label' => portal_chart_stream_date_label($row['stream_date'] ?? '', (string)($idx + 1)),
+            'x' => round($x, 1),
+        ];
+    }
 }
 
 $submissionRows = [
@@ -134,29 +156,48 @@ require __DIR__ . '/_header.php';
 </section>
 
 <section class="portal-section-head">
-  <h2><span class="portal-section-icon bars"></span>収益サマリー</h2>
-  <a href="<?= portal_h($portalBase) ?>/history.php">詳細を見る</a>
+  <h2><span class="portal-section-icon bars"></span>配信概要 最新解析</h2>
+  <a href="<?= portal_h($portalBase) ?>/twitch.php">CSVを見る</a>
 </section>
-<section class="portal-revenue-card portal-motion-card">
-  <div class="portal-revenue-top">
-    <div>
-      <span>今月の収益（<?= (int)$thisMonth ?>月）</span>
-      <strong>¥<?= portal_h(number_format($currentRevenue, 0)) ?></strong>
-      <small>先月比 <b class="<?= $growth >= 0 ? 'up' : 'down' ?>"><?= $growth >= 0 ? '↑' : '↓' ?> <?= portal_h(number_format(abs($growth), 1)) ?>%</b></small>
+<?php if ($latestTwitchReport): ?>
+  <section class="portal-analytics-card portal-motion-card">
+    <div class="portal-analytics-copy">
+      <span><?= portal_h(sprintf('%04d年%02d月', $latestTwitchReport['report_year'], $latestTwitchReport['report_month'])) ?></span>
+      <strong><?= portal_h(number_format((int)$latestTwitchReport['total_views'])) ?></strong>
+      <small>総視聴数 / 配信 <?= portal_h((string)$latestTwitchReport['total_streams']) ?> 回</small>
     </div>
-    <svg class="portal-mini-chart" viewBox="0 0 284 110" aria-hidden="true">
-      <polyline points="<?= portal_h(implode(' ', $chartPoints)) ?>" fill="none" stroke="#7b4dea" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <?php foreach ($chartPoints as $p): [$x, $y] = array_map('floatval', explode(',', $p)); ?>
-        <circle cx="<?= $x ?>" cy="<?= $y ?>" r="4" fill="#7b4dea"/>
+    <svg class="portal-line-chart" viewBox="0 0 420 176" role="img" aria-label="Twitch視聴推移">
+      <?php foreach ($streamChartYTicks as $tick): ?>
+        <line x1="<?= $streamPlotLeft ?>" y1="<?= $tick['y'] ?>" x2="<?= $streamPlotRight ?>" y2="<?= $tick['y'] ?>" stroke="#ece7f8" stroke-width="1"/>
+        <text x="<?= $streamPlotLeft - 8 ?>" y="<?= $tick['y'] + 4 ?>" text-anchor="end" fill="#8a7f99" font-size="10"><?= portal_h(number_format($tick['value'])) ?></text>
       <?php endforeach; ?>
+      <line x1="<?= $streamPlotLeft ?>" y1="<?= $streamPlotTop ?>" x2="<?= $streamPlotLeft ?>" y2="<?= $streamPlotBottom ?>" stroke="#d8cdec" stroke-width="1.2"/>
+      <line x1="<?= $streamPlotLeft ?>" y1="<?= $streamPlotBottom ?>" x2="<?= $streamPlotRight ?>" y2="<?= $streamPlotBottom ?>" stroke="#d8cdec" stroke-width="1.2"/>
+      <polyline points="<?= portal_h(implode(' ', $streamChartPoints)) ?>" fill="none" stroke="#7b4dea" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <?php foreach ($streamChartPoints as $point): [$x, $y] = array_map('floatval', explode(',', $point)); ?>
+        <circle cx="<?= $x ?>" cy="<?= $y ?>" r="5" fill="#7b4dea"/>
+      <?php endforeach; ?>
+      <?php foreach ($streamChartXLabels as $label): ?>
+        <text x="<?= $label['x'] ?>" y="158" text-anchor="middle" fill="#8a7f99" font-size="10"><?= portal_h($label['label']) ?></text>
+      <?php endforeach; ?>
+      <text x="<?= ($streamPlotLeft + $streamPlotRight) / 2 ?>" y="172" text-anchor="middle" fill="#8a7f99" font-size="10">配信日</text>
+      <text x="12" y="<?= ($streamPlotTop + $streamPlotBottom) / 2 ?>" text-anchor="middle" fill="#8a7f99" font-size="10" transform="rotate(-90 12 <?= ($streamPlotTop + $streamPlotBottom) / 2 ?>)">視聴数</text>
     </svg>
-  </div>
-  <div class="portal-revenue-stats">
-    <div><span>累計収益（<?= (int)$thisYear ?>年）</span><strong>¥<?= portal_h(number_format($yearTotal, 0)) ?></strong></div>
-    <div><span>未確定金額</span><strong>¥<?= portal_h(number_format($pendingAmount, 0)) ?></strong></div>
-    <div><span>次回目安</span><strong><?= portal_h((new DateTime('last day of this month'))->format('Y/m/d')) ?></strong></div>
-  </div>
-</section>
+    <div class="portal-metric-grid">
+      <div><span>配信時間</span><strong><?= portal_h(number_format((float)$latestTwitchReport['total_minutes'] / 60, 1)) ?>h</strong></div>
+      <div><span>平均視聴者</span><strong><?= portal_h(number_format((float)$latestTwitchReport['avg_viewers'], 1)) ?></strong></div>
+      <div><span>最大視聴者</span><strong><?= portal_h(number_format((int)$latestTwitchReport['peak_viewers'])) ?></strong></div>
+      <div><span>フォロワー増</span><strong><?= portal_h(number_format((int)$latestTwitchReport['followers_gained'])) ?></strong></div>
+    </div>
+  </section>
+<?php else: ?>
+  <section class="portal-home-card portal-motion-card">
+    <div class="portal-empty-line">まだTwitch CSVの解析結果はありません。</div>
+    <div style="margin-top:14px;">
+      <a class="portal-btn portal-btn-primary" href="<?= portal_h($portalBase) ?>/twitch.php">CSVを提出する</a>
+    </div>
+  </section>
+<?php endif; ?>
 
 <section class="portal-section-head">
   <h2><span class="portal-section-icon doc"></span>提出物・申請状況</h2>
