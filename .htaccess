@@ -32,6 +32,6 @@ RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 </FilesMatch>
 
 # ---------- DBファイル・設定ファイルへの直接アクセス禁止 ----------
-<FilesMatch "^(db|config|settings|bootstrap|_bootstrap|_auth|_functions)\.php$">
+<FilesMatch "^(db|config|bootstrap|_bootstrap|_auth|_functions)\.php$">
     Require all denied
 </FilesMatch>
