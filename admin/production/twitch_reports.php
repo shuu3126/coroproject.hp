@@ -44,10 +44,10 @@ function admin_twitch_trend_badge($current, $previous) {
     $previousValue = (float)$previous;
     $diff = $currentValue - $previousValue;
     if (abs($diff) < 0.000001) {
-        return '<span class="stat-delta stat-delta-flat" title="same as previous month" aria-label="same as previous month">&#8594;</span>';
+        return '<span class="stat-delta stat-delta-flat" title="same as previous month" aria-label="same as previous month">&#10140;</span>';
     }
     $class = $diff > 0 ? 'stat-delta-up' : 'stat-delta-down';
-    $arrow = $diff > 0 ? '&#8599;' : '&#8600;';
+    $arrow = $diff > 0 ? '&#10138;' : '&#10139;';
     $label = $diff > 0 ? 'up from previous month' : 'down from previous month';
     return '<span class="stat-delta ' . $class . '" title="' . h($label) . '" aria-label="' . h($label) . '">' . $arrow . '</span>';
 }

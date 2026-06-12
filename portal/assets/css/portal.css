@@ -522,45 +522,60 @@ a, button, .portal-card, .portal-home-card, .portal-revenue-card, .portal-quick-
   white-space: nowrap;
 }
 
+.portal-analytics-copy strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: 100%;
+}
+
 .portal-trend-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  margin-left: 8px;
-  border-radius: 999px;
-  font-size: 14px;
+  order: -1;
+  width: 28px;
+  height: 28px;
+  margin: 0 8px 0 0;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,.9);
+  font-size: 17px;
   font-weight: 900;
   line-height: 1;
   vertical-align: middle;
+  box-shadow: 0 8px 18px rgba(79,55,145,.14);
 }
 
 .portal-metric-grid .portal-trend-badge {
-  margin-left: 0;
+  margin-right: 7px;
   flex: 0 0 auto;
 }
 
 .portal-analytics-copy .portal-trend-badge {
-  width: 30px;
-  height: 30px;
-  margin-left: 10px;
-  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  margin: 0 10px 0 0;
+  border-radius: 12px;
+  font-size: 21px;
 }
 
 .portal-trend-up {
-  color: #15803d;
-  background: #dcfce7;
+  color: #047857;
+  background: linear-gradient(135deg, #bbf7d0 0%, #5eead4 100%);
+  box-shadow: 0 10px 22px rgba(20,184,166,.28);
 }
 
 .portal-trend-down {
-  color: #b91c1c;
-  background: #fee2e2;
+  color: #be123c;
+  background: linear-gradient(135deg, #fecdd3 0%, #fb7185 100%);
+  box-shadow: 0 10px 22px rgba(244,63,94,.25);
 }
 
 .portal-trend-flat {
-  color: #6b7280;
-  background: #f3f4f6;
+  color: #64748b;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  box-shadow: 0 8px 18px rgba(100,116,139,.16);
 }
 
 .portal-submit-list {
@@ -1945,16 +1960,17 @@ body {
   }
 
   .portal-trend-badge {
-    width: 20px;
-    height: 20px;
-    margin-left: 6px;
-    font-size: 12px;
+    width: 24px;
+    height: 24px;
+    margin: 0 7px 0 0;
+    border-radius: 9px;
+    font-size: 14px;
   }
 
   .portal-analytics-copy .portal-trend-badge {
-    width: 24px;
-    height: 24px;
-    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    font-size: 17px;
   }
 
   .portal-submit-list {

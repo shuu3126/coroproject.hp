@@ -768,10 +768,10 @@ function portal_twitch_trend_badge($current, $previous) {
     $previousValue = (float)$previous;
     $diff = $currentValue - $previousValue;
     if (abs($diff) < 0.000001) {
-        return '<span class="portal-trend-badge portal-trend-flat" title="same as previous month" aria-label="same as previous month">&#8594;</span>';
+        return '<span class="portal-trend-badge portal-trend-flat" title="same as previous month" aria-label="same as previous month">&#10140;</span>';
     }
     $class = $diff > 0 ? 'portal-trend-up' : 'portal-trend-down';
-    $arrow = $diff > 0 ? '&#8599;' : '&#8600;';
+    $arrow = $diff > 0 ? '&#10138;' : '&#10139;';
     $label = $diff > 0 ? 'up from previous month' : 'down from previous month';
     return '<span class="portal-trend-badge ' . $class . '" title="' . portal_h($label) . '" aria-label="' . portal_h($label) . '">' . $arrow . '</span>';
 }

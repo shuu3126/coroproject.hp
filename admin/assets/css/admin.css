@@ -366,6 +366,9 @@ body:not(.login-body) .app-shell {
   color: var(--sub);
 }
 .stat-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 32px;
   font-weight: 900;
   letter-spacing: -.02em;
@@ -380,28 +383,34 @@ body:not(.login-body) .app-shell {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  margin-left: 8px;
-  border-radius: 999px;
-  font-size: 14px;
+  order: -1;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,.9);
+  font-size: 17px;
   font-weight: 900;
   line-height: 1;
   vertical-align: middle;
   background: #f3f4f6;
+  box-shadow: 0 8px 18px rgba(79,70,229,.14);
   -webkit-text-fill-color: currentColor;
 }
 .stat-delta-up {
-  color: #15803d;
-  background: #dcfce7;
+  color: #047857;
+  background: linear-gradient(135deg, #bbf7d0 0%, #5eead4 100%);
+  box-shadow: 0 10px 22px rgba(20,184,166,.28);
 }
 .stat-delta-down {
-  color: #b91c1c;
-  background: #fee2e2;
+  color: #be123c;
+  background: linear-gradient(135deg, #fecdd3 0%, #fb7185 100%);
+  box-shadow: 0 10px 22px rgba(244,63,94,.25);
 }
 .stat-delta-flat {
-  color: #6b7280;
-  background: #f3f4f6;
+  color: #64748b;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  box-shadow: 0 8px 18px rgba(100,116,139,.16);
 }
 .stat-card p {
   margin: 4px 0 0;
