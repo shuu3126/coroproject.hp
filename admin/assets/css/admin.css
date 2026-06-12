@@ -389,17 +389,14 @@ body:not(.login-body) .app-shell {
   height: 30px;
   margin: 0;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.9);
+  border: 0;
   font-size: 0;
   font-weight: 900;
   line-height: 1;
   vertical-align: middle;
   overflow: hidden;
   background: #f3f4f6;
-  box-shadow:
-    inset 0 2px 7px rgba(255,255,255,.55),
-    inset 0 -6px 10px rgba(255,255,255,.20),
-    0 8px 16px rgba(79,70,229,.16);
+  box-shadow: 0 5px 12px rgba(79,70,229,.12);
   -webkit-text-fill-color: currentColor;
 }
 .stat-delta::before {
@@ -412,40 +409,21 @@ body:not(.login-body) .app-shell {
   border-radius: 2px;
   background: #fff;
   clip-path: polygon(0 34%, 54% 34%, 54% 0, 100% 50%, 54% 100%, 54% 66%, 0 66%);
-  filter: drop-shadow(0 2px 2px rgba(0,0,0,.18));
 }
 .stat-delta::after {
   content: none;
 }
 .stat-delta-up {
-  background:
-    radial-gradient(circle at 34% 20%, rgba(255,255,255,.70) 0 24%, transparent 25%),
-    radial-gradient(circle at 45% 92%, rgba(255,255,255,.60) 0 16%, transparent 17%),
-    linear-gradient(145deg, #9eff65 0%, #31cc00 54%, #118600 100%);
-  box-shadow:
-    inset 0 2px 7px rgba(255,255,255,.60),
-    inset 0 -7px 12px rgba(255,255,255,.25),
-    0 10px 20px rgba(49,204,0,.30);
+  background: #22c55e;
+  box-shadow: 0 5px 12px rgba(34,197,94,.22);
 }
 .stat-delta-down {
-  background:
-    radial-gradient(circle at 34% 20%, rgba(255,255,255,.68) 0 24%, transparent 25%),
-    radial-gradient(circle at 45% 92%, rgba(255,255,255,.50) 0 16%, transparent 17%),
-    linear-gradient(145deg, #ff8b3d 0%, #ff3c18 54%, #c91b00 100%);
-  box-shadow:
-    inset 0 2px 7px rgba(255,255,255,.55),
-    inset 0 -7px 12px rgba(255,255,255,.22),
-    0 10px 20px rgba(255,60,24,.28);
+  background: #ef4444;
+  box-shadow: 0 5px 12px rgba(239,68,68,.22);
 }
 .stat-delta-flat {
-  background:
-    radial-gradient(circle at 34% 20%, rgba(255,255,255,.68) 0 24%, transparent 25%),
-    radial-gradient(circle at 45% 92%, rgba(255,255,255,.48) 0 16%, transparent 17%),
-    linear-gradient(145deg, #55c8ff 0%, #0e8bd8 54%, #0764a5 100%);
-  box-shadow:
-    inset 0 2px 7px rgba(255,255,255,.55),
-    inset 0 -7px 12px rgba(255,255,255,.22),
-    0 10px 20px rgba(14,139,216,.24);
+  background: #38bdf8;
+  box-shadow: 0 5px 12px rgba(56,189,248,.20);
 }
 .stat-card p {
   margin: 4px 0 0;

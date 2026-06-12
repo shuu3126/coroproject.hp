@@ -22,7 +22,7 @@ $_portalScript = basename($_SERVER['SCRIPT_NAME']);
   <title><?= portal_h($_portalPageTitle) ?></title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" type="image/png" href="<?= portal_h($portalBase) ?>/../images/logo.png">
-  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260612-glossy-trend">
+  <link rel="stylesheet" href="<?= portal_h($portalBase) ?>/assets/css/portal.css?v=20260612-flat-trend">
 </head>
 <body>
 
