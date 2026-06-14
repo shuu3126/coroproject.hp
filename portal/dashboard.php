@@ -135,7 +135,7 @@ require __DIR__ . '/_header.php';
               <span class="portal-notice-meta">理由: <?= portal_h($alert['portal_note']) ?></span>
             <?php endif; ?>
           </strong>
-          <span class="portal-row-arrow">›</span>
+          <svg class="portal-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
       <?php endforeach; ?>
       <?php foreach (array_slice($notices, 0, 3) as $notice): ?>
@@ -149,7 +149,7 @@ require __DIR__ . '/_header.php';
               <span class="portal-notice-meta"><?= nl2br(portal_h($notice['body'])) ?></span>
             <?php endif; ?>
           </strong>
-          <span class="portal-row-arrow">›</span>
+          <svg class="portal-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       <?php endforeach; ?>
     </div>
@@ -209,7 +209,7 @@ require __DIR__ . '/_header.php';
         <span class="portal-submit-icon"></span>
         <span><strong><?= portal_h($item['title']) ?></strong><small><?= portal_h($item['sub']) ?></small></span>
         <em class="<?= portal_h($item['class']) ?>"><?= portal_h($item['status']) ?></em>
-        <i>›</i>
+        <svg class="portal-chevron" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     <?php endforeach; ?>
   </div>

@@ -60,6 +60,16 @@ require __DIR__ . '/_header.php';
   <div class="portal-flash portal-flash--warning">Twitch CSV用のDB更新が未実行です。管理者は admin/portal_migrate.sql を再実行してください。</div>
 <?php endif; ?>
 
+<div class="portal-card portal-motion-card" style="margin-bottom:16px;">
+  <div class="portal-card-title">CSVのダウンロード方法</div>
+  <ol class="portal-howto-list">
+    <li><a href="https://dashboard.twitch.tv" target="_blank" rel="noopener">Twitchクリエイターダッシュボード</a>を開く</li>
+    <li>左メニュー「<strong>インサイト</strong>」→「<strong>ストリームサマリー</strong>」をクリック</li>
+    <li>対象月の配信をすべて表示した状態で、右上の「<strong>CSVをエクスポート</strong>」ボタンをクリック</li>
+    <li>ダウンロードしたCSVファイルを下のフォームからアップロード</li>
+  </ol>
+</div>
+
 <form method="post" enctype="multipart/form-data" class="portal-card portal-motion-card">
   <input type="hidden" name="_csrf" value="<?= portal_h(portal_csrf_token()) ?>">
   <div class="portal-card-title">CSVを提出</div>
@@ -81,9 +91,12 @@ require __DIR__ . '/_header.php';
       </select>
     </div>
   </div>
-  <div class="portal-upload-box">
-    <input type="file" name="twitch_csv" accept=".csv,text/csv" required>
-    <div class="portal-upload-label"><strong>TwitchのCSVを選択</strong><br>最大5MB / CSVのみ</div>
+  <div class="portal-upload-box" id="twitchUploadBox">
+    <input type="file" id="twitchCsvInput" name="twitch_csv" accept=".csv,text/csv" required>
+    <div class="portal-upload-label" id="twitchUploadLabel">
+      <strong>TwitchのCSVを選択</strong><br>
+      <span style="font-size:11px;">最大5MB / CSVのみ</span>
+    </div>
   </div>
   <div class="portal-form-group" style="margin-top:16px;">
     <label for="note">メモ</label>
@@ -91,6 +104,41 @@ require __DIR__ . '/_header.php';
   </div>
   <button class="portal-btn portal-btn-primary" type="submit">提出して解析する</button>
 </form>
+
+<script>
+(function () {
+  var input = document.getElementById('twitchCsvInput');
+  var box   = document.getElementById('twitchUploadBox');
+  var label = document.getElementById('twitchUploadLabel');
+
+  input.addEventListener('change', function () {
+    if (!input.files[0]) return;
+    var file = input.files[0];
+    var kb   = (file.size / 1024).toFixed(0);
+    box.classList.add('selected');
+    label.innerHTML =
+      '<svg viewBox="0 0 20 20" fill="none" style="width:28px;height:28px;margin-bottom:6px;color:var(--accent)">' +
+        '<path d="M10 3v9m0-9L7 6m3-3l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="3" y="13" width="14" height="4" rx="2" stroke="currentColor" stroke-width="2"/>' +
+      '</svg>' +
+      '<br><strong style="color:var(--accent);">' + file.name + '</strong>' +
+      '<br><span style="font-size:11px;color:var(--sub);">' + kb + ' KB — 選択済み</span>';
+  });
+
+  box.addEventListener('dragover', function (e) { e.preventDefault(); box.classList.add('dragover'); });
+  box.addEventListener('dragleave', function () { box.classList.remove('dragover'); });
+  box.addEventListener('drop', function (e) {
+    e.preventDefault();
+    box.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) {
+      var dt = new DataTransfer();
+      dt.items.add(e.dataTransfer.files[0]);
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+    }
+  });
+})();
+</script>
 
 <?php if ($latest): ?>
 <section class="portal-section-head">

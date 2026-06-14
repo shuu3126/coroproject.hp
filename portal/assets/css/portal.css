@@ -427,9 +427,16 @@ a, button, .portal-card, .portal-home-card, .portal-revenue-card, .portal-quick-
 
 .portal-row-arrow,
 .portal-submit-row i {
-  color: #77718e;
+  color: #a89ec8;
   font-size: 34px;
   line-height: 1;
+}
+
+.portal-chevron {
+  width: 18px;
+  height: 18px;
+  color: #a89ec8;
+  flex-shrink: 0;
 }
 
 .portal-revenue-card {
@@ -552,10 +559,10 @@ a, button, .portal-card, .portal-home-card, .portal-revenue-card, .portal-quick-
 .portal-trend-badge::before {
   content: "";
   position: absolute;
-  left: 5px;
-  top: 7px;
-  width: 20px;
-  height: 16px;
+  left: 7px;
+  top: 5px;
+  width: 16px;
+  height: 20px;
   border-radius: 2px;
   background: #fff;
   clip-path: polygon(0 34%, 54% 34%, 54% 0, 100% 50%, 54% 100%, 54% 66%, 0 66%);
@@ -565,7 +572,30 @@ a, button, .portal-card, .portal-home-card, .portal-revenue-card, .portal-quick-
   content: none;
 }
 
+.portal-trend-up::before {
+  clip-path: polygon(50% 0, 100% 54%, 66% 54%, 66% 100%, 34% 100%, 34% 54%, 0 54%);
+}
+
+.portal-trend-down::before {
+  clip-path: polygon(50% 100%, 0 46%, 34% 46%, 34% 0, 66% 0, 66% 46%, 100% 46%);
+}
+
+.portal-trend-flat::before {
+  left: 5px;
+  top: 7px;
+  width: 20px;
+  height: 16px;
+  clip-path: polygon(0 34%, 54% 34%, 54% 0, 100% 50%, 54% 100%, 54% 66%, 0 66%);
+}
+
 .portal-analytics-copy .portal-trend-badge::before {
+  left: 9px;
+  top: 8px;
+  width: 18px;
+  height: 20px;
+}
+
+.portal-analytics-copy .portal-trend-flat::before {
   left: 6px;
   top: 9px;
   width: 24px;
@@ -1404,6 +1434,36 @@ body.portal-login-body {
   color: var(--accent);
 }
 
+/* ── Upload selected state ───────────────────────────────── */
+.portal-upload-box.selected {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, #f6f0ff, #fdf6ff);
+}
+
+.portal-upload-box.selected .portal-upload-label {
+  color: var(--accent);
+}
+
+/* ── How-to list ─────────────────────────────────────────── */
+.portal-howto-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--sub);
+  line-height: 1.65;
+}
+
+.portal-howto-list li strong {
+  color: var(--text);
+}
+
+.portal-howto-list a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 /* ── Invoice status ──────────────────────────────────────── */
 .invoice-status-issued          { color: var(--warning); }
 .invoice-status-paid            { color: var(--success); }
@@ -1926,6 +1986,11 @@ body {
   .portal-row-arrow,
   .portal-submit-row i {
     font-size: 24px;
+  }
+
+  .portal-chevron {
+    width: 14px;
+    height: 14px;
   }
 
   .portal-notice-meta {
