@@ -43,7 +43,7 @@ if ($method === 'PATCH' && $id) {
     foreach ($allowed as $f) { if (array_key_exists($f, $body)) { $sets[] = "{$f} = ?"; $params[] = $body[$f]; } }
     if (empty($sets)) { api_error(400, 'No updatable fields'); }
     $params[] = $id;
-    $pdo->prepare("UPDATE inquiries SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = ?")->execute($params);
+    $pdo->prepare("UPDATE inquiries SET " . implode(', ', $sets) . " WHERE id = ?")->execute($params);
     api_ok(['id' => $id]);
 }
 
