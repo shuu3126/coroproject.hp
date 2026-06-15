@@ -117,7 +117,36 @@ if ($method === 'POST') {
         $mail->Subject = $subject;
         $mail->Body    = $text;
         $mail->send();
-        api_ok(['sent' => true, 'to' => $to]);
+
+        // mail_messages テーブルに送信済みレコードを保存
+        $toText = $toName ? "{$toName} <{$to}>" : $to;
+        try {
+            $pdo->prepare("
+                INSERT INTO mail_messages
+                    (account_email, mailbox, direction, from_name, from_email, to_text, subject, body_text, status, sent_at, created_at, updated_at)
+                VALUES
+                    (?, 'sent', 'outbound', ?, ?, ?, ?, ?, 'sent', NOW(), NOW(), NOW())
+            ")->execute([
+                $smtpCfg['from_email'],
+                $smtpCfg['from_name'],
+                $smtpCfg['from_email'],
+                $toText,
+                $subject,
+                $text,
+            ]);
+            $sentId = (int)$pdo->lastInsertId();
+        } catch (\Throwable $_e) { $sentId = 0; }
+
+        // inquiry_id が指定されていれば問い合わせを返信済みに更新
+        $inquiryId = (int)($body['inquiry_id'] ?? 0);
+        if ($inquiryId > 0) {
+            try {
+                $pdo->prepare("UPDATE inquiries SET status = 'replied', updated_at = NOW() WHERE id = ?")->execute([$inquiryId]);
+                $pdo->prepare("INSERT INTO inquiry_replies (inquiry_id, admin_user_id, body, mail_sent, created_at) VALUES (?, 0, ?, 1, NOW())")->execute([$inquiryId, $text]);
+            } catch (\Throwable $_e) {}
+        }
+
+        api_ok(['sent' => true, 'to' => $to, 'sent_id' => $sentId]);
     } catch (\Exception $e) {
         api_error(500, 'Mail send failed: ' . $e->getMessage());
     }
