@@ -63,7 +63,7 @@ function api_path_id() {
     $parts = array_values(array_filter(explode('/', $uri)));
     $last = end($parts);
     if ($last === false || $last === '') { return null; }
-    $endpoints = ['talents','clients','deals','invoices','revenues','journal','payments','update','migrate','inquiries','mail'];
+    $endpoints = ['talents','clients','deals','invoices','revenues','journal','payments','update','migrate','inquiries','mail','applications'];
     if (in_array($last, $endpoints, true)) { return null; }
     return is_numeric($last) ? (int)$last : $last;
 }
