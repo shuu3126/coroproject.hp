@@ -116,6 +116,17 @@ if ($method === 'POST') {
         $mail->addReplyTo($smtpCfg['from_email'], $smtpCfg['from_name']);
         $mail->Subject = $subject;
         $mail->Body    = $text;
+
+        // 添付ファイル（attachment_name + attachment_base64 で指定）
+        $attachName   = trim($body['attachment_name'] ?? '');
+        $attachBase64 = trim($body['attachment_base64'] ?? '');
+        if ($attachName !== '' && $attachBase64 !== '') {
+            $attachData = base64_decode($attachBase64, true);
+            if ($attachData !== false) {
+                $mail->addStringAttachment($attachData, $attachName);
+            }
+        }
+
         $mail->send();
 
         // mail_messages テーブルに送信済みレコードを保存
