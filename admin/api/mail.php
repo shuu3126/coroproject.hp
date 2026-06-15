@@ -63,4 +63,64 @@ if ($method === 'PATCH' && $id) {
     api_ok(['id' => $id]);
 }
 
+// POST /mail — メール送信
+if ($method === 'POST') {
+    $body = api_input();
+    $to      = trim($body['to'] ?? '');
+    $toName  = trim($body['to_name'] ?? '');
+    $subject = trim($body['subject'] ?? '');
+    $text    = trim($body['body'] ?? '');
+    if (!$to || !$subject || !$text) { api_error(400, 'to, subject, body are required'); }
+    if (!filter_var($to, FILTER_VALIDATE_EMAIL)) { api_error(400, 'Invalid to address'); }
+
+    // SMTP設定をDBから取得
+    $smtpCfg = ['host' => 's221.myssl.jp', 'port' => 465, 'secure' => 'ssl', 'user' => '', 'pass' => '', 'from_email' => 'info@coroproject.jp', 'from_name' => 'CORO PROJECT'];
+    try {
+        $keys = ['smtp_host','smtp_port','smtp_secure','smtp_user','smtp_pass','smtp_from_email','smtp_from_name'];
+        $ph   = implode(',', array_fill(0, count($keys), '?'));
+        $st   = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ($ph)");
+        $st->execute($keys);
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $k = $row['setting_key']; $v = $row['setting_value'];
+            if ($k === 'smtp_host' && $v)       $smtpCfg['host']       = $v;
+            if ($k === 'smtp_port' && $v)        $smtpCfg['port']       = (int)$v;
+            if ($k === 'smtp_secure' && $v)      $smtpCfg['secure']     = $v;
+            if ($k === 'smtp_user')              $smtpCfg['user']       = $v;
+            if ($k === 'smtp_pass')              $smtpCfg['pass']       = $v;
+            if ($k === 'smtp_from_email' && $v)  $smtpCfg['from_email'] = $v;
+            if ($k === 'smtp_from_name' && $v)   $smtpCfg['from_name']  = $v;
+        }
+    } catch (\Throwable $_e) {}
+
+    $libDir = dirname(__DIR__, 2) . '/production/lib/PHPMailer';
+    require_once $libDir . '/Exception.php';
+    require_once $libDir . '/PHPMailer.php';
+    require_once $libDir . '/SMTP.php';
+
+    try {
+        $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+        $mail->CharSet  = 'UTF-8';
+        $mail->Encoding = 'base64';
+        $mail->isSMTP();
+        $mail->Host       = $smtpCfg['host'];
+        $mail->SMTPAuth   = true;
+        $mail->Username   = $smtpCfg['user'];
+        $mail->Password   = $smtpCfg['pass'];
+        $mail->Port       = $smtpCfg['port'];
+        $mail->SMTPSecure = $smtpCfg['secure'] === 'ssl'
+            ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+            : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]];
+        $mail->setFrom($smtpCfg['from_email'], $smtpCfg['from_name']);
+        $mail->addAddress($to, $toName);
+        $mail->addReplyTo($smtpCfg['from_email'], $smtpCfg['from_name']);
+        $mail->Subject = $subject;
+        $mail->Body    = $text;
+        $mail->send();
+        api_ok(['sent' => true, 'to' => $to]);
+    } catch (\Exception $e) {
+        api_error(500, 'Mail send failed: ' . $e->getMessage());
+    }
+}
+
 api_error(405, 'Method not allowed');
