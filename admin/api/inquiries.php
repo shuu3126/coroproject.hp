@@ -1,6 +1,11 @@
 <?php
 require __DIR__ . '/_bootstrap.php';
 
+// status ENUMに replied/closed を追加（既にある場合は無視）
+try {
+    $pdo->exec("ALTER TABLE inquiries MODIFY COLUMN status ENUM('unread','read','replied','closed') NOT NULL DEFAULT 'unread'");
+} catch (\Throwable $_e) {}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = api_path_id();
 
