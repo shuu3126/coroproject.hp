@@ -55,6 +55,16 @@ if ($pdo) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         ");
     } catch (Exception $_e) {}
+
+    // 金銭関連カラムを追加（MySQL は IF NOT EXISTS 非対応のため try/catch）
+    foreach ([
+        "ALTER TABLE talent_applications ADD COLUMN monetization_status VARCHAR(50) NULL AFTER questions",
+        "ALTER TABLE talent_applications ADD COLUMN monthly_income_range VARCHAR(30) NULL AFTER monetization_status",
+        "ALTER TABLE talent_applications ADD COLUMN desired_compensation VARCHAR(30) NULL AFTER monthly_income_range",
+        "ALTER TABLE talent_applications ADD COLUMN financial_support_needs TEXT NULL AFTER desired_compensation",
+    ] as $_alterSql) {
+        try { $pdo->exec($_alterSql); } catch (Exception $_e) {}
+    }
 }
 
 $error = '';
@@ -154,8 +164,12 @@ if ($submitted) {
         $goal            = trim($_POST['goal'] ?? '');
         $micEquipment    = trim($_POST['mic_equipment'] ?? '') ?: null;
         $pcSpec          = trim($_POST['pc_spec'] ?? '') ?: null;
-        $questions       = trim($_POST['questions'] ?? '') ?: null;
-        $privacyAgree    = (bool)($_POST['privacy_agree'] ?? false);
+        $questions             = trim($_POST['questions'] ?? '') ?: null;
+        $monetizationStatus    = trim($_POST['monetization_status'] ?? '') ?: null;
+        $monthlyIncomeRange    = trim($_POST['monthly_income_range'] ?? '') ?: null;
+        $desiredCompensation   = trim($_POST['desired_compensation'] ?? '') ?: null;
+        $financialSupportNeeds = trim($_POST['financial_support_needs'] ?? '') ?: null;
+        $privacyAgree          = (bool)($_POST['privacy_agree'] ?? false);
 
         // 必須チェック
         if (!$vtuberName) throw new Exception('VTuber名を入力してください。');
@@ -190,6 +204,7 @@ if ($submitted) {
                 past_achievements, event_experience, skills,
                 affiliation_type, work_style, work_detail,
                 motivation, goal, mic_equipment, pc_spec, questions,
+                monetization_status, monthly_income_range, desired_compensation, financial_support_needs,
                 status, created_at
             ) VALUES (
                 ?, ?, ?, ?, ?, ?,
@@ -203,6 +218,7 @@ if ($submitted) {
                 ?, ?, ?,
                 ?, ?, ?,
                 ?, ?, ?, ?, ?,
+                ?, ?, ?, ?,
                 'new', NOW()
             )
         ");
@@ -218,6 +234,7 @@ if ($submitted) {
             $pastAchievements, $eventExperience, $skills,
             $affiliationType, $workStyle, $workDetail,
             $motivation, $goal, $micEquipment, $pcSpec, $questions,
+            $monetizationStatus, $monthlyIncomeRange, $desiredCompensation, $financialSupportNeeds,
         ]);
         $newAppId = (int)$pdo->lastInsertId();
 
@@ -569,9 +586,74 @@ render_header('');
             </label>
           </fieldset>
 
-          <!-- セクション5: 機材 -->
+          <!-- セクション5: 収益・報酬 -->
           <fieldset>
-            <legend>5. 使用機材（任意）</legend>
+            <legend>5. 収益・報酬</legend>
+
+            <div class="form-group">
+              <span class="form-label">現在の収益化状況</span>
+              <div class="radio-group">
+                <?php foreach ([
+                  'youtube_monetized' => 'YouTube収益化済み',
+                  'twitch_affiliate'  => 'Twitch提携以上',
+                  'superchats_only'   => 'スパチャ・投げ銭のみ',
+                  'none'              => '収益化なし',
+                  'other_monetize'    => 'その他',
+                ] as $val => $label): ?>
+                  <label class="radio-label">
+                    <input type="radio" name="monetization_status" value="<?= h($val) ?>" <?= (($_POST['monetization_status'] ?? '') === $val) ? 'checked' : '' ?>>
+                    <span><?= h($label) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <span class="form-label">配信活動による月間収益の目安</span>
+              <div class="radio-group">
+                <?php foreach ([
+                  'no_answer'   => '回答しない',
+                  'zero'        => 'ほぼ0円',
+                  'under_10k'   => '〜1万円',
+                  'under_50k'   => '〜5万円',
+                  'under_100k'  => '〜10万円',
+                  'over_100k'   => '10万円以上',
+                ] as $val => $label): ?>
+                  <label class="radio-label">
+                    <input type="radio" name="monthly_income_range" value="<?= h($val) ?>" <?= (($_POST['monthly_income_range'] ?? '') === $val) ? 'checked' : '' ?>>
+                    <span><?= h($label) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <span class="form-label">希望する報酬体系</span>
+              <div class="radio-group">
+                <?php foreach ([
+                  'monthly_fixed' => '月額固定',
+                  'per_project'   => '案件ごとの報酬',
+                  'revenue_share' => 'レベニューシェア（収益分配）',
+                  'negotiable'    => '相談したい',
+                ] as $val => $label): ?>
+                  <label class="radio-label">
+                    <input type="radio" name="desired_compensation" value="<?= h($val) ?>" <?= (($_POST['desired_compensation'] ?? '') === $val) ? 'checked' : '' ?>>
+                    <span><?= h($label) ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </div>
+
+            <label>
+              <span>事務所に期待する金銭的サポート</span>
+              <textarea name="financial_support_needs" rows="4" placeholder="案件収益の分配比率の希望、最低保証の有無、経費負担の希望などがあればご記入ください（任意）。"><?= h($_POST['financial_support_needs'] ?? '') ?></textarea>
+              <small class="field-note">任意。具体的な金額の記入は不要です。</small>
+            </label>
+          </fieldset>
+
+          <!-- セクション6: 機材 -->
+          <fieldset>
+            <legend>6. 使用機材（任意）</legend>
 
             <label>
               <span>マイク・音声機材</span>
@@ -584,9 +666,9 @@ render_header('');
             </label>
           </fieldset>
 
-          <!-- セクション6: その他 -->
+          <!-- セクション7: その他 -->
           <fieldset>
-            <legend>6. その他</legend>
+            <legend>7. その他</legend>
 
             <label>
               <span>ご質問・ご要望</span>
@@ -621,6 +703,9 @@ render_header('');
   color: var(--accent, #a78bfa);
   letter-spacing: 0.04em;
 }
+.contact-form label { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.contact-form label > span { font-size: 0.9em; font-weight: 500; }
+.contact-form .field-note { font-size: 0.8em; opacity: 0.65; margin-top: 2px; }
 .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
 .form-label { font-size: 0.9em; font-weight: 500; }
 .radio-group { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -629,7 +714,7 @@ render_header('');
 .checkbox-label input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; }
 .platform-group { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 16px; margin-bottom: 16px; }
 .platform-group h4 { font-size: 0.85em; font-weight: 600; margin: 0 0 12px; opacity: 0.7; }
-.platform-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; margin-bottom: 12px; align-items: end; }
+.platform-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 12px; align-items: start; }
 @media (max-width: 600px) { .platform-row { grid-template-columns: 1fr; } }
 .req { color: #f87171; font-style: normal; }
 </style>

@@ -58,6 +58,27 @@ $statusClasses = [
 $genderLabels = ['female' => '女性', 'male' => '男性', 'other' => 'その他', 'private' => '非公開'];
 $affiliationLabels = ['exclusive' => '専属', 'non_exclusive' => '非専属', 'negotiable' => '相談したい'];
 $workStyleLabels   = ['full_time' => '専業', 'part_time' => '副業', 'other' => 'その他'];
+$monetizationLabels = [
+    'youtube_monetized' => 'YouTube収益化済み',
+    'twitch_affiliate'  => 'Twitch提携以上',
+    'superchats_only'   => 'スパチャ・投げ銭のみ',
+    'none'              => '収益化なし',
+    'other_monetize'    => 'その他',
+];
+$incomeRangeLabels = [
+    'no_answer'  => '回答しない',
+    'zero'       => 'ほぼ0円',
+    'under_10k'  => '〜1万円',
+    'under_50k'  => '〜5万円',
+    'under_100k' => '〜10万円',
+    'over_100k'  => '10万円以上',
+];
+$compensationLabels = [
+    'monthly_fixed' => '月額固定',
+    'per_project'   => '案件ごとの報酬',
+    'revenue_share' => 'レベニューシェア（収益分配）',
+    'negotiable'    => '相談したい',
+];
 
 $sl = $statusLabels[$app['status']] ?? $app['status'];
 $sc = $statusClasses[$app['status']] ?? 'muted';
@@ -184,7 +205,32 @@ start_page('応募詳細 #' . $id, h($app['vtuber_name']) . ' 様の応募');
       </tbody>
     </table>
 
-    <!-- セクション5: 機材 -->
+    <!-- セクション5: 収益・報酬 -->
+    <?php
+    $hasFinancial = !empty($app['monetization_status']) || !empty($app['monthly_income_range'])
+                 || !empty($app['desired_compensation']) || !empty($app['financial_support_needs']);
+    ?>
+    <?php if ($hasFinancial): ?>
+      <h3 style="margin:24px 0 8px;font-size:0.95em;opacity:.7;border-bottom:1px solid var(--border,#e5e5e5);padding-bottom:6px;">収益・報酬</h3>
+      <table class="data-table">
+        <tbody>
+          <?php if (!empty($app['monetization_status'])): ?>
+            <tr><th style="width:160px;">収益化状況</th><td><?= h($monetizationLabels[$app['monetization_status']] ?? $app['monetization_status']) ?></td></tr>
+          <?php endif; ?>
+          <?php if (!empty($app['monthly_income_range'])): ?>
+            <tr><th>月間収益目安</th><td><?= h($incomeRangeLabels[$app['monthly_income_range']] ?? $app['monthly_income_range']) ?></td></tr>
+          <?php endif; ?>
+          <?php if (!empty($app['desired_compensation'])): ?>
+            <tr><th>希望報酬体系</th><td><?= h($compensationLabels[$app['desired_compensation']] ?? $app['desired_compensation']) ?></td></tr>
+          <?php endif; ?>
+          <?php if (!empty($app['financial_support_needs'])): ?>
+            <tr><th>期待する金銭的サポート</th><td style="white-space:pre-wrap;"><?= h($app['financial_support_needs']) ?></td></tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    <?php endif; ?>
+
+    <!-- セクション6: 機材 -->
     <?php if (!empty($app['mic_equipment']) || !empty($app['pc_spec'])): ?>
       <h3 style="margin:24px 0 8px;font-size:0.95em;opacity:.7;border-bottom:1px solid var(--border,#e5e5e5);padding-bottom:6px;">使用機材</h3>
       <table class="data-table">
