@@ -9,6 +9,8 @@ function app_settings_defaults($config) {
         'office_invoice_note' => '',
         'fx_default_rate'   => '150',
         'fx_api_key'        => '',
+        'fx_cached_rate'    => '',
+        'fx_cached_at'      => '',
         'pdf_font_path'     => $config['pdf']['font_path'],
         'pdf_stamp_path'    => $config['pdf']['stamp_path'],
         'smtp_host'         => 's221.myssl.jp',
@@ -37,6 +39,59 @@ function load_app_settings($pdo, $config) {
     } catch (Exception $e) {
     }
     return $settings;
+}
+
+function accounting_get_live_fx_rate($pdo, $config, $settings) {
+    $apiKey     = trim((string)($settings['fx_api_key'] ?? ''));
+    $fallback   = (float)($settings['fx_default_rate'] ?: 150);
+    $cachedRate = (float)($settings['fx_cached_rate'] ?? 0);
+    $cachedAt   = (string)($settings['fx_cached_at'] ?? '');
+
+    if ($apiKey === '') {
+        return $fallback;
+    }
+
+    // 6時間以内のキャッシュは再利用
+    if ($cachedRate > 0 && $cachedAt !== '' && (time() - strtotime($cachedAt)) < 21600) {
+        return $cachedRate;
+    }
+
+    // APIから最新レートを取得
+    try {
+        if (!function_exists('curl_init')) {
+            throw new RuntimeException('cURL unavailable');
+        }
+        $ch = curl_init('https://v6.exchangerate-api.com/v6/' . rawurlencode($apiKey) . '/latest/USD');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_USERAGENT      => 'CORO-PROJECT-ADMIN/1.0',
+        ]);
+        $resp     = curl_exec($ch);
+        $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($resp && $httpCode === 200) {
+            $json = json_decode($resp, true);
+            if (is_array($json) && ($json['result'] ?? '') === 'success') {
+                $rate = (float)($json['conversion_rates']['JPY'] ?? 0);
+                if ($rate > 0) {
+                    save_app_settings_map($pdo, null, [
+                        'fx_cached_rate' => (string)$rate,
+                        'fx_cached_at'   => date('Y-m-d H:i:s'),
+                    ]);
+                    return $rate;
+                }
+            }
+        }
+    } catch (Exception $e) {
+        // fall through
+    }
+
+    return $cachedRate > 0 ? $cachedRate : $fallback;
 }
 
 function save_app_settings_map($pdo, $userId, $map) {

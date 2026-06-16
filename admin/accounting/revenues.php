@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 $q         = trim(isset($_GET['q']) ? $_GET['q'] : '');
 $rows      = accounting_fetch_all_revenues_with_status($pdo, $q);
 $settings  = load_app_settings($pdo, $config);
-$fxRate    = (float)$settings['fx_default_rate'];
+$fxRate    = accounting_get_live_fx_rate($pdo, $config, $settings);
 $threshold = accounting_threshold_yen();
 $pendingSummaries = ($q === '') ? accounting_get_pending_summaries($pdo, $fxRate) : [];
 
@@ -72,7 +72,13 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
   <div class="card form-card pending-summary">
     <div class="pending-summary-head">
       <span class="pending-summary-title">請求待ちサマリー</span>
-      <span class="pending-summary-note">概算（<?= h(number_format($fxRate, 0)) ?> 円/USD・各タレントの取り分率で計算）</span>
+      <span class="pending-summary-note">
+        <?php
+          $cachedAt = $settings['fx_cached_at'] ?? '';
+          $isLive = $cachedAt !== '' && (time() - strtotime($cachedAt)) < 21600;
+        ?>
+        概算（<?= h(number_format($fxRate, 2)) ?> 円/USD<?= $isLive ? '・最新レート' : '・デフォルトレート' ?>・各タレントの取り分率で計算）
+      </span>
     </div>
     <div class="pending-cards">
       <?php foreach ($pendingSummaries as $s):
