@@ -17,7 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     $id = (int)($_POST['id'] ?? 0);
     if ($id > 0) {
-        if ($action === 'confirm') {
+        if ($action === 'uninvoice') {
+            $rev = accounting_fetch_revenue($pdo, $id);
+            if ($rev) {
+                $pdo->prepare('DELETE FROM accounting_invoiced_months WHERE talent_id = ? AND year = ? AND month = ?')
+                    ->execute([(string)$rev['talent_id'], (int)$rev['year'], (int)$rev['month']]);
+                write_admin_log($pdo, (int)$user['id'], 'update', 'accounting_revenue', $id,
+                    sprintf('収益を未請求に戻しました（%d年%d月）', $rev['year'], $rev['month']));
+                set_flash('success', sprintf('%d年%d月の収益を未請求に戻しました。請求待ちサマリーから新しい請求書を作成してください。', $rev['year'], $rev['month']));
+            }
+        } elseif ($action === 'confirm') {
             if (accounting_portal_confirm_revenue($pdo, $id, (int)$user['id'])) {
                 write_admin_log($pdo, (int)$user['id'], 'update', 'accounting_revenue', $id, '収益データを承認しました');
                 set_flash('success', '収益データを承認しました。');
@@ -196,6 +205,13 @@ start_page('収益入力', '収益の登録・請求状況を管理します。'
                 <?php endif; ?>
                 <a class="ghost-btn"
                    href="<?= h($baseUrl) ?>/accounting/revenue_edit.php?id=<?= urlencode((string)$row['id']) ?>">編集</a>
+                <?php if ($row['is_invoiced']): ?>
+                  <form method="post" data-confirm="<?= h(sprintf('%d年%d月の請求済みフラグを解除しますか？複数月まとめて再請求する場合は対象月すべてで実行してください。', $row['year'], $row['month'])) ?>">
+                    <input type="hidden" name="action" value="uninvoice">
+                    <input type="hidden" name="id" value="<?= h((string)$row['id']) ?>">
+                    <button class="warning-btn" type="submit" style="font-size:11px;padding:4px 8px;">未請求に戻す</button>
+                  </form>
+                <?php endif; ?>
                 <form method="post" data-confirm="この収益データを削除しますか？">
                   <input type="hidden" name="action" value="delete">
                   <input type="hidden" name="id" value="<?= h((string)$row['id']) ?>">
