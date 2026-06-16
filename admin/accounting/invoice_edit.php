@@ -123,6 +123,9 @@ $defaultFx = (float)$settings['fx_default_rate'];
 $fxApiKey = isset($settings['fx_api_key']) ? (string)$settings['fx_api_key'] : '';
 $incomeCategories = accounting_fetch_categories($pdo, 'income');
 
+// ページ読み込み時に最新レートを自動取得（キャッシュ利用・失敗時はデフォルト）
+$autoFxRate = accounting_get_live_fx_rate($pdo, $config, $settings);
+
 $form = [
     'mode'         => $mode,
     'division'     => $division,
@@ -132,7 +135,7 @@ $form = [
     'project_id'   => $preProjectId,
     'year'         => date('Y'),
     'month'        => date('n'),
-    'fx_rate'      => number_format($defaultFx, 4, '.', ''),
+    'fx_rate'      => number_format($autoFxRate, 4, '.', ''),
     'note'         => (string)$settings['office_invoice_note'],
     'due_date'     => '',
     'payment_bank_info' => (string)$settings['office_bank_info'],
@@ -159,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $form['project_id']   = isset($_POST['project_id']) ? (string)$_POST['project_id'] : '';
     $form['year']         = isset($_POST['year'])       ? (string)$_POST['year']       : date('Y');
     $form['month']        = isset($_POST['month'])      ? (string)$_POST['month']      : date('n');
-    $form['fx_rate']      = isset($_POST['fx_rate'])    ? (string)$_POST['fx_rate']    : number_format($defaultFx, 4, '.', '');
+    $form['fx_rate']      = isset($_POST['fx_rate'])    ? (string)$_POST['fx_rate']    : number_format($autoFxRate, 4, '.', '');
     $form['note']         = isset($_POST['note'])       ? (string)$_POST['note']       : '';
     $form['due_date']     = isset($_POST['due_date'])   ? (string)$_POST['due_date']   : '';
     $form['payment_bank_info'] = isset($_POST['payment_bank_info']) ? (string)$_POST['payment_bank_info'] : '';
