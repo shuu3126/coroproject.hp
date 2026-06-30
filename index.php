@@ -246,21 +246,25 @@ render_header('', false);
             <span>FOR COMPANY</span>
             <h3>企業・ブランド担当者</h3>
             <p>VTuber起用のPR案件、タイアップ、イベント出演など。CREDiTで条件を入力するだけで、審査済みのVTuber・クリエイターに一括打診できます。</p>
+            <a href="https://credit.coroproject.jp/offer/" class="card-link" target="_blank" rel="noopener noreferrer">OPEN CREDIT <span aria-hidden="true">›</span></a>
           </article>
           <article class="route-card cyber-clip-lg">
             <span>FOR CREATOR</span>
             <h3>クリエイター・制作者</h3>
             <p>Live2D・イラスト・動画編集・楽曲制作など、VTuber向けスキルをお持ちの方。CREDiTクリエイター登録で、審査済みの案件に出会えます。</p>
+            <a href="https://credit.coroproject.jp/register/" class="card-link" target="_blank" rel="noopener noreferrer">REGISTER NOW <span aria-hidden="true">›</span></a>
           </article>
           <article class="route-card cyber-clip-lg">
             <span>FOR VTUBER</span>
             <h3>VTuber・配信者</h3>
             <p>活動支援・マネジメント・案件紹介。事務所所属のご相談、またはCREDiTへのVTuber登録（審査制）はこちらから。</p>
+            <a href="<?= $basePath ?>/production/" class="card-link">ENTER AGENCY <span aria-hidden="true">›</span></a>
           </article>
           <article class="route-card cyber-clip-lg">
             <span>FOR PARTNER</span>
             <h3>メディア・提携・協業</h3>
             <p>取材・掲載・業務提携・共同企画のご相談はお気軽に。CORO PROJECTの事業に共鳴していただける方をお待ちしています。</p>
+            <a href="<?= $basePath ?>/contact.php" class="card-link">CONTACT US <span aria-hidden="true">›</span></a>
           </article>
         </div>
       </section>
