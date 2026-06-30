@@ -1,104 +1,67 @@
 <?php
 require_once __DIR__ . '/includes/layout.php';
 
-$pageTitle = $siteName . ' | VTuber・案件仲介・クリエイティブ支援の総合ポータル';
-$pageDescription = 'CORO PROJECTの総合ポータル。VTuber事務所、企業向け案件仲介、クリエイティブ支援を一体で案内し、活動設計・案件提案・制作進行の相談窓口へつなぎます。';
-$ogDescription = 'VTuber事務所、企業向け案件仲介、クリエイティブ支援を一体で案内するCORO PROJECTの総合ポータル。';
-$homeUrl = 'https://coroproject.jp/';
-$ogImage = 'https://coroproject.jp/images/ogp.png';
+$pageTitle       = 'CORO PROJECT | VTuber事務所 × B2Bマッチングプラットフォーム CREDiT';
+$pageDescription = 'CORO PROJECTは、VTuber事務所「Production」と業界特化B2BプラットフォームCREDiTを運営。タレント育成から企業案件マッチング・クリエイター連携まで、VTuber業界のインフラを構築します。';
+$homeUrl         = 'https://coroproject.jp/';
+$ogImage         = 'https://coroproject.jp/images/ogp.png';
+
 $homeJsonLd = [
     '@context' => 'https://schema.org',
-    '@graph' => [
+    '@graph'   => [
+        ['@type' => 'Organization', 'name' => 'CORO PROJECT', 'url' => $homeUrl, 'logo' => 'https://coroproject.jp/images/logo.png'],
+        ['@type' => 'WebSite',      'name' => 'CORO PROJECT', 'url' => $homeUrl],
+        ['@type' => 'WebPage',      'name' => $pageTitle, 'url' => $homeUrl, 'description' => $pageDescription],
         [
-            '@type' => 'Organization',
-            'name' => 'CORO PROJECT',
-            'url' => $homeUrl,
-            'logo' => 'https://coroproject.jp/images/logo.png',
-        ],
-        [
-            '@type' => 'WebSite',
-            'name' => 'CORO PROJECT',
-            'url' => $homeUrl,
-        ],
-        [
-            '@type' => 'WebPage',
-            'name' => $pageTitle,
-            'url' => $homeUrl,
-            'description' => $ogDescription,
-            'isPartOf' => [
-                '@type' => 'WebSite',
-                'name' => 'CORO PROJECT',
-                'url' => $homeUrl,
-            ],
-        ],
-        [
-            '@type' => 'ItemList',
-            'name' => 'CORO PROJECTの事業一覧',
+            '@type'           => 'ItemList',
+            'name'            => 'CORO PROJECTの事業',
             'itemListElement' => [
-                [
-                    '@type' => 'ListItem',
-                    'position' => 1,
-                    'name' => 'Business Matching',
-                    'url' => 'https://coroproject.jp/business/',
-                ],
-                [
-                    '@type' => 'ListItem',
-                    'position' => 2,
-                    'name' => 'Creative Support',
-                    'url' => 'https://coroproject.jp/creative/',
-                ],
-                [
-                    '@type' => 'ListItem',
-                    'position' => 3,
-                    'name' => 'Production',
-                    'url' => 'https://coroproject.jp/production/',
-                ],
+                ['@type' => 'ListItem', 'position' => 1, 'name' => 'CREDiT B2Bマッチング',  'url' => 'https://credit.coroproject.jp/'],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Production VTuber事務所', 'url' => $homeUrl . 'production/'],
             ],
         ],
     ],
 ];
 
 render_head($siteName, $pageDescription, [
-    'title' => $pageTitle,
-    'canonical' => $homeUrl,
-    'robots' => 'index, follow',
-    'og_type' => 'website',
-    'og_title' => $pageTitle,
-    'og_description' => $ogDescription,
-    'og_url' => $homeUrl,
-    'og_image' => $ogImage,
-    'json_ld' => $homeJsonLd,
-    'shell_class' => 'page-shell',
+    'title'          => $pageTitle,
+    'canonical'      => $homeUrl,
+    'robots'         => 'index, follow',
+    'og_type'        => 'website',
+    'og_title'       => $pageTitle,
+    'og_description' => $pageDescription,
+    'og_url'         => $homeUrl,
+    'og_image'       => $ogImage,
+    'json_ld'        => $homeJsonLd,
+    'shell_class'    => 'page-shell',
 ]);
 render_header('', false);
 ?>
     <main>
+
+      <!-- ═══ HERO ═══ -->
       <section class="hero-section">
-        <div class="hero-marquee hero-marquee-top">
-          <div class="marquee-track">CORO PROJECT // VTUBER PRODUCTION // NEXT GENERATION // CORO PROJECT // VTUBER PRODUCTION //</div>
-        </div>
-        <div class="hero-marquee hero-marquee-bottom">
-          <div class="marquee-track reverse">CREATIVE SUPPORT // BUSINESS MATCHING // CREATIVE SUPPORT // BUSINESS MATCHING //</div>
-        </div>
-
-        <div class="hero-hud hero-hud-left">SYS.VER.1.0.4<br>STATUS: ONLINE</div>
-        <div class="hero-hud hero-hud-right">TARGET: ACQUIRED<br>COORD: 35.6895° N, 139.6917° E</div>
-
         <div class="container hero-content reveal">
-          <div class="hero-label cyber-clip">VTuber Total Solutions</div>
+          <div class="hero-label cyber-clip">VTuber事務所 × B2B Platform</div>
           <h1 class="hero-title">
-            VTuberと企業・クリエイターを<br>
-            <span>つなぎ、可能性を拡張する。</span>
+            VTuber業界を、<br>
+            <span>インフラから変える。</span>
           </h1>
           <p class="hero-lead">
-            CORO PROJECTは、VTuber事務所運営を軸に、<br class="hide-mobile">
-            活動設計、企業案件の接続、制作進行までを一つの導線で支える総合支援ブランドです。
+            CORO PROJECTは<strong>VTuber事務所「Production」</strong>と<strong>業界特化B2Bマッチング「CREDiT」</strong>の<br class="hide-mobile">
+            2事業を展開。タレントの育成から企業の案件接続まで、VTuber業界の基盤を担います。
           </p>
         </div>
 
-        <div class="container cards-grid reveal" id="services">
-          <?php foreach ($divisions as $division): ?>
-            <a class="division-card cyber-clip-lg <?= h($division['class']) ?>" href="<?= h($basePath . '/' . $division['slug'] . '/') ?>">
+        <!-- 2ピラー ポータルカード -->
+        <div class="container cards-grid reveal" id="services" style="grid-template-columns: repeat(2, minmax(0,1fr)); max-width: 960px;">
+          <?php foreach ($divisions as $division):
+            $url    = $division['url'] ?? ($basePath . '/' . $division['slug'] . '/');
+            $isExt  = !empty($division['url']);
+          ?>
+            <a class="division-card cyber-clip-lg <?= h($division['class']) ?>"
+               href="<?= h($url) ?>"
+               <?= $isExt ? 'target="_blank" rel="noopener noreferrer"' : '' ?>>
               <div class="corner corner-tl"></div>
               <div class="card-top">
                 <span class="card-num"><?= h($division['num']) ?></span>
@@ -108,7 +71,7 @@ render_header('', false);
               <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
               <p class="card-desc"><?= h($division['desc']) ?></p>
               <span class="card-link">
-                <span class="card-link-main">ENTER</span>
+                <span class="card-link-main"><?= $isExt ? 'OPEN PLATFORM' : 'ENTER' ?></span>
                 <span aria-hidden="true">›</span>
               </span>
             </a>
@@ -121,56 +84,91 @@ render_header('', false);
         </div>
       </section>
 
+      <!-- ═══ WHAT WE DO ═══ -->
       <section class="content-section content-section-alt">
         <div class="container section-head reveal">
           <div class="section-title-wrap">
             <span class="pink-bar"></span>
             <div>
-              <span class="section-sub">WHY INTEGRATED</span>
-              <h2 class="section-title">分断されやすい仕事を、ひとつの流れにする。</h2>
+              <span class="section-sub">TWO PILLARS</span>
+              <h2 class="section-title">2つの事業が、業界を動かす。</h2>
             </div>
           </div>
-          <p class="section-note">VTuber活動は、配信だけで完結しません。企画、営業、制作、告知、権利確認、納期管理が同時に動くからこそ、相談窓口を分けすぎない設計が必要です。</p>
+          <p class="section-note">
+            事務所としてタレントを育て、プラットフォームで業界取引を効率化する。<br class="hide-mobile">
+            この2事業の連携が、VTuber業界に新しい価値軸をつくります。
+          </p>
+        </div>
+        <div class="container info-grid reveal" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+          <?php foreach ($divisions as $division):
+            $url   = $division['url'] ?? ($basePath . '/' . $division['slug'] . '/');
+            $isExt = !empty($division['url']);
+          ?>
+            <article class="info-card cyber-clip-lg <?= h($division['class']) ?>">
+              <div class="corner corner-tl"></div>
+              <span class="info-num"><?= h($division['num']) ?></span>
+              <span class="info-eyebrow"><?= h($division['title']) ?></span>
+              <h3><?= h($division['title_jp']) ?></h3>
+              <p><?= h($division['summary']) ?></p>
+              <a href="<?= h($url) ?>" class="card-link" <?= $isExt ? 'target="_blank" rel="noopener noreferrer"' : '' ?>>
+                <span class="card-link-main">OPEN</span>
+                <span class="card-link-name"><?= h($division['title_jp']) ?></span>
+                <span aria-hidden="true">›</span>
+              </a>
+            </article>
+          <?php endforeach; ?>
+        </div>
+      </section>
+
+      <!-- ═══ WHY INTEGRATED ═══ -->
+      <section class="content-section">
+        <div class="container section-head reveal">
+          <div class="section-title-wrap">
+            <span class="pink-bar"></span>
+            <div>
+              <span class="section-sub">WHY CORO PROJECT</span>
+              <h2 class="section-title">事務所とプラットフォームを、一社で持つ理由。</h2>
+            </div>
+          </div>
         </div>
         <div class="container insight-grid reveal">
           <article class="insight-card cyber-clip-lg">
             <span class="insight-index">01</span>
-            <h3>活動者の魅力を、案件で消費しない</h3>
-            <p>タレントの人格、世界観、活動ペースを理解したうえで、無理に案件へ当てはめず、長く応援される見せ方へ整えます。</p>
+            <h3>現場感覚で作るプラットフォーム</h3>
+            <p>実際にVTuberを運営しているからこそ、業界の商慣行・問題点・ニーズを肌感覚で理解しています。CREDiTは「使う側」が作ったB2Bインフラです。</p>
           </article>
           <article class="insight-card cyber-clip-lg">
             <span class="insight-index">02</span>
-            <h3>企業の目的を、施策に翻訳する</h3>
-            <p>商品紹介、認知拡大、来店促進、採用広報など、目的によって必要な出演形式や制作物は変わります。最初の相談段階から整理します。</p>
+            <h3>三者全員に価値を届ける構造</h3>
+            <p>VTuber・クリエイター・企業の三者が安心して取引できる仕組みを設計。クレジットツリー・契約書自動生成・インボイス対応で、業界の商慣行を近代化します。</p>
           </article>
           <article class="insight-card cyber-clip-lg">
             <span class="insight-index">03</span>
-            <h3>制作物まで含めて進行を止めない</h3>
-            <p>サムネイル、告知画像、動画、配信画面、ロゴなど、案件や活動に必要な素材を制作相談へつなげ、実行までの抜け漏れを減らします。</p>
+            <h3>タレントの価値を最大化する一貫支援</h3>
+            <p>事務所で培ったマネジメントノウハウと、プラットフォームの案件データを組み合わせ、所属タレントが最適な案件・制作パートナーと出会える環境を整えます。</p>
           </article>
         </div>
       </section>
 
+      <!-- ═══ ABOUT ═══ -->
       <section class="about-section" id="about">
         <div class="container about-grid">
           <div class="about-copy reveal">
             <div class="section-marker">
               <span class="marker-bar"></span>
-              <span class="marker-text">MISSION OBJECTIVE</span>
+              <span class="marker-text">MISSION</span>
             </div>
             <h2>
-              VTuberという新時代の才能を、<br>
+              VTuberという才能を、<br>
               一過性のブームではなく、<br>
-              多角的な価値へと<span>変革</span>していく。
+              持続可能な<span>産業</span>にする。
             </h2>
             <div class="about-text">
               <p>
-                CORO PROJECTは、単なるタレント事務所に留まりません。企業とタレントが互いの価値を高め合える案件の創出、
-                クリエイターのスキルを最適な形で接続する仕組み、そしてそれらを支える確かなマネジメントを構築します。
+                CORO PROJECTは、VTuber事務所の現場から生まれた会社です。タレント運営を通じて見えてきた業界課題——不透明な取引・契約トラブル・制作パートナーとのミスマッチ——をテクノロジーで解決するためにCREDiTを立ち上げました。
               </p>
               <p>
-                大切にしているのは、短期的な話題づくりだけではなく、活動者・企業・制作パートナーが安心して関わり続けられる状態をつくること。
-                「三方よし」の精神で、VTuber業界のさらなる成熟と、そこに集うすべての人々の可能性を最大化することを使命としています。
+                事務所とプラットフォームを同時に運営することで、理論ではなく実体験に基づいたサービス改善を継続。VTuber・クリエイター・企業の三者が安心して関わり続けられる業界インフラの構築が、私たちの使命です。
               </p>
             </div>
             <a href="about.php" class="outline-button cyber-clip">ABOUT CORO PROJECT <span aria-hidden="true">›</span></a>
@@ -179,7 +177,7 @@ render_header('', false);
           <div class="about-visual reveal">
             <div class="visual-frame cyber-clip-lg">
               <div class="visual-gradient"></div>
-              <video class="visual-video" src="images/short/short1.mp4" autoplay muted loop playsinline preload="metadata" aria-label="青海しび ゲームプレイ動画"></video>
+              <video class="visual-video" src="images/short/short1.mp4" autoplay muted loop playsinline preload="metadata" aria-label="CORO PROJECT 所属タレント"></video>
               <div class="frame-corner frame-corner-tl"></div>
               <div class="frame-corner frame-corner-br"></div>
               <div class="visual-caption">
@@ -191,71 +189,44 @@ render_header('', false);
         </div>
       </section>
 
-      <section class="content-section service-overview">
+      <!-- ═══ FOR WHOM ═══ -->
+      <section class="content-section content-section-alt">
         <div class="container section-head reveal">
           <div class="section-title-wrap">
             <span class="pink-bar"></span>
             <div>
-              <span class="section-sub">SERVICE OVERVIEW</span>
-              <h2 class="section-title">3つの窓口で、活動と案件と制作を止めない。</h2>
+              <span class="section-sub">CONTACT ROUTES</span>
+              <h2 class="section-title">あなたの立場から、入口を選んでください。</h2>
             </div>
           </div>
-          <a href="service.php" class="ghost-link cyber-clip">VIEW SERVICE PAGE <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="container info-grid reveal">
-          <?php foreach ($divisions as $division): ?>
-            <article class="info-card cyber-clip-lg <?= h($division['class']) ?>">
-              <div class="corner corner-tl"></div>
-              <span class="info-num"><?= h($division['num']) ?></span>
-              <span class="info-eyebrow"><?= h($division['title']) ?></span>
-              <h3><?= h($division['title_jp']) ?></h3>
-              <p><?= h($division['summary']) ?></p>
-              <a href="<?= h($division['slug']) ?>/" class="card-link">
-                <span class="card-link-main">OPEN</span>
-                <span class="card-link-name"><?= h($division['title_jp']) ?></span>
-                <span aria-hidden="true">›</span>
-              </a>
-            </article>
-          <?php endforeach; ?>
-        </div>
-      </section>
-
-      <section class="content-section">
-        <div class="container section-head reveal">
-          <div class="section-title-wrap">
-            <span class="pink-bar"></span>
-            <div>
-              <span class="section-sub">CONSULTATION ROUTES</span>
-              <h2 class="section-title">相談内容から、最適な入口を選べます。</h2>
-            </div>
-          </div>
-          <a href="contact.php" class="ghost-link cyber-clip">START CONSULTATION <span aria-hidden="true">→</span></a>
+          <a href="contact.php" class="ghost-link cyber-clip">お問い合わせ <span aria-hidden="true">→</span></a>
         </div>
         <div class="container route-grid reveal">
           <article class="route-card cyber-clip-lg">
             <span>FOR COMPANY</span>
-            <h3>企業案件・PR施策</h3>
-            <p>商品紹介、サービス認知、イベント出演、SNS施策など、目的に合わせてVTuber起用の形を整理します。</p>
+            <h3>企業・ブランド担当者</h3>
+            <p>VTuber起用のPR案件、タイアップ、イベント出演など。CREDiTで条件を入力するだけで、審査済みのVTuber・クリエイターに一括打診できます。</p>
           </article>
           <article class="route-card cyber-clip-lg">
             <span>FOR CREATOR</span>
-            <h3>制作・デザイン相談</h3>
-            <p>イラスト、動画、配信素材、ロゴなど、活動や案件に必要な制作物を依頼しやすい粒度に整えます。</p>
+            <h3>クリエイター・制作者</h3>
+            <p>Live2D・イラスト・動画編集・楽曲制作など、VTuber向けスキルをお持ちの方。CREDiTクリエイター登録で、審査済みの案件に出会えます。</p>
           </article>
           <article class="route-card cyber-clip-lg">
-            <span>FOR TALENT</span>
-            <h3>所属・活動相談</h3>
-            <p>活動方針、企画、案件対応、制作の悩みまで、継続して活動するために必要な支援を一緒に確認します。</p>
+            <span>FOR VTUBER</span>
+            <h3>VTuber・配信者</h3>
+            <p>活動支援・マネジメント・案件紹介。事務所所属のご相談、またはCREDiTへのVTuber登録（審査制）はこちらから。</p>
           </article>
           <article class="route-card cyber-clip-lg">
             <span>FOR PARTNER</span>
-            <h3>提携・取材・協業</h3>
-            <p>メディア掲載、共同企画、業務提携など、CORO PROJECTとの接点を広げる相談を受け付けています。</p>
+            <h3>メディア・提携・協業</h3>
+            <p>取材・掲載・業務提携・共同企画のご相談はお気軽に。CORO PROJECTの事業に共鳴していただける方をお待ちしています。</p>
           </article>
         </div>
       </section>
 
-      <section class="content-section content-section-alt" id="news-preview">
+      <!-- ═══ NEWS ═══ -->
+      <section class="content-section" id="news-preview">
         <div class="container section-head reveal">
           <div class="section-title-wrap">
             <span class="pink-bar"></span>
@@ -281,19 +252,21 @@ render_header('', false);
         </div>
       </section>
 
+      <!-- ═══ CTA ═══ -->
       <section class="cta-section" id="contact">
         <video class="cta-bg-video" src="images/short/short1.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
         <div class="cta-beam"></div>
         <div class="container cta-inner reveal">
-          <div class="mini-tag">SYSTEM_PROMPT: NEXT_STEP</div>
-          <h2>企画の種を、<br>実行できる導線へ。</h2>
-          <p class="cta-lead">相談内容がまだ曖昧でも大丈夫です。目的、予算感、希望時期、必要な制作物を整理しながら、最初に開くべき窓口へつなぎます。</p>
+          <div class="mini-tag">NEXT_STEP</div>
+          <h2>まず、話してみてください。</h2>
+          <p class="cta-lead">企業案件のご相談、VTuber登録、クリエイター参加、事業提携——どんな入口でも大丈夫です。<br class="hide-mobile">目的を整理するところから、一緒に始めましょう。</p>
           <div class="cta-actions">
             <a href="contact.php" class="primary-button cyber-clip">CONTACT US</a>
-            <a href="service.php" class="secondary-button cyber-clip">SERVICE / SYSTEM DETAIL</a>
+            <a href="https://credit.coroproject.jp/" class="secondary-button cyber-clip" target="_blank" rel="noopener noreferrer">CREDiT を見る</a>
           </div>
         </div>
       </section>
+
     </main>
 
 <?php render_footer(); ?>

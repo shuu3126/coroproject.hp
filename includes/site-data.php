@@ -4,31 +4,24 @@ $basePath = '.';
 
 $divisions = [
     [
-        'slug' => 'business',
-        'title' => 'Business Matching',
-        'title_jp' => '案件仲介',
-        'desc' => 'VTuberの個性と企業の目的を照合し、PR配信・出演・SNS施策まで実行しやすい形に整えます。',
-        'class' => 'is-cyan',
-        'num' => '01',
-        'summary' => '企業担当者向けに、PR配信、イベント出演、SNS施策、アンバサダー提案などを支援。目的整理、候補提案、条件調整、制作物確認、当日進行まで、案件が止まりやすい部分をまとめて伴走します。'
+        'slug'     => 'credit',
+        'url'      => 'https://credit.coroproject.jp/',
+        'title'    => 'CREDiT',
+        'title_jp' => 'B2Bマッチング',
+        'desc'     => 'VTuber・クリエイター・企業の三者をつなぐ業界特化B2Bプラットフォーム。案件打診から契約・請求まで一貫対応。',
+        'class'    => 'is-cyan',
+        'num'      => '01',
+        'summary'  => '審査済みVTuber・クリエイターへの案件打診、条件フィルタ検索、クレジットツリー管理、契約書自動生成、インボイス対応請求書発行まで。企業担当者の案件打診が30分以内で完了する業界インフラ。',
     ],
     [
-        'slug' => 'creative',
-        'title' => 'Creative Support',
-        'title_jp' => 'クリエイティブ支援',
-        'desc' => '活動の世界観を崩さずに、ビジュアル・動画・配信素材など必要な制作物を整えます。',
-        'class' => 'is-pink',
-        'num' => '02',
-        'summary' => '立ち絵、キービジュアル、サムネイル、MV、配信画面、ロゴなど、VTuber活動に必要な制作物の相談窓口として機能します。依頼内容の言語化、クリエイター選定、進行管理、納品前確認まで支援します。'
-    ],
-    [
-        'slug' => 'production',
-        'title' => 'Production',
+        'slug'     => 'production',
+        'url'      => null,
+        'title'    => 'Production',
         'title_jp' => 'VTuber事務所',
-        'desc' => 'タレントの個性・生活リズム・成長段階に合わせて、長く続けられる活動環境を設計します。',
-        'class' => 'is-indigo',
-        'num' => '03',
-        'summary' => '所属タレントの活動支援、マネジメント、プロモーションを担い、配信・企画・案件・制作を無理なく接続します。短期的な話題化だけでなく、継続して応援される状態づくりを重視します。'
+        'desc'     => '所属タレントの活動を全方位で支援。配信・企画・案件・制作を無理なく接続し、長く応援される環境を設計します。',
+        'class'    => 'is-pink',
+        'num'      => '02',
+        'summary'  => 'タレントの個性・生活リズム・成長段階に合わせた活動設計。企業案件の接続、クリエイターとの制作連携、SNS運用支援まで、マネジメントを一括伴走します。',
     ],
 ];
 
@@ -84,7 +77,7 @@ $newsItems = [
 ];
 
 $dbNewsItems = load_news_items_from_database();
-if ($dbNewsItems !== null) {
+if (!empty($dbNewsItems)) {
     $newsItems = $dbNewsItems;
 }
 
