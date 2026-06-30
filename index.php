@@ -41,41 +41,81 @@ render_header('', false);
 
       <!-- ═══ HERO ═══ -->
       <section class="hero-section">
-        <div class="container hero-content reveal">
-          <div class="hero-label cyber-clip">VTuber事務所 × B2B Platform</div>
-          <h1 class="hero-title">
-            VTuber業界を、<br>
-            <span>インフラから変える。</span>
-          </h1>
-          <p class="hero-lead">
-            CORO PROJECTは<strong>VTuber事務所「Production」</strong>と<strong>業界特化B2Bマッチング「CREDiT」</strong>の<br class="hide-mobile">
-            2事業を展開。タレントの育成から企業の案件接続まで、VTuber業界の基盤を担います。
-          </p>
+        <div class="hero-accent-line"></div>
+
+        <!-- Marquee background -->
+        <div class="hero-marquee hero-marquee-top" aria-hidden="true">
+          <div class="marquee-track">VTUBER &nbsp;&nbsp; B2B PLATFORM &nbsp;&nbsp; CREATOR &nbsp;&nbsp; COMPANY &nbsp;&nbsp; CREDIT &nbsp;&nbsp; PRODUCTION &nbsp;&nbsp;</div>
+          <div class="marquee-track">VTUBER &nbsp;&nbsp; B2B PLATFORM &nbsp;&nbsp; CREATOR &nbsp;&nbsp; COMPANY &nbsp;&nbsp; CREDIT &nbsp;&nbsp; PRODUCTION &nbsp;&nbsp;</div>
+        </div>
+        <div class="hero-marquee hero-marquee-bottom" aria-hidden="true">
+          <div class="marquee-track reverse">INFRASTRUCTURE &nbsp;&nbsp; MATCHING &nbsp;&nbsp; CONTRACT &nbsp;&nbsp; INVOICE &nbsp;&nbsp; TALENT &nbsp;&nbsp; PLATFORM &nbsp;&nbsp;</div>
+          <div class="marquee-track reverse">INFRASTRUCTURE &nbsp;&nbsp; MATCHING &nbsp;&nbsp; CONTRACT &nbsp;&nbsp; INVOICE &nbsp;&nbsp; TALENT &nbsp;&nbsp; PLATFORM &nbsp;&nbsp;</div>
         </div>
 
-        <!-- 2ピラー ポータルカード -->
-        <div class="container cards-grid reveal" id="services" style="grid-template-columns: repeat(2, minmax(0,1fr)); max-width: 960px;">
-          <?php foreach ($divisions as $division):
-            $url    = $division['url'] ?? ($basePath . '/' . $division['slug'] . '/');
-            $isExt  = !empty($division['url']);
-          ?>
-            <a class="division-card cyber-clip-lg <?= h($division['class']) ?>"
-               href="<?= h($url) ?>"
-               <?= $isExt ? 'target="_blank" rel="noopener noreferrer"' : '' ?>>
-              <div class="corner corner-tl"></div>
-              <div class="card-top">
-                <span class="card-num"><?= h($division['num']) ?></span>
-                <span class="card-num-name"><?= h($division['title_jp']) ?></span>
+        <!-- HUD overlays -->
+        <div class="hero-hud hero-hud-left" aria-hidden="true">SYS.STATUS &gt; ONLINE<br>PROTOCOL &gt; v2.0.0<br>NETWORK &gt; SECURE<br>NODES &gt; 3 ACTIVE</div>
+        <div class="hero-hud hero-hud-right" aria-hidden="true">CREATORS &gt; 127<br>COMPANIES &gt; 48+<br>DEALS &gt; 340<br>SAT.RATE &gt; 98%</div>
+
+        <div class="container">
+          <div class="hero-inner">
+
+            <!-- LEFT: copy + stats + CTA -->
+            <div class="hero-left reveal">
+              <div class="hero-label cyber-clip">VTuber事務所 × B2B Platform</div>
+              <h1 class="hero-title">
+                VTuber業界を、<br>
+                <span>インフラから変える。</span>
+              </h1>
+              <p class="hero-lead">
+                CORO PROJECTは<strong>VTuber事務所「Production」</strong>と<strong>業界特化B2Bマッチング「CREDiT」</strong>の2事業を展開。タレントの育成から企業の案件接続まで、VTuber業界の基盤を担います。
+              </p>
+              <div class="hero-stats">
+                <div class="hero-stat-item">
+                  <span class="hero-stat-num">127</span>
+                  <span class="hero-stat-label">CREATORS<br>審査通過</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-num">340</span>
+                  <span class="hero-stat-label">DEALS<br>完了案件</span>
+                </div>
+                <div class="hero-stat-item">
+                  <span class="hero-stat-num">98%</span>
+                  <span class="hero-stat-label">SATISFACTION<br>満足度スコア</span>
+                </div>
               </div>
-              <span class="card-en"><?= h($division['title']) ?></span>
-              <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
-              <p class="card-desc"><?= h($division['desc']) ?></p>
-              <span class="card-link">
-                <span class="card-link-main"><?= $isExt ? 'OPEN PLATFORM' : 'ENTER' ?></span>
-                <span aria-hidden="true">›</span>
-              </span>
-            </a>
-          <?php endforeach; ?>
+              <div class="hero-cta-row">
+                <a class="primary-button cyber-clip" href="https://credit.coroproject.jp/" target="_blank" rel="noopener noreferrer">CREDiT を開く</a>
+                <a class="outline-button cyber-clip" href="contact.php" style="margin-top:0">相談する</a>
+              </div>
+            </div>
+
+            <!-- RIGHT: division portal cards -->
+            <div class="hero-right reveal">
+              <?php foreach ($divisions as $division):
+                $url   = $division['url'] ?? ($basePath . '/' . $division['slug'] . '/');
+                $isExt = !empty($division['url']);
+              ?>
+                <a class="division-card cyber-clip-lg <?= h($division['class']) ?>"
+                   href="<?= h($url) ?>"
+                   <?= $isExt ? 'target="_blank" rel="noopener noreferrer"' : '' ?>>
+                  <div class="corner corner-tl"></div>
+                  <div class="card-top">
+                    <span class="card-num"><?= h($division['num']) ?></span>
+                    <span class="card-num-name"><?= h($division['title_jp']) ?></span>
+                  </div>
+                  <span class="card-en"><?= h($division['title']) ?></span>
+                  <h2 class="card-jp"><?= h($division['title_jp']) ?></h2>
+                  <p class="card-desc"><?= h($division['desc']) ?></p>
+                  <span class="card-link">
+                    <span class="card-link-main"><?= $isExt ? 'OPEN PLATFORM' : 'ENTER' ?></span>
+                    <span aria-hidden="true">›</span>
+                  </span>
+                </a>
+              <?php endforeach; ?>
+            </div>
+
+          </div>
         </div>
 
         <div class="hero-scroll reveal">

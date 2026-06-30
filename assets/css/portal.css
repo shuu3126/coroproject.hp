@@ -1719,3 +1719,71 @@ body {
     min-width: 0;
   }
 }
+
+/* ═══ HERO REDESIGN ADDITIONS ═══ */
+
+.hero-accent-line {
+  position: absolute; top: 78px; left: 0; right: 0; height: 1px; z-index: 2; pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, var(--cyan) 25%, var(--pink) 60%, var(--indigo) 85%, transparent 100%);
+  box-shadow: 0 0 18px rgba(34,211,238,.35);
+  opacity: .6;
+}
+
+.hero-section::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(34,211,238,.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 80%);
+}
+
+.hero-section { overflow: hidden; }
+
+.hero-inner {
+  position: relative; z-index: 2;
+  display: grid; grid-template-columns: 1.1fr .9fr; gap: 64px; align-items: center;
+  padding: 0 0 40px;
+}
+
+.hero-hud-left { top: 100px; left: 40px; }
+.hero-hud-right { right: 40px; top: 100px; bottom: auto; }
+
+.hero-left { display: flex; flex-direction: column; }
+
+.hero-right { display: flex; flex-direction: column; gap: 24px; }
+
+.hero-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  margin: 36px 0 0; padding: 28px 0;
+  border-top: 1px solid rgba(255,255,255,.10);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.hero-stat-item { display: flex; flex-direction: column; gap: 6px; }
+
+.hero-stat-num {
+  font-family: var(--display); font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 900; font-style: italic; line-height: 1; color: var(--cyan);
+}
+
+.hero-stat-label {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted); line-height: 1.5;
+}
+
+.hero-cta-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 32px; align-items: center; }
+.hero-cta-row .outline-button { margin-top: 0; }
+
+@media (max-width: 1120px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 48px; padding: 0 0 40px; }
+  .hero-right { flex-direction: row; }
+  .hero-hud-left, .hero-hud-right { display: none; }
+}
+
+@media (max-width: 640px) {
+  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .hero-right { flex-direction: column; }
+  .hero-cta-row { flex-direction: column; }
+  .hero-cta-row .primary-button,
+  .hero-cta-row .outline-button { min-width: 0; width: 100%; }
+}

@@ -57,6 +57,9 @@ function render_head(string $pageTitle, string $description, array $options = []
   <link rel="apple-touch-icon" href="images/logo.png">
   <link rel="shortcut icon" href="images/logo.png">
   <link rel="stylesheet" href="assets/css/portal.css?v=20260429-content-depth">
+  <?php if (!empty($options['extra_css'])): foreach ($options['extra_css'] as $_ecss): ?>
+  <link rel="stylesheet" href="<?= h($_ecss) ?>?v=20260622">
+  <?php endforeach; endif; ?>
 </head>
 <body>
   <div class="<?= h($shellClass) ?>">
