@@ -1,0 +1,332 @@
+/*
+ * portal-v3-sub.css — サブページ（about / service / news / news_detail / contact）の
+ * ライトテーマ再塗装 (2026-07-02)
+ * portal-v3.css（トークン・ヘッダー・フッターのライト化）とセットで読み込む。
+ * 既存マークアップ・PHPロジック（NEWSフィルタ・問い合わせフォーム・DB連携）には
+ * 一切触れず、色と形だけを「White Hall, Purple Stage」に揃える方針。
+ */
+
+/* ============================================================== */
+/* 形状の統一: 六角形カット(cyber-clip)を全廃し角丸へ                */
+/* ============================================================== */
+.cyber-clip,
+.cyber-clip-lg,
+.primary-button,
+.outline-button,
+.ghost-link,
+.mini-tag,
+.filter-pill,
+.matrix-card,
+.info-card,
+.route-card,
+.principle-card,
+.division-card,
+.news-card,
+.empty-state,
+.visual-frame {
+    clip-path: none !important;
+}
+.matrix-card,
+.info-card,
+.route-card,
+.principle-card,
+.division-card,
+.news-card,
+.empty-state,
+.timeline-item,
+.role-row,
+.contact-aside-block,
+.contact-form-wrap,
+.article-shell {
+    border-radius: 18px;
+}
+.primary-button,
+.outline-button,
+.ghost-link,
+.mini-tag,
+.filter-pill {
+    border-radius: 100px;
+    font-style: normal;
+}
+.corner { display: none; }
+
+/* ============================================================== */
+/* サブページ共通の下地・見出し                                      */
+/* ============================================================== */
+.subpage-main { background: var(--v3-bg); }
+.sub-hero { background: var(--v3-bg); }
+.sub-title,
+.section-title,
+.content-title,
+.article-title {
+    font-family: var(--v3-head);
+    font-weight: 900;
+    font-style: normal;
+    letter-spacing: .01em;
+    color: var(--v3-ink);
+    text-shadow: none;
+}
+.sub-title span,
+.about-copy h2 span {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--v3-accent);
+}
+.sub-lead,
+.section-note,
+.content-copy p,
+.info-list li {
+    color: var(--v3-ink-soft);
+}
+.marker-bar,
+.pink-bar { background: var(--v3-accent); transform: none; border-radius: 3px; }
+.marker-text,
+.section-sub,
+.info-eyebrow,
+.card-en { color: var(--v3-accent); font-style: normal; }
+
+.content-section { background: var(--v3-bg-soft); border-top: 1px solid var(--v3-line); }
+.content-section-alt { background: var(--v3-bg); }
+
+/* ============================================================== */
+/* カード類（白カード＋薄い罫線＋ホバーで紫縁）                        */
+/* ============================================================== */
+.matrix-card,
+.info-card,
+.route-card,
+.principle-card,
+.division-card,
+.news-card,
+.timeline-item,
+.role-row,
+.empty-state,
+.contact-aside-block {
+    background: #fff;
+    border: 1px solid var(--v3-line);
+    box-shadow: none;
+    color: var(--v3-ink);
+}
+.matrix-card:hover,
+.info-card:hover,
+.route-card:hover,
+.principle-card:hover,
+.division-card:hover,
+.news-card:hover {
+    border-color: rgba(124, 58, 237, .45);
+    box-shadow: 0 18px 40px rgba(23, 23, 30, .1);
+    transform: translateY(-4px);
+}
+.matrix-card h3,
+.info-card h3,
+.route-card h3,
+.principle-card h3,
+.news-card h2,
+.news-card h3,
+.timeline-item h3,
+.card-jp {
+    font-family: var(--v3-head);
+    font-weight: 700;
+    font-style: normal;
+    color: var(--v3-ink);
+}
+.matrix-card p,
+.info-card p,
+.route-card p,
+.principle-card p,
+.news-card p,
+.timeline-item p,
+.card-desc { color: var(--v3-ink-soft); }
+.card-num,
+.info-num { color: rgba(124, 58, 237, .35); font-style: normal; }
+.card-link { color: var(--v3-accent); font-style: normal; }
+.card-link:hover { color: var(--v3-accent-dark); }
+.route-card > span:first-child { color: var(--v3-accent); }
+
+/* NEWS 固有 */
+.news-category {
+    background: rgba(124, 58, 237, .09) !important;
+    border: 1px solid rgba(124, 58, 237, .2) !important;
+    color: var(--v3-accent) !important;
+    border-radius: 100px;
+}
+.news-date { color: var(--v3-ink-soft); }
+.news-talent { color: var(--v3-accent); }
+.news-card-thumb {
+    border-radius: 12px;
+    /* 全件が同一フォールバック画像のとき巨大バナーの繰り返しに見えないよう高さを抑制 */
+    aspect-ratio: auto;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+}
+.filter-pill {
+    background: #fff;
+    border: 1px solid var(--v3-line);
+    color: var(--v3-ink);
+}
+.filter-pill span { color: var(--v3-ink-soft); }
+.filter-pill:hover { border-color: var(--v3-accent); color: var(--v3-accent); }
+.filter-pill.is-current {
+    background: var(--v3-accent);
+    border-color: var(--v3-accent);
+    color: #fff;
+}
+.filter-pill.is-current span { color: rgba(255, 255, 255, .8); }
+
+/* NEWS詳細（article） */
+.article-shell {
+    background: #fff;
+    border: 1px solid var(--v3-line);
+}
+.article-shell p,
+.article-follow { color: var(--v3-ink-soft); }
+.article-image { border-radius: 14px; }
+
+/* ============================================================== */
+/* ボタン・タグ                                                     */
+/* ============================================================== */
+.primary-button {
+    background: var(--v3-accent);
+    color: #fff;
+    border: 1px solid var(--v3-accent);
+    box-shadow: 0 10px 26px rgba(124, 58, 237, .26);
+}
+.primary-button:hover { background: var(--v3-accent-soft); border-color: var(--v3-accent-soft); }
+.outline-button,
+.ghost-link {
+    background: #fff;
+    border: 1px solid var(--v3-line);
+    color: var(--v3-ink);
+}
+.outline-button:hover,
+.ghost-link:hover { border-color: var(--v3-accent); color: var(--v3-accent); }
+.mini-tag {
+    background: rgba(124, 58, 237, .08);
+    border: 1px solid rgba(124, 58, 237, .22);
+    color: var(--v3-accent);
+}
+
+/* ============================================================== */
+/* ビジュアル窓（visual-frame）= 白ページ上の「紫のステージ窓」        */
+/* ============================================================== */
+.visual-frame {
+    border: none;
+    border-radius: 22px;
+    background: var(--v3-stage);
+    box-shadow: 0 28px 64px rgba(23, 23, 30, .2);
+}
+.visual-frame::after { display: none; }   /* スキャンライン装飾を無効化 */
+.frame-corner { display: none; }          /* ネオン四隅を無効化 */
+.visual-gradient { background: linear-gradient(135deg, rgba(124, 58, 237, .22), transparent 60%); }
+.visual-caption {
+    border-left: none;
+    border-radius: 12px;
+    background: rgba(16, 10, 31, .74);
+    backdrop-filter: blur(8px);
+}
+.visual-caption span { color: var(--v3-accent-soft) !important; }
+.visual-caption .talent-name {
+    background: none;
+    -webkit-text-fill-color: #fff;
+    color: #fff;
+    transform: none;
+    filter: none;
+    font-style: normal;
+    letter-spacing: .06em;
+}
+
+/* ============================================================== */
+/* CONTACT フォーム                                                 */
+/* ============================================================== */
+.contact-form-wrap {
+    background: #fff;
+    border: 1px solid var(--v3-line);
+}
+.contact-form span { color: var(--v3-ink); font-style: normal; }
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+    background: var(--v3-bg);
+    border: 1px solid var(--v3-line);
+    border-radius: 10px;
+    color: var(--v3-ink);
+}
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+    border-color: var(--v3-accent);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, .14);
+}
+.contact-form select option { background: #fff; color: var(--v3-ink); }
+.field-note { color: var(--v3-ink-soft); }
+.error-box {
+    background: rgba(225, 29, 72, .06);
+    border: 1px solid rgba(225, 29, 72, .3);
+    border-radius: 12px;
+    color: #BE123C;
+}
+.contact-info a { color: var(--v3-accent); }
+.contact-info {
+    background: var(--v3-bg);
+    border: 1px solid var(--v3-line);
+    border-radius: 18px;
+    clip-path: none !important;
+    color: var(--v3-ink-soft);
+}
+.contact-info .content-title { color: var(--v3-ink); }
+.contact-copy { color: var(--v3-ink-soft); }
+.contact-copy li { color: var(--v3-ink-soft); }
+
+/* ============================================================== */
+/* タイムライン・その他                                              */
+/* ============================================================== */
+.timeline-item { border-left: 3px solid var(--v3-accent); }
+.empty-state strong { color: var(--v3-ink); }
+.empty-state p { color: var(--v3-ink-soft); }
+
+/* ============================================================== */
+/* ダークテーマ残骸の追加除去（実写スクリーンショットで検出した分）    */
+/* ============================================================== */
+/* リード文: 暗色ボックス＋シアン縦線 → 装飾なしのプレーンな段落へ */
+.sub-lead {
+    padding: 0;
+    border-left: none;
+    background: transparent;
+    color: var(--v3-ink-soft);
+}
+/* カード上端のシアン→ピンクのグラデ線 → 紫単色の細線へ */
+.insight-card::before,
+.route-card::before,
+.principle-card::before,
+.matrix-card::before {
+    background: var(--v3-accent);
+    opacity: .55;
+    border-radius: 18px 18px 0 0;
+}
+.insight-index,
+.principle-card > span { color: var(--v3-accent); font-style: normal; }
+/* Talent / Company / Creator の行ラベル: シアン斜体 → 黒の直立体へ */
+.role-row span {
+    font-family: var(--v3-head);
+    font-style: normal;
+    color: var(--v3-ink);
+}
+.role-stack .role-row { background: #fff; }
+/* カードリンクのシアン残り（route-card/division-card内）を強制的に紫へ */
+.subpage-main .card-link { color: var(--v3-accent) !important; }
+.subpage-main .card-link:hover { color: var(--v3-accent-dark) !important; }
+/* division-cardのシアン/ピンク色分け(is-cyan/is-pink)を無効化して紫系に統一 */
+.division-card.is-cyan,
+.division-card.is-pink,
+.division-card.is-indigo {
+    color: var(--v3-accent);
+    border-color: var(--v3-line);
+}
+.division-card.is-cyan:hover,
+.division-card.is-pink:hover,
+.division-card.is-indigo:hover {
+    border-color: rgba(124, 58, 237, .45);
+    box-shadow: 0 18px 40px rgba(23, 23, 30, .1);
+}
+.card-icon { display: none; }

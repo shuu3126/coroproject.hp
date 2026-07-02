@@ -1,0 +1,926 @@
+/*
+ * portal-v3.css — Coroproject.jp 総合ページ 全面リニューアル (2026-07-02)
+ * コンセプト: 「White Hall, Purple Stage」
+ *   白基調＋大きな余白の中に、イラスト・映像の「紫のステージ窓」を限定的に嵌め込む。
+ *   VTuber業界の現場側サイト（hololive/ANYCOLOR/774 inc.等）はすべて白基調という
+ *   調査結果に基づき、ダーク基調から全面転換。
+ * このファイルは index.php でのみ読み込まれる（render_head の extra_css 経由）。
+ * portal.css（全ページ共通・ダーク）より後に読み込み、index.php 表示時のみ上書きする。
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap');
+
+:root {
+    --v3-bg: #F7F6FA;
+    --v3-bg-soft: #FFFFFF;
+    --v3-ink: #17171E;
+    --v3-ink-soft: #6B6B78;
+    --v3-accent: #7C3AED;
+    --v3-accent-soft: #9F67F5;
+    --v3-stage: #100A1F;
+    --v3-line: #E4E2EE;
+    --v3-head: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+}
+
+/* ============================================================== */
+/* 共通シェルのライトテーマ化（portal.cssのダーク装飾を無効化）      */
+/* ============================================================== */
+html { color-scheme: light; }
+body {
+    background: var(--v3-bg);
+    color: var(--v3-ink);
+    overflow-x: hidden;
+}
+.page-shell {
+    background: var(--v3-bg);
+}
+.scanlines,
+.blob { display: none; }
+
+/* ============================================================== */
+/* ヘッダー（白背景・黒テキストへ反転）                              */
+/* ============================================================== */
+.site-header.is-scrolled {
+    background: rgba(247, 246, 250, .9);
+    border-bottom: 1px solid var(--v3-line);
+}
+.brand-text {
+    color: var(--v3-ink);
+    font-style: normal;
+}
+.main-nav a {
+    color: var(--v3-ink);
+    font-style: normal;
+}
+.main-nav a:hover,
+.main-nav a.is-active { color: var(--v3-accent); }
+.status-pill {
+    color: var(--v3-ink-soft);
+    font-style: normal;
+    font-size: .72rem;
+    opacity: .55;
+}
+.status-dot { background: var(--v3-accent); }
+.site-header .nav-cta {
+    color: #fff !important;
+    background: var(--v3-accent);
+    border: 1px solid var(--v3-accent);
+    box-shadow: none;
+    border-radius: 100px;
+    clip-path: none;
+    font-style: normal;
+}
+.site-header .nav-cta:hover { background: var(--v3-accent-soft); border-color: var(--v3-accent-soft); }
+.menu-toggle { border-color: var(--v3-line); background: #fff; }
+.menu-toggle span { background: var(--v3-ink); }
+.mobile-nav {
+    background: rgba(247, 246, 250, .97);
+    border-bottom: 1px solid var(--v3-line);
+}
+.mobile-nav a { color: var(--v3-ink); font-style: normal; }
+
+/* ============================================================== */
+/* 共通パーツ                                                       */
+/* ============================================================== */
+.v3 { overflow: hidden; }
+.v3 section[id] { scroll-margin-top: 90px; }
+
+.sec3-label {
+    display: inline-block;
+    font-family: var(--mono, monospace);
+    font-size: .74rem;
+    letter-spacing: .34em;
+    text-transform: uppercase;
+    color: var(--v3-accent);
+    margin-bottom: 14px;
+}
+.sec3-title {
+    margin: 0 0 14px;
+    font-family: var(--v3-head);
+    font-weight: 900;
+    font-size: clamp(1.9rem, 3.6vw, 3rem);
+    line-height: 1.3;
+    letter-spacing: .01em;
+    color: var(--v3-ink);
+}
+.sec3-lead {
+    margin: 0;
+    color: var(--v3-ink-soft);
+    line-height: 1.9;
+}
+.sec3-head { text-align: center; margin-bottom: 56px; }
+.sec3-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.text3-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--display, sans-serif);
+    font-weight: 700;
+    font-size: .88rem;
+    letter-spacing: .12em;
+    color: var(--v3-accent);
+    transition: gap .25s ease;
+}
+.text3-link:hover { gap: 14px; }
+
+.btn3-primary,
+.btn3-ghost,
+.btn3-white,
+.btn3-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 54px;
+    padding: 0 30px;
+    border-radius: 100px;
+    font-family: var(--v3-head);
+    font-weight: 700;
+    font-size: .94rem;
+    letter-spacing: .06em;
+    transition: transform .25s ease, background .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.btn3-primary {
+    background: var(--v3-accent);
+    color: #fff;
+    box-shadow: 0 10px 28px rgba(124, 58, 237, .28);
+}
+.btn3-primary:hover { background: var(--v3-accent-soft); transform: translateY(-2px); }
+.btn3-ghost {
+    background: #fff;
+    color: var(--v3-ink);
+    border: 1px solid var(--v3-line);
+}
+.btn3-ghost:hover { border-color: var(--v3-accent); color: var(--v3-accent); transform: translateY(-2px); }
+
+/* ============================================================== */
+/* HERO                                                            */
+/* ============================================================== */
+.hero3 {
+    position: relative;
+    padding: 168px 0 96px;
+    background:
+        radial-gradient(circle at 88% 12%, rgba(124, 58, 237, .07), transparent 42%),
+        radial-gradient(circle at 6% 88%, rgba(159, 103, 245, .06), transparent 40%),
+        var(--v3-bg);
+}
+.hero3-inner {
+    display: flex;
+    align-items: center;
+    gap: clamp(40px, 5vw, 88px);
+    flex-wrap: wrap;
+}
+.hero3-copy { flex: 1 1 500px; min-width: 0; }
+.hero3-eyebrow {
+    margin: 0 0 22px;
+    font-family: var(--mono, monospace);
+    font-size: .76rem;
+    letter-spacing: .3em;
+    color: var(--v3-ink-soft);
+}
+.hero3-eyebrow span { color: var(--v3-accent); }
+.hero3-title {
+    margin: 0 0 24px;
+    font-family: var(--v3-head);
+    font-weight: 900;
+    /* 2行目「インフラから変える。」(10文字)が中間幅でも折り返さないサイズに抑える */
+    font-size: clamp(2.4rem, 4.4vw, 4rem);
+    line-height: 1.26;
+    letter-spacing: .01em;
+    color: var(--v3-ink);
+}
+.hero3-title em {
+    font-style: normal;
+    color: var(--v3-accent);
+}
+.hero3-lead {
+    max-width: 540px;
+    margin: 0 0 40px;
+    font-size: 1.02rem;
+    line-height: 2;
+    color: var(--v3-ink-soft);
+}
+.hero3-stats {
+    display: flex;
+    gap: clamp(24px, 3vw, 48px);
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+.hero3-stat { display: flex; flex-direction: column; gap: 6px; }
+.hero3-stat-num {
+    font-family: var(--display, sans-serif);
+    font-weight: 800;
+    font-size: clamp(1.9rem, 2.8vw, 2.7rem);
+    line-height: 1;
+    color: var(--v3-ink);
+}
+.hero3-stat-num small { font-size: .6em; color: var(--v3-accent); }
+.hero3-stat-label {
+    font-size: .8rem;
+    color: var(--v3-ink-soft);
+    letter-spacing: .06em;
+}
+.hero3-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+/* 紫のステージ窓（イラストの額装） */
+.hero3-stage {
+    flex: 1 1 420px;
+    position: relative;
+    min-width: 0;
+}
+.stage3-window {
+    position: relative;
+    border-radius: 24px;
+    overflow: hidden;
+    background: var(--v3-stage);
+    box-shadow: 0 32px 80px rgba(23, 23, 30, .22);
+    aspect-ratio: 4 / 3;
+}
+.stage3-window img,
+.stage3-window video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+}
+.stage3-caption {
+    position: absolute;
+    right: 22px;
+    bottom: 20px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    background: rgba(16, 10, 31, .72);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-family: var(--display, sans-serif);
+    font-weight: 700;
+    font-size: .82rem;
+    letter-spacing: .18em;
+}
+.stage3-caption span {
+    display: block;
+    margin-bottom: 3px;
+    font-size: .62rem;
+    letter-spacing: .3em;
+    color: var(--v3-accent-soft);
+}
+.stage3-blob {
+    position: absolute;
+    z-index: -1;
+    right: -70px;
+    top: -60px;
+    width: 240px;
+    height: 240px;
+    border-radius: 46% 54% 60% 40% / 50% 44% 56% 50%;
+    background: linear-gradient(140deg, rgba(159, 103, 245, .25), rgba(236, 174, 255, .18));
+    filter: blur(2px);
+    animation: v3-float-a 14s ease-in-out infinite alternate;
+}
+
+/* ── エコシステム・モック（CSSのみ）: タレント ↔ プラットフォーム ↔ 案件 ── */
+.stage3-mock {
+    background:
+        radial-gradient(circle at 30% 20%, rgba(124, 58, 237, .3), transparent 52%),
+        radial-gradient(circle at 82% 86%, rgba(90, 40, 179, .35), transparent 48%),
+        var(--v3-stage);
+}
+.mock3-grid {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, .16) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: .5;
+    mask-image: radial-gradient(circle at 50% 45%, rgba(0,0,0,.9), transparent 78%);
+    -webkit-mask-image: radial-gradient(circle at 50% 45%, rgba(0,0,0,.9), transparent 78%);
+}
+.mock3-glow {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    width: 220px;
+    height: 220px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(159, 103, 245, .4), transparent 65%);
+    filter: blur(18px);
+}
+.mock3-line {
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    top: 42%;
+    border-top: 2px dashed rgba(255, 255, 255, .28);
+}
+.mock3-pulse {
+    position: absolute;
+    left: 50%;
+    top: -6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--v3-accent-soft);
+    box-shadow: 0 0 14px rgba(159, 103, 245, .9);
+    animation: v3-pulse 2.4s ease-in-out infinite;
+}
+@keyframes v3-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.7); opacity: .6; }
+}
+.mock3-planet {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    transform: translate(-50%, -50%);
+    animation: v3-float-b 10s ease-in-out infinite alternate;
+}
+.mock3-planet img {
+    display: block;
+    width: 190px;
+    height: 190px;
+    filter: drop-shadow(0 12px 30px rgba(124, 58, 237, .45));
+}
+.mock3-card {
+    position: absolute;
+    width: 218px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 20px 44px rgba(5, 2, 12, .45);
+}
+.mock3-talent {
+    left: 7%;
+    bottom: 28%;
+    animation: v3-float-a 12s ease-in-out infinite alternate;
+}
+.mock3-deal {
+    right: 6%;
+    top: 14%;
+    animation: v3-float-b 13s ease-in-out infinite alternate;
+}
+.mock3-talent-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.mock3-avatar {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(140deg, #C4B5FD, #7C3AED);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, .35);
+}
+.mock3-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.mock3-lines i {
+    display: block;
+    height: 9px;
+    border-radius: 5px;
+    background: #E7E4F2;
+}
+.mock3-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+.mock3-tag {
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: rgba(124, 58, 237, .1);
+    color: var(--v3-accent);
+    font-family: var(--display, sans-serif);
+    font-weight: 700;
+    font-size: .62rem;
+    letter-spacing: .14em;
+}
+.mock3-tag-credit {
+    background: var(--v3-accent);
+    color: #fff;
+}
+.mock3-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--display, sans-serif);
+    font-weight: 700;
+    font-size: .62rem;
+    letter-spacing: .16em;
+    color: #E11D48;
+}
+.mock3-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #E11D48;
+    animation: v3-pulse 1.8s ease-in-out infinite;
+}
+.mock3-deal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.mock3-badge {
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: rgba(22, 163, 74, .12);
+    color: #15803D;
+    font-weight: 700;
+    font-size: .68rem;
+}
+.mock3-amount {
+    font-family: var(--display, sans-serif);
+    font-weight: 800;
+    font-size: 1.02rem;
+    color: var(--v3-ink);
+}
+.stage3-chip {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid var(--v3-line);
+    box-shadow: 0 14px 34px rgba(23, 23, 30, .12);
+    font-family: var(--v3-head);
+    font-weight: 700;
+    font-size: .8rem;
+    color: var(--v3-ink);
+    backdrop-filter: blur(6px);
+}
+.stage3-chip-1 {
+    right: -22px;
+    top: -20px;
+    animation: v3-float-b 9s ease-in-out infinite alternate;
+}
+.stage3-chip-2 {
+    left: -30px;
+    bottom: 9%;
+    animation: v3-float-a 12s ease-in-out infinite alternate;
+}
+.chip3-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--v3-accent);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, .16);
+}
+
+/* 浮遊アニメーション（transformのみ・GPU合成で完結） */
+@keyframes v3-float-a {
+    from { transform: translate3d(0, 0, 0) rotate(0deg); }
+    to   { transform: translate3d(-10px, 14px, 0) rotate(3deg); }
+}
+@keyframes v3-float-b {
+    from { transform: translate3d(0, 0, 0) rotate(0deg); }
+    to   { transform: translate3d(8px, -12px, 0) rotate(-4deg); }
+}
+
+/* ヒーロー背景の浮遊オーブ（ページに常時ゆっくりした動きを与える） */
+.hero3 { overflow: hidden; }
+.hero3-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(60px);
+}
+.hero3-orb-a {
+    width: 420px;
+    height: 420px;
+    right: -120px;
+    top: -140px;
+    background: radial-gradient(circle, rgba(159, 103, 245, .2), transparent 65%);
+    animation: v3-drift-a 18s ease-in-out infinite alternate;
+}
+.hero3-orb-b {
+    width: 360px;
+    height: 360px;
+    left: -140px;
+    bottom: -160px;
+    background: radial-gradient(circle, rgba(236, 174, 255, .2), transparent 65%);
+    animation: v3-drift-b 22s ease-in-out infinite alternate;
+}
+@keyframes v3-drift-a {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(-60px, 50px, 0) scale(1.12); }
+}
+@keyframes v3-drift-b {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(50px, -40px, 0) scale(1.08); }
+}
+
+/* ============================================================== */
+/* MARQUEE — セクション間の帯（アウトライン文字・低速）              */
+/* ============================================================== */
+.marquee3 {
+    overflow: hidden;
+    padding: 34px 0;
+    background: var(--v3-bg-soft);
+    border-top: 1px solid var(--v3-line);
+    white-space: nowrap;
+}
+.marquee3-track {
+    display: inline-flex;
+    animation: v3-marquee 42s linear infinite;
+    will-change: transform;
+}
+.marquee3-track span {
+    font-family: var(--display, sans-serif);
+    font-weight: 800;
+    font-size: clamp(2.2rem, 4vw, 3.6rem);
+    letter-spacing: .04em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(124, 58, 237, .28);
+}
+@keyframes v3-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+/* アクセシビリティ: 動きを減らす設定のユーザーには常時アニメーションを止める */
+@media (prefers-reduced-motion: reduce) {
+    .hero3-orb,
+    .stage3-blob,
+    .stage3-planet,
+    .stage3-chip,
+    .marquee3-track { animation: none; }
+}
+
+/* ============================================================== */
+/* GATE — 分岐カード（主役）                                        */
+/* ============================================================== */
+.gate3 { padding: 120px 0; background: var(--v3-bg-soft); border-top: 1px solid var(--v3-line); }
+.gate3-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+    margin-bottom: 40px;
+}
+.gate3-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 360px;
+    padding: clamp(30px, 3.4vw, 48px);
+    border-radius: 24px;
+    overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+.gate3-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 28px 60px rgba(23, 23, 30, .16);
+}
+/* Production = 白カード（人・現場）: パステルブロブ＋惑星ロゴの透かしで温度を出す */
+.gate3-production {
+    background:
+        radial-gradient(circle at 88% 0%, rgba(159, 103, 245, .13), transparent 42%),
+        radial-gradient(circle at 8% 100%, rgba(236, 174, 255, .16), transparent 46%),
+        var(--v3-bg);
+    border: 1px solid var(--v3-line);
+}
+.gate3-production::after {
+    content: '';
+    position: absolute;
+    right: -48px;
+    bottom: -56px;
+    width: 260px;
+    height: 260px;
+    background: url('../../images/toukalogo.png') center / contain no-repeat;
+    opacity: .5;
+    transform: rotate(-8deg);
+    transition: transform .4s ease, opacity .4s ease;
+    pointer-events: none;
+}
+.gate3-production:hover::after { transform: rotate(0deg) scale(1.06); opacity: .7; }
+.gate3-production .gate3-brand,
+.gate3-production .gate3-desc { color: var(--v3-ink); }
+.gate3-production .gate3-desc { color: var(--v3-ink-soft); }
+.gate3-production .gate3-cta { color: var(--v3-accent); }
+/* CREDiT = 紫カード（テック・プラットフォーム） */
+.gate3-credit {
+    background:
+        radial-gradient(circle at 82% 16%, rgba(255, 255, 255, .16), transparent 42%),
+        linear-gradient(150deg, #8B4DF0 0%, #6D2BD9 55%, #5A28B3 100%);
+    color: #fff;
+}
+.gate3-credit::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, .22) 1px, transparent 1px);
+    background-size: 22px 22px;
+    opacity: .4;
+    mask-image: linear-gradient(155deg, rgba(0,0,0,.85), transparent 60%);
+    -webkit-mask-image: linear-gradient(155deg, rgba(0,0,0,.85), transparent 60%);
+    pointer-events: none;
+}
+.gate3-credit .gate3-desc { color: rgba(255, 255, 255, .82); }
+.gate3-credit .gate3-cta { color: #fff; }
+
+.gate3-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: clamp(36px, 5vh, 64px);
+}
+.gate3-num {
+    font-family: var(--mono, monospace);
+    font-size: .8rem;
+    letter-spacing: .22em;
+    opacity: .55;
+}
+.gate3-tag {
+    padding: 7px 16px;
+    border-radius: 100px;
+    font-size: .76rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    background: rgba(124, 58, 237, .1);
+    color: var(--v3-accent);
+}
+.gate3-credit .gate3-tag {
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+}
+.gate3-brand {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 14px;
+    font-family: var(--display, sans-serif);
+    font-weight: 800;
+    font-size: clamp(2.3rem, 4vw, 3.6rem);
+    letter-spacing: .01em;
+    line-height: 1.05;
+}
+.gate3-desc {
+    position: relative;
+    z-index: 1;
+    max-width: 460px;
+    margin: 0 0 30px;
+    font-size: .95rem;
+    line-height: 1.9;
+}
+.gate3-cta {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: auto;
+    font-family: var(--display, sans-serif);
+    font-weight: 700;
+    font-size: .84rem;
+    letter-spacing: .16em;
+}
+.gate3-arrow { transition: transform .25s ease; }
+.gate3-card:hover .gate3-arrow { transform: translateX(6px); }
+
+/* 立場別クイック導線 */
+.gate3-routes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+.gate3-routes a {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px 24px;
+    border: 1px solid var(--v3-line);
+    border-radius: 16px;
+    background: var(--v3-bg);
+    transition: border-color .25s ease, transform .25s ease;
+}
+.gate3-routes a:hover { border-color: var(--v3-accent); transform: translateY(-3px); }
+.route3-who {
+    font-size: .78rem;
+    letter-spacing: .1em;
+    color: var(--v3-ink-soft);
+}
+.route3-to {
+    font-family: var(--v3-head);
+    font-weight: 700;
+    font-size: .96rem;
+    color: var(--v3-ink);
+}
+.gate3-routes a:hover .route3-to { color: var(--v3-accent); }
+
+/* ============================================================== */
+/* MISSION                                                         */
+/* ============================================================== */
+.mission3 {
+    padding: 140px 0;
+    background: var(--v3-bg);
+    border-top: 1px solid var(--v3-line);
+}
+.mission3-inner {
+    max-width: 860px;
+    text-align: center;
+    margin: 0 auto;
+}
+.mission3-title {
+    margin: 0 0 28px;
+    font-family: var(--v3-head);
+    font-weight: 900;
+    font-size: clamp(2rem, 4.4vw, 3.6rem);
+    line-height: 1.42;
+    color: var(--v3-ink);
+}
+.mission3-title em {
+    font-style: normal;
+    color: var(--v3-accent);
+}
+.mission3-text {
+    margin: 0 0 32px;
+    color: var(--v3-ink-soft);
+    line-height: 2.1;
+    font-size: .98rem;
+    text-align: left;
+}
+/* ============================================================== */
+/* NEWS（admin管理・DB連携の表示先）                                 */
+/* ============================================================== */
+.news3 {
+    padding: 110px 0;
+    background: var(--v3-bg-soft);
+    border-top: 1px solid var(--v3-line);
+}
+.news3-list { border-top: 1px solid var(--v3-line); }
+.news3-row {
+    display: grid;
+    grid-template-columns: 110px 130px 1fr 40px;
+    align-items: center;
+    gap: 20px;
+    padding: 26px 8px;
+    border-bottom: 1px solid var(--v3-line);
+    transition: background .2s ease;
+}
+.news3-row:hover { background: var(--v3-bg); }
+.news3-date {
+    font-family: var(--display, sans-serif);
+    font-weight: 700;
+    font-size: .86rem;
+    letter-spacing: .06em;
+    color: var(--v3-ink-soft);
+}
+.news3-cat {
+    justify-self: start;
+    padding: 5px 14px;
+    border-radius: 100px;
+    background: rgba(124, 58, 237, .09);
+    color: var(--v3-accent);
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+.news3-title {
+    font-family: var(--v3-head);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--v3-ink);
+    line-height: 1.6;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+.news3-arrow {
+    justify-self: end;
+    color: var(--v3-accent);
+    font-weight: 700;
+    transition: transform .25s ease;
+}
+.news3-row:hover .news3-arrow { transform: translateX(5px); }
+
+/* ============================================================== */
+/* CTA（紫帯）                                                      */
+/* ============================================================== */
+.cta3 {
+    padding: 130px 0;
+    background:
+        radial-gradient(circle at 84% 20%, rgba(255, 255, 255, .14), transparent 44%),
+        linear-gradient(150deg, #8B4DF0 0%, #6D2BD9 58%, #4C1D95 100%);
+}
+.cta3-inner { text-align: center; }
+.cta3-label {
+    display: inline-block;
+    margin-bottom: 16px;
+    font-family: var(--mono, monospace);
+    font-size: .74rem;
+    letter-spacing: .34em;
+    color: rgba(255, 255, 255, .72);
+}
+.cta3-title {
+    margin: 0 0 20px;
+    font-family: var(--v3-head);
+    font-weight: 900;
+    font-size: clamp(2rem, 4.4vw, 3.4rem);
+    color: #fff;
+}
+.cta3-lead {
+    max-width: 620px;
+    margin: 0 auto 40px;
+    color: rgba(255, 255, 255, .85);
+    line-height: 2;
+}
+.cta3-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.btn3-white {
+    background: #fff;
+    color: var(--v3-accent);
+    min-width: 220px;
+}
+.btn3-white:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(16, 10, 31, .3); }
+.btn3-outline {
+    border: 1px solid rgba(255, 255, 255, .55);
+    color: #fff;
+    min-width: 220px;
+}
+.btn3-outline:hover { background: rgba(255, 255, 255, .12); border-color: #fff; }
+
+/* ============================================================== */
+/* フッター（ライト化）                                              */
+/* ============================================================== */
+.site-footer {
+    background: var(--v3-bg-soft);
+    border-top: 1px solid var(--v3-line);
+    color: var(--v3-ink);
+}
+.footer-brand p { color: var(--v3-ink-soft); }
+.footer-links h3 { color: var(--v3-accent); font-style: normal; }
+.footer-links:last-child h3 { color: var(--v3-ink-soft); }
+.footer-links a { color: var(--v3-ink); }
+.footer-links a:hover { color: var(--v3-accent); }
+.social-box,
+.footer-socials a {
+    border-color: var(--v3-line);
+    background: var(--v3-bg);
+    color: var(--v3-ink);
+    clip-path: none;
+    border-radius: 10px;
+}
+.social-box:hover,
+.footer-socials a:hover { background: var(--v3-accent); border-color: var(--v3-accent); color: #fff; }
+.footer-meta { display: none; }
+.footer-copy { color: var(--v3-ink-soft); }
+
+/* ============================================================== */
+/* アクセシビリティ                                                  */
+/* ============================================================== */
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--v3-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* ============================================================== */
+/* レスポンシブ                                                      */
+/* ============================================================== */
+@media (max-width: 1120px) {
+    .hero3 { padding: 148px 0 80px; }
+    .gate3-grid { grid-template-columns: 1fr; }
+    .gate3-routes { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+    .hero3 { padding: 128px 0 64px; }
+    .hero3-inner { flex-direction: column-reverse; align-items: stretch; }
+    .hero3-copy,
+    .hero3-stage { flex: 0 0 auto; width: 100%; min-width: 0; }
+    .hero3-title { font-size: clamp(2rem, 8.6vw, 2.8rem); }
+    .hero3-lead { max-width: none; }
+    .gate3, .mission3, .news3 { padding: 88px 0; }
+    .cta3 { padding: 96px 0; }
+    .sec3-head-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .news3-row {
+        grid-template-columns: auto auto 1fr;
+        grid-template-areas: "date cat arrow" "title title title";
+        row-gap: 10px;
+    }
+    .news3-date { grid-area: date; }
+    .news3-cat { grid-area: cat; }
+    .news3-title { grid-area: title; -webkit-line-clamp: 2; }
+    .news3-arrow { grid-area: arrow; }
+}
+@media (max-width: 640px) {
+    .hero3-actions .btn3-primary,
+    .hero3-actions .btn3-ghost { width: 100%; }
+    .cta3-actions .btn3-white,
+    .cta3-actions .btn3-outline { width: 100%; }
+    .stage3-blob { display: none; }
+}

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/site.php';
 
@@ -117,8 +117,8 @@ try {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/styles.css?v=20260622">
-  <link rel="stylesheet" href="css/top.css?v=20260622f">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/top.css">
 </head>
 
 <body class="home is-loading">
@@ -133,12 +133,6 @@ try {
 
   <!-- App -->
   <div id="app">
-    <!-- Global background blobs -->
-    <div class="global-bg" aria-hidden="true">
-      <div class="blob blob--cyan"></div>
-      <div class="blob blob--purple"></div>
-      <div class="blob blob--pink"></div>
-    </div>
     <!-- ===== Header ===== -->
     <header class="site-header">
       <div class="container header-inner">
@@ -165,99 +159,56 @@ try {
       <!-- ===== Hero ===== -->
       <section class="hero">
         <div class="hero-bg" aria-hidden="true"></div>
-        <!-- v3 BgDecorations -->
-        <div class="bg-deco" aria-hidden="true">
-          <div class="bg-deco__vline bg-deco__vline--left"></div>
-          <div class="bg-deco__vline bg-deco__vline--right"></div>
-          <div class="bg-deco__hline bg-deco__hline--top"></div>
-          <div class="bg-deco__hline bg-deco__hline--bottom"></div>
-          <div class="bg-deco__dots bg-deco__dots--br"></div>
-          <div class="bg-deco__dots bg-deco__dots--tr"></div>
-          <div class="bg-deco__scan"></div>
-          <span class="bg-deco__plus bg-deco__plus--1">+</span>
-          <span class="bg-deco__plus bg-deco__plus--2">+</span>
-          <span class="bg-deco__plus bg-deco__plus--3">+</span>
-        </div>
         <div class="container hero-inner">
           <div class="hero-copy">
-            <p class="hero-eyebrow"><span class="hero-eyebrow-icon">🎮</span> CORO PROJECT / VTuber Talent Agency</p>
-            <h1 class="hero-title">バーチャルの世界で、<br><span class="hero-title-grad">共に輝く。</span></h1>
+            <p class="hero-eyebrow">VTUBER PRODUCTION</p>
+            <h1 class="hero-title">ころぷろじぇくと！</h1>
+            <p class="hero-lead">“自分だけでは届かなかった場所へ”</p>
             <p class="hero-sub">
-              紫とピンクをテーマに、配信・創作・企画のすべてをサポートするVTuberプロダクション。<br>
+              紫とピンクをテーマに、配信・創作・企画のすべてを一緒に楽しむVTuberプロダクション。
               あなたの「好き」を、もっと遠くまで届けます。
             </p>
 
             <div class="hero-actions">
-              <a class="btn btn-primary" href="html/talents.php">タレントを見る</a>
-              <a class="btn btn-outline" href="html/audition.html">オーディション</a>
-            </div>
-
-            <div class="hero-stats">
-              <div class="hero-stat">
-                <span class="hero-stat__num">150<small>倍</small></span>
-                <span class="hero-stat__label">Shorts再生数増加実績</span>
-              </div>
-              <div class="hero-stat">
-                <span class="hero-stat__num">2<small>名</small></span>
-                <span class="hero-stat__label">所属タレント</span>
-              </div>
-              <div class="hero-stat">
-                <span class="hero-stat__num">多数</span>
-                <span class="hero-stat__label">イベント実績</span>
-              </div>
+              <a class="btn btn-primary" href="html/audition.html">オーディション</a>
+              <a class="btn btn-outline" href="html/talents.php">タレントを見る</a>
             </div>
           </div>
 
           <div class="hero-visual">
-            <div class="phone-wrap">
-              <!-- HudRing（スマホ背景） -->
-              <span class="phone-hudring" aria-hidden="true">
-                <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" style="width:100%;height:100%">
-                  <circle cx="50" cy="50" r="48" stroke-width="0.5" stroke-dasharray="2 6" opacity="0.4"/>
-                  <circle cx="50" cy="50" r="40" stroke-width="1" stroke-dasharray="30 15 10 20" opacity="0.6" style="animation:spin-slow 15s linear infinite;transform-origin:center;transform-box:fill-box"/>
-                  <circle cx="50" cy="50" r="30" stroke-width="1.5" stroke-dasharray="50 50" opacity="0.4" style="animation:spin-slow-reverse 18s linear infinite;transform-origin:center;transform-box:fill-box"/>
-                  <path d="M50 0 L50 4 M50 96 L50 100 M0 50 L4 50 M96 50 L100 50" stroke-width="1"/>
-                </svg>
-              </span>
-              <!-- LIVE BROADCAST バッジ -->
-              <span class="phone-badge phone-badge--live">LIVE BROADCAST</span>
-              <!-- TRENDING NOW バッジ -->
-              <span class="phone-badge phone-badge--trending">TRENDING NOW</span>
+            <div class="hero-visual-inner">
+              <div class="hero-aurora" aria-hidden="true"></div>
 
-              <div class="hero-visual-inner">
-                <div class="hero-aurora" aria-hidden="true"></div>
-
-                <div class="shorts-phone">
-                  <div class="shorts-phone-inner">
-                    <div class="shorts-track" id="shortsTrack">
-                      <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short1.mp4"></video></section>
-                      <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short2.mp4"></video></section>
-                      <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short3.mp4"></video></section>
-                      <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short4.mp4"></video></section>
-                    </div>
+              <div class="shorts-phone">
+                <div class="shorts-phone-inner">
+                  <div class="shorts-track" id="shortsTrack">
+                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short1.mp4"></video></section>
+                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short2.mp4"></video></section>
+                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short3.mp4"></video></section>
+                    <section class="shorts-item"><video playsinline muted preload="metadata" src="shorts/short4.mp4"></video></section>
                   </div>
-                  <div class="shorts-phone-bar"></div>
                 </div>
-
-                <div class="hero-badge">
-                  <span class="badge-label">Coro Project Shorts</span>
-                  <span class="badge-dot"></span>
-                </div>
-
-                <div class="hero-tags">
-                  <span>#切り抜き</span>
-                  <span>#VTuber</span>
-                  <span>#CoroProject</span>
-                </div>
-
-                <div class="shorts-dots" aria-label="ショート動画のインジケーター">
-                  <button type="button" data-index="0" class="is-active"></button>
-                  <button type="button" data-index="1"></button>
-                  <button type="button" data-index="2"></button>
-                  <button type="button" data-index="3"></button>
-                </div>
+                <div class="shorts-phone-bar"></div>
               </div>
-            </div><!-- /.phone-wrap -->
+
+              <div class="hero-badge">
+                <span class="badge-label">Coro Project Shorts</span>
+                <span class="badge-dot"></span>
+              </div>
+
+              <div class="hero-tags">
+                <span>#切り抜き</span>
+                <span>#VTuber</span>
+                <span>#CoroProject</span>
+              </div>
+
+              <div class="shorts-dots" aria-label="ショート動画のインジケーター">
+                <button type="button" data-index="0" class="is-active"></button>
+                <button type="button" data-index="1"></button>
+                <button type="button" data-index="2"></button>
+                <button type="button" data-index="3"></button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -285,11 +236,11 @@ try {
               <p>
                 配信スケジュール、企画、コラボ、数字の伸び方。<br>
                 ひとつひとつの悩みに寄り添いながら、タレントと一緒に
-                <span class="about-highlight">"その人らしい活動スタイル"</span>を組み立てていきます。
+                <span class="about-highlight">“その人らしい活動スタイル”</span>を組み立てていきます。
               </p>
               <p>
                 「もっと本気でやりたいけど、ひとりだと限界を感じている」「でも、ガチガチの箱に入りたいわけじゃない」。<br>
-                そんな人の "ちょうどいい居場所" になれたら、と考えています。
+                そんな人の “ちょうどいい居場所” になれたら、と考えています。
               </p>
             </div>
 

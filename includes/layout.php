@@ -105,7 +105,7 @@ function render_header(string $current = 'about', bool $isScrolled = true): void
 <?php }
 
 function render_footer(): void {
-    global $divisions;
+    global $divisions, $basePath;
     ?>
     <footer class="site-footer">
       <div class="container footer-grid">
@@ -122,8 +122,11 @@ function render_footer(): void {
 
         <div class="footer-links">
           <h3>SERVICES</h3>
-          <?php foreach ($divisions as $division): ?>
-            <a href="<?= h($division['slug']) ?>/"><?= h($division['title']) ?></a>
+          <?php foreach ($divisions as $division):
+            $footerUrl = $division['url'] ?? (($basePath ?? '.') . '/' . $division['slug'] . '/');
+            $footerExt = !empty($division['url']);
+          ?>
+            <a href="<?= h($footerUrl) ?>" <?= $footerExt ? 'target="_blank" rel="noopener noreferrer"' : '' ?>><?= h($division['title']) ?></a>
           <?php endforeach; ?>
         </div>
 
@@ -141,7 +144,7 @@ function render_footer(): void {
         <div>LATENCY: 12ms</div>
         <div>SECURE_CONNECTION</div>
       </div>
-      <p class="footer-copy">© CORO PROJECT 2026 // ALL SYSTEM OPERATIONAL</p>
+      <p class="footer-copy">© 2026 CORO PROJECT</p>
     </footer>
   </div>
   <script src="assets/js/social-links.js?v=20260429-1" data-social-endpoint="production/html/api/site-links.php"></script>
